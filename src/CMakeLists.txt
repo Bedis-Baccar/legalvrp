@@ -23,7 +23,7 @@ set(L legalvrp)
 
 legalvrp_module(domain
   SOURCES ${L}/domain/models.cpp ${L}/domain/rules.cpp ${L}/domain/compat.cpp ${L}/domain/paths.cpp
-          ${L}/domain/json.cpp ${L}/domain/detail/yaml_section.cpp
+          ${L}/domain/json.cpp ${L}/domain/day.cpp ${L}/domain/detail/yaml_section.cpp
   DEPS nlohmann_json::nlohmann_json)
 target_link_libraries(legalvrp_domain PRIVATE yaml-cpp::yaml-cpp)  # yaml stays out of public headers
 target_compile_definitions(legalvrp_domain PUBLIC

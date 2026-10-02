@@ -64,4 +64,5 @@ data/ results/   generated, git-ignored
 | T0 skeleton, build, configs, CI | done |
 | T1 domain records, config loaders with validation, compatibility | done |
 | T2 portable RNG, synthetic generator, JSON I/O, golden fixtures, estimator | done (certification with T5) |
-| T3–T9 | to do, in order (see brief §12) |
+| T3 exact route evaluator (temporal network), brute-force cross-check | done |
+| T4–T9 | to do, in order (see brief §12) |
