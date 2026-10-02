@@ -14,6 +14,7 @@ struct Roster {
   std::vector<Truck> trucks;
 };
 
-[[nodiscard]] Roster make_roster(const InstanceConfig& cfg);
+// shift_end_max = min(shift_start + shift_span_max, rules.latest_duty_end) (D-020).
+[[nodiscard]] Roster make_roster(const InstanceConfig& cfg, const Rules& rules);
 
 }  // namespace legalvrp::data

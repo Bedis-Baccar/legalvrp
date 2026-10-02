@@ -28,7 +28,9 @@
   ],
   "costs": {
     "cost_per_km": 1.6,
-    "postpone_penalty": 200.0
+    "postpone_escalation": 2.0,
+    "postpone_penalty": 200.0,
+    "unserved_end_penalty": 1000.0
   },
   "customers": [
     {
@@ -477,7 +479,7 @@
       ],
       "contract_class": "full_time",
       "id": "k3",
-      "shift_end_max": 1185,
+      "shift_end_max": 1140,
       "shift_start": 420,
       "truck_id": "t3"
     },
@@ -1281,6 +1283,8 @@
     "depot_close": 10,
     "depot_prep": 20,
     "drive_before_break": 270,
+    "earliest_duty_start": 300,
+    "latest_duty_end": 1140,
     "weekly_drive_max": 3360,
     "work_before_break": 360
   },

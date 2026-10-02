@@ -9,3 +9,9 @@ weekly_drive_max: 3360    # Reg. 561/2006 art. 6
 daily_rest_min: 660       # Reg. 561/2006 art. 8
 depot_prep: 20            # company: pre-trip work before departure (P)
 depot_close: 10           # company: post-trip work after return (R)
+# Daytime duty window (D-020: no night work, by design). Every shift lies in
+# [earliest_duty_start, latest_duty_end]. With 05:00 <= start and end <= 19:00 there is no
+# work between 00:00 and 05:00 and at most 1 h/day in the 21:00-06:00 night period
+# (< 50 h/month), so the night-work rules of Code des transports L3312-1 never apply.
+earliest_duty_start: 300       # 05:00
+latest_duty_end: 1140          # 19:00 (must stay <= 21:00, start of the night period)

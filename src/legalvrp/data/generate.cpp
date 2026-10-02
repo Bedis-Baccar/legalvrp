@@ -25,6 +25,14 @@ void check_against_config(const InstanceConfig& cfg, const Config& config,
                         "unknown contract class '" + name + "' (see contracts.yaml)");
     }
   }
+  // D-020: daytime duties only.
+  for (std::size_t i = 0; i < cfg.drivers.size(); ++i) {
+    const Minutes s = cfg.drivers[i].shift_start;
+    if (s < config.rules.earliest_duty_start || s >= config.rules.latest_duty_end) {
+      throw ConfigError(source, "drivers[" + std::to_string(i) + "].shift_start",
+                        "must lie in [earliest_duty_start, latest_duty_end) of rules.yaml");
+    }
+  }
   // A12: same shift start every day keeps the daily rest automatic iff span <= 24 h - rest.
   if (cfg.shift_span_max > kDay - config.rules.daily_rest_min) {
     throw ConfigError(source, "shift_span_max",
@@ -53,7 +61,7 @@ GeneratedWeek generate_week(const InstanceConfig& cfg, const Config& config, std
   const Rng orders_rng = root.split(3);
 
   Geography geo = make_geography(cfg, geo_rng);
-  Roster roster = make_roster(cfg);
+  Roster roster = make_roster(cfg, config.rules);
   const Pallets largest =
       std::ranges::max(roster.trucks, {}, &Truck::capacity_pallets).capacity_pallets;
 
@@ -114,6 +122,9 @@ std::vector<std::string> validate_week(const WeekInstance& w) {
     }
     if (d.shift_start < 0 || d.shift_start >= d.shift_end_max || d.shift_end_max > kDay) {
       p.push_back("driver " + d.id + ": invalid shift");
+    }
+    if (d.shift_start < w.rules.earliest_duty_start || d.shift_end_max > w.rules.latest_duty_end) {
+      p.push_back("driver " + d.id + ": shift outside the daytime duty window (D-020)");
     }
     if (d.shift_end_max - d.shift_start > kDay - w.rules.daily_rest_min) {
       p.push_back("driver " + d.id + ": shift span breaks the daily rest (A12)");

@@ -1,3 +1,8 @@
 # Economic parameters — ILLUSTRATIVE (A16). Euros.
 cost_per_km: 1.60            # 7.5-19 t rigid, regional distribution: ~1.40-2.00 EUR/km
-postpone_penalty: 200.0      # per order, constant over the week (decision D4)
+# Postponement (D-019): penalty on day d for an order first due on day d0 is
+#   postpone_penalty * postpone_escalation^(d - d0),
+# and on the last day of the horizon at least unserved_end_penalty (order left unserved).
+postpone_penalty: 200.0      # first postponement
+postpone_escalation: 2.0     # 200, 400, 800, ... : no order is postponed indefinitely
+unserved_end_penalty: 1000.0 # left unserved at the end of the week

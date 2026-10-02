@@ -40,6 +40,10 @@ Rules parse_rules(std::string_view yaml, std::string_view source_view) {
   r.daily_rest_min = s.minutes("daily_rest_min", 0, kDay - 1);
   r.depot_prep = s.minutes("depot_prep", 0, kDay);
   r.depot_close = s.minutes("depot_close", 0, kDay);
+  // No work before 05:00 and none in the 21:00-06:00 night period beyond its first hour:
+  // the night-work rules (L3312-1) then cannot apply (D-020).
+  r.earliest_duty_start = s.minutes("earliest_duty_start", 300, kDay);
+  r.latest_duty_end = s.minutes("latest_duty_end", 0, 21 * 60);
   s.reject_unknown();
 
   // Cross-key consistency.
@@ -57,6 +61,10 @@ Rules parse_rules(std::string_view yaml, std::string_view source_view) {
   if (r.depot_prep + r.depot_close > r.work_before_break) {
     s.fail("depot_prep+depot_close",
            must_be_le("work_before_break", r.work_before_break, r.depot_prep + r.depot_close));
+  }
+  if (r.earliest_duty_start >= r.latest_duty_end) {
+    s.fail("latest_duty_end", "must be after earliest_duty_start (" +
+                                  std::to_string(r.earliest_duty_start) + ")");
   }
   return r;
 }
@@ -93,9 +101,14 @@ Costs parse_costs(std::string_view yaml, std::string_view source_view) {
   Costs c;
   c.cost_per_km = s.euros("cost_per_km", 0.0, kMaxEuros);
   c.postpone_penalty = s.euros("postpone_penalty", 0.0, kMaxEuros);
+  c.postpone_escalation = s.real("postpone_escalation", 1.0, 100.0);
+  c.unserved_end_penalty = s.euros("unserved_end_penalty", 0.0, kMaxEuros);
   s.reject_unknown();
   // Strictly positive: a free postponement would make "postpone everything" optimal.
   if (c.postpone_penalty <= 0.0) s.fail("postpone_penalty", "must be > 0 euros");
+  if (c.unserved_end_penalty < c.postpone_penalty) {
+    s.fail("unserved_end_penalty", "must be >= postpone_penalty");
+  }
   return c;
 }
 

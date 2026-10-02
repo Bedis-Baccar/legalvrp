@@ -177,7 +177,9 @@ void to_json(json& j, const Rules& x) {
            {"break_length", x.break_length},             {"daily_drive_max", x.daily_drive_max},
            {"daily_service_max", x.daily_service_max},   {"weekly_drive_max", x.weekly_drive_max},
            {"daily_rest_min", x.daily_rest_min},         {"depot_prep", x.depot_prep},
-           {"depot_close", x.depot_close}};
+           {"depot_close", x.depot_close},
+           {"earliest_duty_start", x.earliest_duty_start},
+           {"latest_duty_end", x.latest_duty_end}};
 }
 void from_json(const json& j, Rules& x) {
   j.at("drive_before_break").get_to(x.drive_before_break);
@@ -189,6 +191,8 @@ void from_json(const json& j, Rules& x) {
   j.at("daily_rest_min").get_to(x.daily_rest_min);
   j.at("depot_prep").get_to(x.depot_prep);
   j.at("depot_close").get_to(x.depot_close);
+  j.at("earliest_duty_start").get_to(x.earliest_duty_start);
+  j.at("latest_duty_end").get_to(x.latest_duty_end);
 }
 
 void to_json(json& j, const Contract& x) {
@@ -209,11 +213,16 @@ void from_json(const json& j, Contract& x) {
 }
 
 void to_json(json& j, const Costs& x) {
-  j = json{{"cost_per_km", x.cost_per_km}, {"postpone_penalty", x.postpone_penalty}};
+  j = json{{"cost_per_km", x.cost_per_km},
+           {"postpone_penalty", x.postpone_penalty},
+           {"postpone_escalation", x.postpone_escalation},
+           {"unserved_end_penalty", x.unserved_end_penalty}};
 }
 void from_json(const json& j, Costs& x) {
   j.at("cost_per_km").get_to(x.cost_per_km);
   j.at("postpone_penalty").get_to(x.postpone_penalty);
+  j.at("postpone_escalation").get_to(x.postpone_escalation);
+  j.at("unserved_end_penalty").get_to(x.unserved_end_penalty);
 }
 
 // ---- WeekInstance (matrix excluded: matrix.json)

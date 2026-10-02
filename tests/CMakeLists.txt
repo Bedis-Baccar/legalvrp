@@ -28,3 +28,4 @@ endif()
 
 legalvrp_test(test_route_eval unit unit/test_route_eval.cpp)
 target_link_libraries(test_route_eval PRIVATE legalvrp::heuristics legalvrp::data)
+legalvrp_test(test_day unit unit/test_day.cpp)

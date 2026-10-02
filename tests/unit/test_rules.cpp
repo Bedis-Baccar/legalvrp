@@ -21,6 +21,8 @@ weekly_drive_max: 3360
 daily_rest_min: 660
 depot_prep: 20
 depot_close: 10
+earliest_duty_start: 300
+latest_duty_end: 1140
 )";
 
 const std::string kContracts = R"(
@@ -39,7 +41,9 @@ contracts:
     fixed_cost_if_used: 0.0
 )";
 
-const std::string kCosts = "cost_per_km: 1.60\npostpone_penalty: 200.0\n";
+const std::string kCosts =
+    "cost_per_km: 1.60\npostpone_penalty: 200.0\npostpone_escalation: 2.0\nunserved_end_penalty: "
+    "1000.0\n";
 
 std::string replace(std::string text, const std::string& from, const std::string& to) {
   const auto pos = text.find(from);
@@ -186,4 +190,24 @@ TEST_CASE("costs: non-numeric value is rejected", "[rules]") {
 TEST_CASE("missing config file names the file", "[rules]") {
   const auto e = expect_error([] { (void)load_rules(config_dir() / "does_not_exist.yaml"); });
   CHECK(std::string{e.what()}.find("does_not_exist.yaml") != std::string::npos);
+}
+
+TEST_CASE("costs: end-of-week penalty must not be below the base penalty", "[rules]") {
+  const auto e = expect_error([] {
+    (void)parse_costs(replace(kCosts, "unserved_end_penalty: 1000.0", "unserved_end_penalty: 50"));
+  });
+  check_names_key(e, "unserved_end_penalty");
+}
+
+TEST_CASE("rules: duty window stays out of the night (D-020)", "[rules]") {
+  // Before 05:00 would be work in the 00:00-05:00 band (L3312-1).
+  check_names_key(expect_error([] {
+                    (void)parse_rules(replace(kRules, "earliest_duty_start: 300", "earliest_duty_start: 240"));
+                  }),
+                  "earliest_duty_start");
+  // After 21:00 would enter the road-freight night period.
+  check_names_key(expect_error([] {
+                    (void)parse_rules(replace(kRules, "latest_duty_end: 1140", "latest_duty_end: 1320"));
+                  }),
+                  "latest_duty_end");
 }

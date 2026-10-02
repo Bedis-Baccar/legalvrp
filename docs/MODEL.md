@@ -11,6 +11,12 @@ are the Gurobi variable and constraint names.
 - The MILP may place waiting before the break node; evaluator, brute force and checker must allow this too (F1, D-007 accepted).
 - Pruning extensions and tighter C11 big-M: F4/F5, D-009 proposed. They are not yet part of the specification below.
 
+**Amendments (owner decisions, 2026-10-02)**
+- **Fixed duty start (D-018).** A used driver's duty runs from the shift start $S_k$ to $t^E_k + R$. Prep $P$ is done in $[S_k, t^0_k]$; any time at the depot before departure is work. Hence C14 and C16 use $S_k$ in place of $t^0_k - P$, and $M^w_k = F_k - S_k$. Departure may still be later than $S_k + P$, but this no longer shortens the duty. An unused driver does not come in ($\theta_k = 0$).
+- **Postponement (D-019).** $p_i$ is no longer a constant. On day $d$, for an order first due on day $d_i^0$: $p_i = p^{\text{base}} \cdot \rho^{\,d - d_i^0}$, and on the last day of the horizon $p_i = \max(p^{\text{base}} \cdot \rho^{\,d - d_i^0},\ p^{\text{end}})$, because postponing on that day leaves the order unserved this week. Values in `config/costs.yaml`.
+- **Daytime duties, no night work (D-020).** Every shift lies in [05:00, 19:00] (`earliest_duty_start`, `latest_duty_end` in `config/rules.yaml`; $F_k = \min(S_k + 765, 19{:}00)$). Code des transports L3312-1 caps daily work at 10 h if a duty includes work between 00:00 and 05:00 or the driver is a night worker (≥ 50 h a month in the 21:00–06:00 night period). Neither can happen inside this window (≤ 1 h/day in the night period, ≈ 22 h/month), so the model needs no night constraint.
+- **One trip per duty.** A route leaves the depot once and returns once; no reloading. This was implicit in A1; now explicit.
+
 ---
 
 ## The daily MILP (brief §6)
@@ -67,9 +73,9 @@ $$\min\ \sum_{k}\Big[c^{\text{km}}\!\!\sum_{(i,j)\in A_k}\! d_{ij}x_{ijk} + c^{\
 | C11 | `brk_time` | $T_{ik}+s_i - M^{a}_{ik}(1-y_{ik}) \le a_k \le T_{ik}+s_i + M^{a}_{ik}(1-y_{ik})$ | $k,\ i$ |
 | C12 | `brk_drive` | $D_{ik} - DD(1-y_{ik}) \le b_k \le D_{ik} + DD(1-y_{ik})$; $\ b_k \le DD\,\text{brk}_k$ | $k,\ i$ |
 | C13 | `drive_seg` | $b_k \le DB$; $\ \text{drive}_k - b_k \le DB$ | $k$ |
-| C14 | `work_seg` | $a_k - (t^0_k - P) \le WB + M^{w}_k(1-\text{brk}_k)$; $\ (t^E_k + R) - (a_k + BR) \le WB + M^{w}_k(1-\text{brk}_k)$; $\ (t^E_k + R) - (t^0_k - P) \le WB + M^{w}_k\,\text{brk}_k$ | $k$ |
+| C14 | `work_seg` | $a_k - S_k \le WB + M^{w}_k(1-\text{brk}_k)$; $\ (t^E_k + R) - (a_k + BR) \le WB + M^{w}_k(1-\text{brk}_k)$; $\ (t^E_k + R) - S_k \le WB + M^{w}_k\,\text{brk}_k$ *(fixed start, D-018)* | $k$ |
 | C15 | `drive_day` | $\text{drive}_k \le DD$ | $k$ |
-| C16 | `svc_def` | $\theta_k \ge (t^E_k + R) - (t^0_k - P) - BR\,\text{brk}_k - M^{w}_k(1-\text{used}_k)$ | $k$ |
+| C16 | `svc_def` | $\theta_k \ge (t^E_k + R) - S_k - BR\,\text{brk}_k - M^{w}_k(1-\text{used}_k)$ *(fixed start, D-018)* | $k$ |
 | C17 | `week_caps` | $W_k + \theta_k \le H^{\max}_k$; $\ V_k + \text{drive}_k \le WD$ | $k$ |
 | C18 | `extra` | $o_k \ge W_k + \theta_k - H^{\text{thr}}_k$ | $k$ |
 
@@ -93,7 +99,7 @@ $$\min\ \sum_{k}\Big[c^{\text{km}}\!\!\sum_{(i,j)\in A_k}\! d_{ij}x_{ijk} + c^{\
 | C6 | $M_{ij} = \max(0,\ l_i + s_i + BR + \tau_{ij} - e_j)$ |
 | C7 | $M^E_{ik} = \max(0,\ l_i + s_i + BR + \tau_{iE} - S_k - P)$ |
 | C11 | $M^a_{ik} = \max(F_k,\ l_i + s_i) - \min(S_k,\ e_i + s_i)$ |
-| C14, C16 | $M^w_k = F_k - S_k + P + R$ |
+| C14, C16 | $M^w_k = F_k - S_k$ (fixed start, D-018) |
 | C8, C12, upper side of C9 | $DD$ |
 | lower side of C9 | $DD + \tau_{ij}$ — with only $DD$, a visited node with high accumulated driving would wrongly constrain its successor through an *unused* arc |
 

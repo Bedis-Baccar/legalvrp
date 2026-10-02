@@ -160,44 +160,51 @@ RouteEvaluation RouteEvaluator::evaluate(std::size_t k, std::span<const std::siz
         g.ge(Tn(i), TE, done + leg[n]);
       }
     }
-    // work segments (C14)
+    // work segments (C14), fixed duty start S (D-018)
     if (has_break) {
       const auto b = static_cast<std::size_t>(brk);
       const Minutes sb = orders_[seq[b]].s;
       if (stage != Stage::schedule && stage != Stage::work_after) {
-        g.le(T0, Tn(b), r.work_before_break - P - sb);           // (T_b + s_b) - (t0 - P) <= WB
+        g.le(Z, Tn(b), S + r.work_before_break - sb);            // (T_b + s_b) - S <= WB
       }
       if (stage != Stage::schedule && stage != Stage::work_before) {
         g.le(Tn(b), TE, r.work_before_break - R + sb + BR);      // (tE + R) - (T_b + s_b + BR) <= WB
       }
     } else if (stage != Stage::schedule) {
-      g.le(T0, TE, r.work_before_break - P - R);                 // (tE + R) - (t0 - P) <= WB
+      g.le(Z, TE, S + r.work_before_break - R);                  // (tE + R) - S <= WB
     }
-    // service caps: theta = tE - t0 + R + P - BR*[break]
+    // service caps: theta = tE + R - S - BR*[break]
     const Minutes br_credit = has_break ? BR : 0;
     if (stage == Stage::daily_service || stage == Stage::weekly_service) {
-      g.le(T0, TE, r.daily_service_max - R - P + br_credit);
+      g.le(Z, TE, S + r.daily_service_max - R + br_credit);
     }
     if (stage == Stage::weekly_service) {
-      g.le(T0, TE, c.weekly_service_max - dd.week_service - R - P + br_credit);
+      g.le(Z, TE, S + c.weekly_service_max - dd.week_service - R + br_credit);
     }
     return g;
   };
 
-  // Min (tE - t0) and an earliest schedule achieving it; nullopt if infeasible.
+  // Earliest return (= min theta); then latest departure; then earliest service starts.
+  // Each step only fixes a variable inside its feasible interval, which an STN can always
+  // extend to a full solution. nullopt if infeasible.
   auto solve = [&](int brk, Stage stage) -> std::optional<Timing> {
     Stn g = build(brk, stage);
-    const auto from_te = g.distances(TE, false);
-    if (!from_te) return std::nullopt;
-    const long long delta = -(*from_te)[static_cast<std::size_t>(T0)];  // min tE - t0
-    g.le(T0, TE, delta);
-    const auto to_z = g.distances(Z, true);  // d(v, Z): earliest x_v = -d(v, Z)
+    const auto to_z = g.distances(Z, true);  // d(v, Z); earliest x_v = -d(v, Z)
     if (!to_z) return std::nullopt;
+    const long long te_min = -(*to_z)[static_cast<std::size_t>(TE)];
+    g.le(Z, TE, te_min);
+    const auto from_z = g.distances(Z, false);  // d(Z, v): latest x_v
+    if (!from_z) return std::nullopt;
+    const long long t0_late = (*from_z)[static_cast<std::size_t>(T0)];
+    g.le(Z, T0, t0_late);
+    g.ge(Z, T0, t0_late);
+    const auto earliest = g.distances(Z, true);
+    if (!earliest) return std::nullopt;
     Timing t;
-    t.t0 = static_cast<Minutes>(-(*to_z)[static_cast<std::size_t>(T0)]);
-    t.tE = static_cast<Minutes>(-(*to_z)[static_cast<std::size_t>(TE)]);
+    t.t0 = static_cast<Minutes>(t0_late);
+    t.tE = static_cast<Minutes>(-(*earliest)[static_cast<std::size_t>(TE)]);
     for (std::size_t i = 0; i < n; ++i) {
-      t.starts.push_back(static_cast<Minutes>(-(*to_z)[static_cast<std::size_t>(Tn(i))]));
+      t.starts.push_back(static_cast<Minutes>(-(*earliest)[static_cast<std::size_t>(Tn(i))]));
     }
     return t;
   };
@@ -270,7 +277,7 @@ RouteEvaluation RouteEvaluator::evaluate(std::size_t k, std::span<const std::siz
     }
 
     if (timing) {
-      const Minutes theta = timing->tE + R - (timing->t0 - P) - (brk >= 0 ? BR : 0);
+      const Minutes theta = timing->tE + R - S - (brk >= 0 ? BR : 0);
       if (!best || theta < best->theta) best = Best{brk, *timing, theta};  // ties: first option
     } else if (progress > best_progress) {
       best_progress = progress;

@@ -103,6 +103,9 @@ struct Rules {                          // §3, all integer minutes
   Minutes daily_rest_min = 0;
   Minutes depot_prep = 0;               // P
   Minutes depot_close = 0;              // R
+  // Daytime duty window (D-020): no night work by construction.
+  Minutes earliest_duty_start = 0;      // every shift_start >= this (05:00)
+  Minutes latest_duty_end = 0;          // every shift_end_max <= this (19:00)
 };
 
 struct Contract {
@@ -118,7 +121,9 @@ using Contracts = std::vector<Contract>;  // sorted by name
 
 struct Costs {
   Euros cost_per_km = 0.0;              // c^km
-  Euros postpone_penalty = 0.0;         // default p_i
+  Euros postpone_penalty = 0.0;         // first postponement (base p_i)
+  double postpone_escalation = 1.0;     // multiplier per extra day carried (D-019)
+  Euros unserved_end_penalty = 0.0;     // minimum penalty on the horizon's last day
 };
 
 // ---- one day's problem and its solution ----------------------------------

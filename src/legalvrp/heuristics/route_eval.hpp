@@ -7,13 +7,16 @@
 // Method. For a fixed sequence and break position, every timing rule is a difference
 // constraint x_v - x_u <= c over the times {t0, T_1..T_m, tE}: travel and service, windows,
 // shift, the three 6 h work segments, daily and weekly service caps. This is a simple
-// temporal network: Bellman-Ford decides feasibility, gives min (tE - t0), hence the minimum
-// temps de service, and an integer schedule achieving it (waiting placed where needed,
+// temporal network: Bellman-Ford decides feasibility, gives the earliest return, hence the
+// minimum temps de service, and an integer schedule achieving it (waiting placed where needed,
 // including before the break node, D-007). Driving limits do not depend on times and are
 // checked directly. Cost is non-decreasing in temps de service, so min theta = min cost.
 //
-// Semantics are those of docs/MODEL.md (§6): duty = [t0 - P, tE + R]; break of BR right after
-// service at the break node; theta = tE + R - (t0 - P) - BR * [break].
+// Semantics are those of docs/MODEL.md: fixed duty start (D-018), duty = [S_k, tE + R];
+// break of BR right after service at the break node; theta = tE + R - S_k - BR * [break];
+// theta <= daily_service_max. Minimum theta = earliest return. Among schedules with
+// the earliest return, the driver leaves the depot as late as possible (less waiting at
+// customers) and serves as early as possible after that.
 // Used by the heuristics only; the checker (T4) is written independently.
 
 #include <cstddef>

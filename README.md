@@ -8,6 +8,7 @@ daily MILPs solved exactly with Gurobi, checked by an independent legality check
 - Specification: [PROJECT_BRIEF.md](PROJECT_BRIEF.md) · model: [docs/MODEL.md](docs/MODEL.md)
 - Review and open findings: [docs/REVIEW_V0.md](docs/REVIEW_V0.md) · decisions: [docs/DECISIONS.md](docs/DECISIONS.md)
 - Sizing and data sources: [docs/SIZING.md](docs/SIZING.md), [docs/DATA.md](docs/DATA.md)
+- Tighter formulations, literature: [docs/FORMULATION_RESEARCH.md](docs/FORMULATION_RESEARCH.md)
 - Model validation document: [docs/validation/model_validation.pdf](docs/validation/model_validation.pdf)
 
 ## Requirements
@@ -65,4 +66,5 @@ data/ results/   generated, git-ignored
 | T1 domain records, config loaders with validation, compatibility | done |
 | T2 portable RNG, synthetic generator, JSON I/O, golden fixtures, estimator | done (certification with T5) |
 | T3 exact route evaluator (temporal network), brute-force cross-check | done |
+| Owner decisions D-018..D-022 (fixed start, penalties, daytime duties, T6 formulation) | done |
 | T4–T9 | to do, in order (see brief §12) |

@@ -86,8 +86,9 @@ constexpr Minutes X = 999;  // unused legs
 
 // ============================================================ hand-computed routes
 
-TEST_CASE("departure is delayed to absorb waiting (min temps de service)", "[route_eval]") {
-  // S = 360, P = 20 -> t0 >= 380. A opens at 480, 30 min away: leave at 450, no waiting.
+TEST_CASE("departure is delayed to absorb waiting; duty still starts at the shift start", "[route_eval]") {
+  // S = 360, P = 20 -> t0 >= 380. A opens at 480, 30 min away: leave at 450, no waiting at A.
+  // Fixed start (D-018): the duty runs from 360 whatever the departure.
   Fixture f;
   f.add("A", 480, 600, 20);
   f.matrix({{0, 30}, {30, 0}});
@@ -97,10 +98,10 @@ TEST_CASE("departure is delayed to absorb waiting (min temps de service)", "[rou
   CHECK(ev.route.arrivals == std::vector<Minutes>{480});
   CHECK(ev.route.service_starts == std::vector<Minutes>{480});
   CHECK(ev.route.return_time == 530);              // 480 + 20 + 30
-  CHECK(ev.service_minutes == 110);                // (530 + 10) - (450 - 20)
+  CHECK(ev.service_minutes == 180);                // (530 + 10) - 360
   CHECK_FALSE(ev.route.break_after_order_id);      // tie with a break: "no break" wins
   CHECK(ev.driving_minutes == 60);
-  CHECK(ev.cost == Catch::Approx(1.60 * 60 + 0.01 * 110));
+  CHECK(ev.cost == Catch::Approx(1.60 * 60 + 0.01 * 180));
 }
 
 TEST_CASE("best break position: only after B splits 400 min of driving", "[route_eval]") {
@@ -222,7 +223,7 @@ TEST_CASE("window or shift impossible -> schedule", "[route_eval]") {
 TEST_CASE("weekly caps use the driver's state", "[route_eval]") {
   Fixture f;
   f.add("A", 480, 600, 20);
-  f.matrix({{0, 30}, {30, 0}});  // theta 110, driving 60
+  f.matrix({{0, 30}, {30, 0}});  // theta 180, driving 60
   f.day.states[0].service_minutes_week = 3120 - 100;  // H^max full_time = 3120
   auto ev = f.eval({0});
   CHECK_FALSE(ev.legal);
@@ -242,13 +243,13 @@ TEST_CASE("cost: overtime above the weekly threshold; idle driver", "[route_eval
   f.day.states[0].service_minutes_week = 2340 - 50;  // 50 min below the 39 h threshold
   const auto ev = f.eval({0});
   REQUIRE(ev.legal);
-  CHECK(ev.cost == Catch::Approx(1.60 * 60 + 0.01 * 110 + 0.45 * 60));  // 60 min overtime
+  CHECK(ev.cost == Catch::Approx(1.60 * 60 + 0.01 * 180 + 0.45 * 130));  // 130 min overtime
 
   const auto idle = f.eval({});
   CHECK(idle.legal);
   CHECK(idle.service_minutes == 0);
   CHECK(idle.cost == 0.0);
-  f.day.states[0].service_minutes_week = 2340 + 100;  // already above: constant term (§6.3)
+  f.day.states[0].service_minutes_week = 2340 + 100;  // already above: constant term (Â§6.3)
   CHECK(f.eval({}).cost == Catch::Approx(0.45 * 100));
 }
 
@@ -328,7 +329,7 @@ std::optional<Minutes> brute_force_theta(const DayInstance& day, std::size_t k,
         if (!ok2) break;  // later start only makes later windows worse
         const Minutes tE = rdy + leg[n];
         if (tE > drv.shift_end_max - r.depot_close) break;
-        const Minutes duty_start = t0 - r.depot_prep;
+        const Minutes duty_start = drv.shift_start;  // fixed start (D-018)
         const Minutes duty_end = tE + r.depot_close;
         bool legal = true;
         Minutes theta = duty_end - duty_start;
@@ -390,7 +391,7 @@ void check_route_is_legal(const DayInstance& day, std::size_t k, const std::vect
   drive += m.time(prev, depot);
   CHECK(rt.return_time == ready + m.time(prev, depot));
   CHECK(drive == ev.driving_minutes);
-  const Minutes duty_start = rt.departure - r.depot_prep;
+  const Minutes duty_start = drv.shift_start;  // fixed start (D-018)
   const Minutes duty_end = rt.return_time + r.depot_close;
   if (break_start) {
     CHECK(drive_at_break <= r.drive_before_break);
