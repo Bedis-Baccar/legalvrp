@@ -9,6 +9,7 @@
 //     JSON reader) and then passed by const reference: "immutable by use".
 
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <vector>
@@ -140,6 +141,25 @@ struct DayInstance {
   [[nodiscard]] const Truck& truck(const std::string& id) const;
   [[nodiscard]] const Contract& contract(const std::string& name) const;
   [[nodiscard]] const DriverWeekState& state(const std::string& driver_id) const;
+};
+
+// A stored week (data/instances/<name>/<seed>/): everything needed to build each
+// DayInstance. Rules, contracts and costs are embedded so an instance stays
+// reproducible even if config/ changes later.
+struct WeekInstance {
+  std::string name;
+  std::uint64_t seed = 0;
+  int days = 0;
+  Depot depot;
+  std::vector<Customer> customers;
+  std::vector<Order> orders;               // all days; Order::day says which
+  std::vector<Driver> drivers;
+  std::vector<Truck> trucks;
+  Matrix matrix;                           // stored in matrix.json
+  Rules rules;
+  Contracts contracts;
+  Costs costs;
+  bool certified = false;                  // baseline + checker certification (T5)
 };
 
 struct Route {

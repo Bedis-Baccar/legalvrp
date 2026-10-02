@@ -1,0 +1,57 @@
+#pragma once
+// legalvrp::data — instance generator parameters (config/instance_<name>.yaml, §5.1).
+
+#include <filesystem>
+#include <string>
+#include <string_view>
+#include <vector>
+
+#include "legalvrp/domain/models.hpp"
+
+namespace legalvrp::data {
+
+struct CustomerTypeParams {
+  CustomerType type = CustomerType::grocery;
+  double share = 0.0;            // probability a pool customer has this type
+  Minutes window_start = 0;      // service-start window
+  Minutes window_end = 0;
+  double pallets_lambda = 0.0;   // pallets = 1 + Poisson(lambda), capped at the largest truck
+  double tail_lift_prob = 0.0;   // probability the customer needs a tail-lift
+  double order_weight = 1.0;     // relative chance of ordering on a given day
+};
+
+struct DriverTemplate {
+  std::string contract;
+  Minutes shift_start = 0;
+};
+
+struct TruckTemplate {
+  Pallets capacity_pallets = 0;
+  bool has_tail_lift = false;
+};
+
+struct InstanceConfig {
+  std::string name;
+  int days = 1;
+  int orders_min = 0, orders_max = 0;      // orders per day
+  double customer_pool_factor = 2.0;       // pool size = ceil(factor * orders_max)
+  int towns_min = 0, towns_max = 0;
+  double town_distance_min_km = 0.0, town_distance_max_km = 0.0;
+  double spread_min_km = 0.0, spread_max_km = 0.0;
+  double detour_factor = 1.3;              // road km = euclid km * detour
+  double speed_kmh = 55.0;
+  Minutes access_minutes_per_leg = 4;      // parking/manoeuvring, every truck
+  double asymmetric_noise = 0.05;          // +-5 % on travel time, per direction
+  std::vector<CustomerTypeParams> customer_types;
+  std::vector<double> weekday_factor;      // Mon..Fri multipliers of the day's volume
+  std::vector<DriverTemplate> drivers;     // driver i drives truck i (A2)
+  std::vector<TruckTemplate> trucks;
+  Minutes shift_span_max = 765;            // F_k - S_k
+  double max_postponed_share = 0.20;       // certification threshold (§5.1 Validity)
+};
+
+// Throws ConfigError naming the file and the dotted key.
+[[nodiscard]] InstanceConfig parse_instance_config(std::string_view yaml, std::string_view source);
+[[nodiscard]] InstanceConfig load_instance_config(const std::filesystem::path& file);
+
+}  // namespace legalvrp::data

@@ -18,6 +18,8 @@ target_link_libraries(test_config PRIVATE yaml-cpp::yaml-cpp)
 legalvrp_test(test_layering unit unit/test_layering.cpp)
 legalvrp_test(test_rules  unit unit/test_rules.cpp)
 legalvrp_test(test_compat unit unit/test_compat.cpp)
+legalvrp_test(test_generate unit unit/test_generate.cpp)
+target_link_libraries(test_generate PRIVATE legalvrp::data legalvrp::estimate)
 
 if(LEGALVRP_WITH_GUROBI)
   legalvrp_test(test_gurobi_smoke gurobi unit/test_gurobi_smoke.cpp)

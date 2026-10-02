@@ -23,6 +23,7 @@ set(L legalvrp)
 
 legalvrp_module(domain
   SOURCES ${L}/domain/models.cpp ${L}/domain/rules.cpp ${L}/domain/compat.cpp ${L}/domain/paths.cpp
+          ${L}/domain/json.cpp ${L}/domain/detail/yaml_section.cpp
   DEPS nlohmann_json::nlohmann_json)
 target_link_libraries(legalvrp_domain PRIVATE yaml-cpp::yaml-cpp)  # yaml stays out of public headers
 target_compile_definitions(legalvrp_domain PUBLIC
@@ -30,9 +31,11 @@ target_compile_definitions(legalvrp_domain PUBLIC
   LEGALVRP_VERSION="${PROJECT_VERSION}")
 
 legalvrp_module(data
-  SOURCES ${L}/data/rng.cpp ${L}/data/synthetic.cpp ${L}/data/orders.cpp ${L}/data/roster.cpp
+  SOURCES ${L}/data/rng.cpp ${L}/data/instance_config.cpp ${L}/data/synthetic.cpp
+          ${L}/data/orders.cpp ${L}/data/roster.cpp
           ${L}/data/matrix.cpp ${L}/data/io.cpp ${L}/data/generate.cpp
   DEPS legalvrp::domain)
+target_link_libraries(legalvrp_data PRIVATE yaml-cpp::yaml-cpp)  # instance_config uses the internal YAML reader
 
 legalvrp_module(estimate
   SOURCES ${L}/estimate/deterministic.cpp

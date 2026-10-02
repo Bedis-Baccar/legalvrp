@@ -10,7 +10,7 @@ function(legalvrp_app name src)
   legalvrp_set_warnings(${name})
 endfunction()
 
-legalvrp_app(legalvrp-generate generate.cpp legalvrp::data legalvrp::heuristics legalvrp::check)
+legalvrp_app(legalvrp-generate generate.cpp legalvrp::data)  # + heuristics, check for certification (T5)
 legalvrp_app(legalvrp-check    check.cpp    legalvrp::check)   # checker app links nothing else
 legalvrp_app(legalvrp-run-week run_week.cpp legalvrp::week legalvrp::kpi)
 

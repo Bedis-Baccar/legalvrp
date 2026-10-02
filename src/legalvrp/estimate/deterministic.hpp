@@ -1,5 +1,14 @@
 #pragma once
-// legalvrp::estimate — DeterministicEstimator: returns generator service_mu with sigma = 0 (§9).
-// Task T2 (PROJECT_BRIEF.md §12).
+// legalvrp::estimate — DeterministicEstimator: the generator's service_mu, sigma = 0 (§9).
 
-namespace legalvrp::estimate {}  // namespace legalvrp::estimate
+#include "legalvrp/estimate/base.hpp"
+
+namespace legalvrp::estimate {
+
+class DeterministicEstimator final : public Estimator {
+ public:
+  [[nodiscard]] std::vector<ServiceEstimate> estimate(
+      std::span<const Order> orders, std::span<const Driver> roster) const override;
+};
+
+}  // namespace legalvrp::estimate

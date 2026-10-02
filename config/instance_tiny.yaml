@@ -1,19 +1,25 @@
-# tiny: unit tests and CI; must stay within the restricted licence limits (2000 vars / 2000 constrs).
+# tiny: unit tests (MILP must stay small). PROJECT_BRIEF §5.1.
 name: tiny
 days: 1
 orders_per_day: [6, 8]
+customer_pool_factor: 2.0          # pool = 16 customers
 towns: [3, 4]
 town_distance_km: [15, 60]
 customer_spread_km: [3, 6]
 detour_factor: 1.3
 speed_kmh: 55
-access_minutes_per_leg: 4    # parking/manoeuvring per leg, all trucks
+access_minutes_per_leg: 4
 asymmetric_noise: 0.05
+customer_types:
+  grocery:    {share: 0.40, window: [360, 600], pallets_lambda: 2.0, tail_lift_prob: 0.15, order_weight: 1.0}
+  restaurant: {share: 0.40, window: [510, 690], pallets_lambda: 0.5, tail_lift_prob: 0.25, order_weight: 1.0}
+  site:       {share: 0.20, window: [420, 900], pallets_lambda: 2.5, tail_lift_prob: 0.00, order_weight: 0.6}
+weekday_factor: [1.0]
 drivers:
   - {contract: full_time, shift_start: 360}    # 06:00
   - {contract: full_time, shift_start: 420}    # 07:00
-shift_span_max: 765                            # F_k - S_k (A12: keeps daily rest automatic)
 trucks:
   - {capacity_pallets: 12, has_tail_lift: true}
   - {capacity_pallets: 15, has_tail_lift: false}
+shift_span_max: 765
 max_postponed_share: 0.20

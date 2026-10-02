@@ -1,0 +1,304 @@
+{
+  "certified": false,
+  "contracts": [
+    {
+      "cost_per_min_extra": 0.45,
+      "cost_per_min_regular": 0.01,
+      "fixed_cost_if_used": 0.0,
+      "name": "full_time",
+      "weekly_service_max": 3120,
+      "weekly_threshold": 2340
+    },
+    {
+      "cost_per_min_extra": 0.4,
+      "cost_per_min_regular": 0.01,
+      "fixed_cost_if_used": 0.0,
+      "name": "part_time",
+      "weekly_service_max": 1584,
+      "weekly_threshold": 1440
+    },
+    {
+      "cost_per_min_extra": 0.55,
+      "cost_per_min_regular": 0.55,
+      "fixed_cost_if_used": 60.0,
+      "name": "temp_agency",
+      "weekly_service_max": 3120,
+      "weekly_threshold": 2100
+    }
+  ],
+  "costs": {
+    "cost_per_km": 1.6,
+    "postpone_penalty": 200.0
+  },
+  "customers": [
+    {
+      "id": "c001",
+      "name": "grocery 1",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": 31.704,
+      "y_km": -50.127
+    },
+    {
+      "id": "c002",
+      "name": "grocery 2",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": 28.961,
+      "y_km": -50.1
+    },
+    {
+      "id": "c003",
+      "name": "restaurant 3",
+      "needs_tail_lift": false,
+      "type": "restaurant",
+      "window_end": 690,
+      "window_start": 510,
+      "x_km": 28.209,
+      "y_km": -49.656
+    },
+    {
+      "id": "c004",
+      "name": "grocery 4",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": -15.599,
+      "y_km": 58.032
+    },
+    {
+      "id": "c005",
+      "name": "grocery 5",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": 24.352,
+      "y_km": -43.761
+    },
+    {
+      "id": "c006",
+      "name": "site 6",
+      "needs_tail_lift": false,
+      "type": "site",
+      "window_end": 900,
+      "window_start": 420,
+      "x_km": 36.275,
+      "y_km": 12.578
+    },
+    {
+      "id": "c007",
+      "name": "grocery 7",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": -16.633,
+      "y_km": 54.004
+    },
+    {
+      "id": "c008",
+      "name": "restaurant 8",
+      "needs_tail_lift": false,
+      "type": "restaurant",
+      "window_end": 690,
+      "window_start": 510,
+      "x_km": 24.479,
+      "y_km": -46.63
+    },
+    {
+      "id": "c009",
+      "name": "grocery 9",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": 35.397,
+      "y_km": 15.764
+    },
+    {
+      "id": "c010",
+      "name": "restaurant 10",
+      "needs_tail_lift": false,
+      "type": "restaurant",
+      "window_end": 690,
+      "window_start": 510,
+      "x_km": 23.955,
+      "y_km": -46.692
+    },
+    {
+      "id": "c011",
+      "name": "site 11",
+      "needs_tail_lift": false,
+      "type": "site",
+      "window_end": 900,
+      "window_start": 420,
+      "x_km": -55.17,
+      "y_km": 11.405
+    },
+    {
+      "id": "c012",
+      "name": "restaurant 12",
+      "needs_tail_lift": false,
+      "type": "restaurant",
+      "window_end": 690,
+      "window_start": 510,
+      "x_km": -51.628,
+      "y_km": 8.305
+    },
+    {
+      "id": "c013",
+      "name": "site 13",
+      "needs_tail_lift": false,
+      "type": "site",
+      "window_end": 900,
+      "window_start": 420,
+      "x_km": -49.696,
+      "y_km": 7.577
+    },
+    {
+      "id": "c014",
+      "name": "site 14",
+      "needs_tail_lift": false,
+      "type": "site",
+      "window_end": 900,
+      "window_start": 420,
+      "x_km": -20.318,
+      "y_km": 51.899
+    },
+    {
+      "id": "c015",
+      "name": "grocery 15",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": -54.96,
+      "y_km": 8.199
+    },
+    {
+      "id": "c016",
+      "name": "grocery 16",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": 24.427,
+      "y_km": -47.174
+    }
+  ],
+  "days": 1,
+  "depot": {
+    "id": "depot",
+    "x_km": 0.0,
+    "y_km": 0.0
+  },
+  "drivers": [
+    {
+      "available_days": [
+        0
+      ],
+      "contract_class": "full_time",
+      "id": "k1",
+      "shift_end_max": 1125,
+      "shift_start": 360,
+      "truck_id": "t1"
+    },
+    {
+      "available_days": [
+        0
+      ],
+      "contract_class": "full_time",
+      "id": "k2",
+      "shift_end_max": 1185,
+      "shift_start": 420,
+      "truck_id": "t2"
+    }
+  ],
+  "name": "tiny",
+  "orders": [
+    {
+      "customer_id": "c001",
+      "day": 0,
+      "id": "d0-o01",
+      "pallets": 3,
+      "postpone_penalty": 200.0,
+      "service_mu": 28,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c003",
+      "day": 0,
+      "id": "d0-o02",
+      "pallets": 1,
+      "postpone_penalty": 200.0,
+      "service_mu": 16,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c005",
+      "day": 0,
+      "id": "d0-o03",
+      "pallets": 4,
+      "postpone_penalty": 200.0,
+      "service_mu": 34,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c009",
+      "day": 0,
+      "id": "d0-o04",
+      "pallets": 5,
+      "postpone_penalty": 200.0,
+      "service_mu": 40,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c013",
+      "day": 0,
+      "id": "d0-o05",
+      "pallets": 4,
+      "postpone_penalty": 200.0,
+      "service_mu": 34,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c014",
+      "day": 0,
+      "id": "d0-o06",
+      "pallets": 3,
+      "postpone_penalty": 200.0,
+      "service_mu": 28,
+      "service_sigma": 0
+    }
+  ],
+  "rules": {
+    "break_length": 45,
+    "daily_drive_max": 540,
+    "daily_rest_min": 660,
+    "daily_service_max": 720,
+    "depot_close": 10,
+    "depot_prep": 20,
+    "drive_before_break": 270,
+    "weekly_drive_max": 3360,
+    "work_before_break": 360
+  },
+  "seed": 1,
+  "trucks": [
+    {
+      "capacity_pallets": 12,
+      "has_tail_lift": true,
+      "id": "t1"
+    },
+    {
+      "capacity_pallets": 15,
+      "has_tail_lift": false,
+      "id": "t2"
+    }
+  ]
+}
