@@ -62,4 +62,5 @@ data/ results/   generated, git-ignored
 | Task | State |
 |---|---|
 | T0 skeleton, build, configs, CI | done |
-| T1–T9 | to do, in order (see brief §12) |
+| T1 domain records, config loaders with validation, compatibility | done |
+| T2–T9 | to do, in order (see brief §12) |
