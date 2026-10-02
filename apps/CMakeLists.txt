@@ -11,7 +11,7 @@ function(legalvrp_app name src)
 endfunction()
 
 legalvrp_app(legalvrp-generate generate.cpp legalvrp::data)  # + heuristics, check for certification (T5)
-legalvrp_app(legalvrp-check    check.cpp    legalvrp::check)   # checker app links nothing else
+legalvrp_app(legalvrp-check    check.cpp    legalvrp::check legalvrp::data)  # data: instance files only
 legalvrp_app(legalvrp-run-week run_week.cpp legalvrp::week legalvrp::kpi)
 
 if(LEGALVRP_WITH_GUROBI)

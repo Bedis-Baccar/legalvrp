@@ -33,6 +33,7 @@ struct Violation {
   std::string driver_id;
   std::string order_id;   // order concerned (or the break node), empty if route-level
   double amount = 0.0;    // excess in minutes / pallets when measurable, else 0
+  int day = -1;           // set by week-level checks
 };
 
 }  // namespace legalvrp

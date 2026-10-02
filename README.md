@@ -67,4 +67,5 @@ data/ results/   generated, git-ignored
 | T2 portable RNG, synthetic generator, JSON I/O, golden fixtures, estimator | done (certification with T5) |
 | T3 exact route evaluator (temporal network), brute-force cross-check | done |
 | Owner decisions D-018..D-022 (fixed start, penalties, daytime duties, T6 formulation) | done |
-| T4–T9 | to do, in order (see brief §12) |
+| T4 independent checker (day + week), 41-duty corpus, CLI | done |
+| T5–T9 | to do, in order (see brief §12) |
