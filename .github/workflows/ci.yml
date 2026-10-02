@@ -1,0 +1,23 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: sudo apt-get update && sudo apt-get install -y ninja-build g++-14 && sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: build/ci-linux/_deps
+          key: deps-${{ hashFiles('cmake/Dependencies.cmake') }}
+      - name: Configure
+        run: cmake --preset ci-linux
+      - name: Build
+        run: cmake --build --preset ci-linux
+      - name: Test (unit only; MILP tests need a Gurobi licence, see docs/DECISIONS.md D-004)
+        run: ctest --preset ci-linux

@@ -1,0 +1,22 @@
+# Contract classes — PROJECT_BRIEF.md §3. Minutes are integers; euro values are
+# ILLUSTRATIVE (calibrate from CNR indices for realism, A16).
+# Hours below weekly_threshold are already paid: they carry only a tie-breaker (A14).
+contracts:
+  full_time:                    # full-time short-distance (courte distance)
+    weekly_threshold: 2340      # 39 h
+    weekly_service_max: 3120    # 52 h
+    cost_per_min_regular: 0.01  # tie-breaker only
+    cost_per_min_extra: 0.45    # overtime rate (illustrative)
+    fixed_cost_if_used: 0.0
+  part_time:
+    weekly_threshold: 1440      # contract hours, 24 h
+    weekly_service_max: 1584    # contract + 10 % (decision D5)
+    cost_per_min_regular: 0.01
+    cost_per_min_extra: 0.40    # complementary-hours rate (illustrative)
+    fixed_cost_if_used: 0.0
+  temp_agency:
+    weekly_threshold: 2100      # 35 h
+    weekly_service_max: 3120
+    cost_per_min_regular: 0.55  # agency rate (illustrative)
+    cost_per_min_extra: 0.55
+    fixed_cost_if_used: 60.0    # agency day fee (illustrative)

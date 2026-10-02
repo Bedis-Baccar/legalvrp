@@ -1,0 +1,28 @@
+# build
+/build/
+/out/
+CMakeUserPresets.json
+compile_commands.json
+# generated data and results (PROJECT_BRIEF §10)
+/data/*
+!/data/.gitkeep
+/results/*
+!/results/.gitkeep
+# solver artefacts
+*.log
+*.lp
+*.ilp
+*.mps
+*.sol
+gurobi.lic
+# LaTeX
+docs/validation/*.aux
+docs/validation/*.log
+docs/validation/*.out
+docs/validation/*.toc
+docs/validation/*.synctex.gz
+# editors
+.vs/
+.vscode/
+.idea/
+*.swp

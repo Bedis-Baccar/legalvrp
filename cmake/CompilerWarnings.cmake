@@ -1,0 +1,21 @@
+# legalvrp_set_warnings(<target>) — strict, portable warning set.
+function(legalvrp_set_warnings target)
+  if(MSVC)
+    set(_w /W4 /permissive- /utf-8 /Zc:__cplusplus /Zc:preprocessor
+           /w14242 /w14254 /w14263 /w14265 /w14287 /w14296 /w14311
+           /w14545 /w14546 /w14547 /w14549 /w14555 /w14640 /w14826 /w14905
+           /w14906 /w14928)
+    if(LEGALVRP_WARNINGS_AS_ERRORS)
+      list(APPEND _w /WX)
+    endif()
+  else()
+    set(_w -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wsign-conversion
+           -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wunused
+           -Woverloaded-virtual -Wnull-dereference -Wdouble-promotion
+           -Wformat=2 -Wimplicit-fallthrough)
+    if(LEGALVRP_WARNINGS_AS_ERRORS)
+      list(APPEND _w -Werror)
+    endif()
+  endif()
+  target_compile_options(${target} PRIVATE ${_w})
+endfunction()

@@ -1,0 +1,24 @@
+# Decision log
+
+Dated, append-only. Any change to the model goes to `docs/MODEL.md` first, then code, then here.
+Status: **accepted**, **proposed** (needs the owner's sign-off), **superseded**.
+
+| ID | Date | Decision | Why | Status |
+|---|---|---|---|---|
+| D-001 | 2026-10-02 | **Implementation language is C++20** (CMake, MSVC on Windows, GCC in CI) instead of Python + gurobipy. Overrides PROJECT_BRIEF §2 ("C++ out of scope") and §10 | Owner's choice: one codebase from V0 to the V1 heuristics (ALNS) where C++ speed matters | accepted (owner) |
+| D-002 | 2026-10-02 | Dependencies, pinned in `cmake/Dependencies.cmake`: nlohmann/json 3.12.0 (SHA-256 pinned), yaml-cpp 0.8.0, CLI11 2.5.0, Catch2 3.8.1; Gurobi 12.0.3 C++ API (installed locally). They replace pydantic/pyyaml/pytest. scipy (Hungarian) and scikit-learn (k-means) are replaced by in-house `heuristics/assignment` and `heuristics/kmeans` (≈ 150 lines, no dependency) | Minimal, header-light, widely used. Fetched at configure time only, never while solving or testing | accepted |
+| D-003 | 2026-10-02 | **Portable RNG** (`data/rng`): a fixed generator (SplitMix64/PCG) plus in-house uniform, Poisson and normal sampling. `std::*_distribution` is forbidden in the generator | `std` distributions are implementation-defined. MSVC and libstdc++ give different draws for the same seed, which would break T2's "same seed ⇒ byte-identical output" between Windows and CI | accepted |
+| D-004 | 2026-10-02 | **CI runs without Gurobi** (`ci-linux` preset, `-DLEGALVRP_WITH_GUROBI=OFF`, tests labelled `unit`). MILP tests (label `gurobi`) run locally under the academic licence | The pip restricted licence covers gurobipy only, not the C++ API, and the academic licence is tied to one host. Supersedes the brief's "CI runs MILP tests on tiny" | accepted |
+| D-010 | 2026-10-02 | **Gurobi is mandatory for every local build.** There is no local no-Gurobi preset. `build.ps1` fails fast without `GUROBI_HOME` or a licence (`GRB_LICENSE_FILE`, default `%USERPROFILE%\gurobi.lic`). A test checks that the licence is not size-restricted (> 2000 variables) | Owner preference; `small`/`scale` need the full academic licence | accepted (owner) |
+| D-005 | 2026-10-02 | Module boundaries are enforced **at link time**: one static library per module, `legalvrp::check` links `legalvrp::domain` only. `tests/unit/test_layering.cpp` scans `#include`s as a second guard | Stronger than an import test: a forbidden dependency is a build error | accepted |
+| D-006 | 2026-10-02 | Scaling plots (T9): C++ writes CSV; figures come from a small optional script under `scripts/` | Keeps the C++ build free of plotting dependencies | accepted |
+| D-007 | 2026-10-02 | Route evaluator (§7), brute force (T6) and checker (§8) must allow **waiting before the break node** (`T_b` anywhere in `[earliest, l_b]`). The checker validates the *reported* service starts rather than re-scheduling | Without it they reject plans the MILP legally produces. Counter-example in `docs/REVIEW_V0.md` F1. MILP unchanged | accepted (owner, option A) |
+| D-008 | 2026-10-02 | **No access restrictions.** Any truck can deliver any customer. Removed: `Customer.access_class`, `Truck.size_class`, and the access penalty in `service_mu` (now `10 + 6 × pallets`). Compatibility = tail-lift if needed ∧ `pallets ≤ capacity`. Brief §1, §4, §5.1, §6.6 edited accordingly. The per-leg 4 min (parking/manoeuvring) is unrelated and kept | Owner's simplification. It also resolves review F2 (reversed access rule) | accepted (owner) |
+| D-009 | 2026-10-02 | Extra arc pruning (review F4) and tighter C11 big-M (F5); complete MIP start (F6) | Tighter formulation and faster solves, valid under A7 | **proposed** |
+
+## Owner decisions still open (from `docs/validation/model_validation.tex` §11)
+
+D1 break model · D2 waiting as work · D3 cost of regular hours · D4 postponement
+penalty (escalation?) · D5 part-time ceiling · D6 headline (rolling vs clairvoyant).
+Current defaults in `config/`: D1 one break, D2 waiting = work, D3 tie-breaker 0.01 €/min,
+D4 constant 200 €, D5 contract + 10 %, D6 rolling.

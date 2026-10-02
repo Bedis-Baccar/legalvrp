@@ -1,0 +1,19 @@
+# tiny: unit tests and CI; must stay within the restricted licence limits (2000 vars / 2000 constrs).
+name: tiny
+days: 1
+orders_per_day: [6, 8]
+towns: [3, 4]
+town_distance_km: [15, 60]
+customer_spread_km: [3, 6]
+detour_factor: 1.3
+speed_kmh: 55
+access_minutes_per_leg: 4    # parking/manoeuvring per leg, all trucks
+asymmetric_noise: 0.05
+drivers:
+  - {contract: full_time, shift_start: 360}    # 06:00
+  - {contract: full_time, shift_start: 420}    # 07:00
+shift_span_max: 765                            # F_k - S_k (A12: keeps daily rest automatic)
+trucks:
+  - {capacity_pallets: 12, has_tail_lift: true}
+  - {capacity_pallets: 15, has_tail_lift: false}
+max_postponed_share: 0.20

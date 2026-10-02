@@ -1,0 +1,70 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_POLICY_VERSION_MINIMUM": "3.5",
+        "CMAKE_WARN_DEPRECATED": "OFF",
+        "LEGALVRP_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "msvc-base",
+      "hidden": true,
+      "inherits": "base",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "cl", "LEGALVRP_WITH_GUROBI": "ON" },
+      "architecture": { "value": "x64", "strategy": "external" },
+      "toolset": { "value": "host=x64", "strategy": "external" }
+    },
+    {
+      "name": "msvc-debug",
+      "displayName": "MSVC Debug (Gurobi)",
+      "inherits": "msvc-base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "msvc-release",
+      "displayName": "MSVC Release (Gurobi) - experiments",
+      "inherits": "msvc-base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "LEGALVRP_ENABLE_LTO": "ON" }
+    },
+    {
+      "name": "ci-linux",
+      "displayName": "CI (GCC, no Gurobi, warnings as errors)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "g++",
+        "LEGALVRP_WITH_GUROBI": "OFF",
+        "LEGALVRP_WARNINGS_AS_ERRORS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "msvc-debug", "configurePreset": "msvc-debug" },
+    { "name": "msvc-release", "configurePreset": "msvc-release" },
+    { "name": "ci-linux", "configurePreset": "ci-linux" }
+  ],
+  "testPresets": [
+    {
+      "name": "base-test",
+      "hidden": true,
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error" }
+    },
+    { "name": "msvc-debug", "inherits": "base-test", "configurePreset": "msvc-debug" },
+    { "name": "msvc-release", "inherits": "base-test", "configurePreset": "msvc-release" },
+    {
+      "name": "ci-linux",
+      "inherits": "base-test",
+      "configurePreset": "ci-linux",
+      "filter": { "include": { "label": "unit" } }
+    }
+  ]
+}

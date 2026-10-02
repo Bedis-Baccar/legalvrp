@@ -1,0 +1,8 @@
+# scale: complexity measurement (task T9). One day, K = ceil(n / 5) drivers.
+name: scale
+days: 1
+orders: [8, 10, 12, 15, 20, 25, 30, 40]
+seeds: [1, 2, 3, 4, 5]
+drivers_per_orders: 5        # K = ceil(n / drivers_per_orders)
+solver_profile: scale        # 300 s
+base: instance_small.yaml    # geography, customer types and contracts inherited

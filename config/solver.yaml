@@ -1,0 +1,18 @@
+# Gurobi parameters — PROJECT_BRIEF.md §6.7. Profiles are selected per instance class.
+default:
+  TimeLimit: 120        # seconds per day
+  MIPGap: 0.01
+  Threads: 0            # 0 = all cores
+  Seed: 0
+  OutputFlag: 1
+  write_lp: false       # write the model to .lp (tiny only)
+  write_iis_on_infeasible: true
+profiles:
+  tiny:
+    TimeLimit: 60
+    MIPGap: 0.0
+    write_lp: true
+  small:
+    TimeLimit: 120
+  scale:
+    TimeLimit: 300

@@ -1,0 +1,11 @@
+# Legal and company rules — PROJECT_BRIEF.md §3 (authoritative). Integer minutes.
+# No literal of these values may appear in model code.
+drive_before_break: 270   # Reg. (EC) 561/2006 art. 7
+work_before_break: 360    # Dir. 2002/15/EC art. 5; C. transports L3312-2
+break_length: 45          # one unsplit break per duty in V0 (A6)
+daily_drive_max: 540      # Reg. 561/2006 art. 6 (10 h extension disabled in V0, A11)
+daily_service_max: 720    # C. transports D3312-51 (temps de service)
+weekly_drive_max: 3360    # Reg. 561/2006 art. 6
+daily_rest_min: 660       # Reg. 561/2006 art. 8
+depot_prep: 20            # company: pre-trip work before departure (P)
+depot_close: 10           # company: post-trip work after return (R)
