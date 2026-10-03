@@ -1,0 +1,9 @@
+# large: V1 sizes (60-80 orders a day). Five-day weeks, K = ceil(n / 5) drivers with the driver
+# and truck templates of `medium` (full-time, part-time and temp-agency drivers) cycled.
+name: large
+orders: [60, 70, 80]
+seeds: [1, 2, 3, 4, 5]
+days: 5
+drivers_per_orders: 5        # K = 12 / 14 / 16
+solver_profile: large
+base: instance_medium.yaml   # geography (4-5 towns), customer types, contracts inherited

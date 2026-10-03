@@ -19,3 +19,5 @@ profiles:
     TimeLimit: 120
   scale:
     TimeLimit: 300
+  large:
+    TimeLimit: 300

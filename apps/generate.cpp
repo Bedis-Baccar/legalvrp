@@ -1,5 +1,6 @@
 // Generate a synthetic instance (mode A) — tasks T2 + T5 (PROJECT_BRIEF.md §5.1).
 //   legalvrp-generate --config config/instance_small.yaml --seed 1 [--out DIR] [--config-dir DIR]
+//   legalvrp-generate --config config/instance_large.yaml --size 60 --seed 1   (size families)
 //                     [--no-certify] [--max-attempts N]
 // Writes DIR/{week.json, matrix.json, truth.json}; default DIR = data/instances/<name>/<seed>.
 // Certification (default): the territory baseline is played over the week; the instance is kept
@@ -32,18 +33,22 @@ int main(int argc, char** argv) {
   fs::path config_dir = legalvrp::config_dir();
   bool no_certify = false;
   int max_attempts = 50;
+  int size = 0;
   app.add_option("--config", config, "config/instance_<name>.yaml")->required()->check(CLI::ExistingFile);
   app.add_option("--seed", seed, "RNG seed")->required();
   app.add_option("--out", out, "output directory (default data/instances/<name>/<seed>)");
   app.add_option("--config-dir", config_dir, "directory with rules/contracts/costs.yaml")
       ->check(CLI::ExistingDirectory);
+  app.add_option("--size", size, "family configs (instance_scale / instance_large): orders per day")
+      ->check(CLI::Range(1, 1000));
   app.add_flag("--no-certify", no_certify, "skip baseline certification (T5)");
   app.add_option("--max-attempts", max_attempts, "regeneration attempts before giving up")
       ->check(CLI::Range(1, 1000));
   CLI11_PARSE(app, argc, argv);
 
   try {
-    const auto cfg = legalvrp::data::load_instance_config(config);
+    const auto cfg = size > 0 ? legalvrp::data::scale_instance(legalvrp::data::load_scale_config(config), size)
+                              : legalvrp::data::load_instance_config(config);
     const auto rules = legalvrp::load_config(config_dir);
 
     legalvrp::data::GeneratedWeek gen;

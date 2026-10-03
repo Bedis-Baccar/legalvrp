@@ -66,13 +66,15 @@ struct ScaleConfig {
   std::vector<std::uint64_t> seeds;
   int drivers_per_orders = 5;         // K = ceil(n / drivers_per_orders)
   std::string solver_profile = "scale";
+  std::string name = "scale";         // family name: instances are <name>_n<n>
+  int days = 1;                       // horizon of each instance (optional key, default 1)
   InstanceConfig base;
 };
 
 [[nodiscard]] ScaleConfig load_scale_config(const std::filesystem::path& file);
 
-// One-day instance config with exactly n orders and K = ceil(n / drivers_per_orders) drivers,
-// driver and truck templates cycled from the base.
+// Instance config with exactly n orders per day over `days` days and K = ceil(n / drivers_per_orders)
+// drivers, driver and truck templates cycled from the base (used by T9 scale and V1 large).
 [[nodiscard]] InstanceConfig scale_instance(const ScaleConfig& s, int n);
 
 }  // namespace legalvrp::data

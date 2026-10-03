@@ -364,3 +364,61 @@ TEST_CASE("scale config: sizes, seeds, K = ceil(n/5), certified one-day instance
   CHECK(c->generated.week.orders.size() == 12);
   CHECK(c->generated.week.drivers.size() == 3);
 }
+
+// ============================================================ large instances (V1-T0)
+
+namespace {
+std::uint64_t fnv1a(const std::string& s) {
+  std::uint64_t h = UINT64_C(0xcbf29ce484222325);
+  for (const char ch : s) {
+    h ^= static_cast<unsigned char>(ch);
+    h *= UINT64_C(0x100000001b3);
+  }
+  return h;
+}
+}  // namespace
+
+TEST_CASE("large family: 60/70/80 orders, K = 12/14/16, five-day weeks", "[large]") {
+  const auto lc = load_scale_config(config_dir() / "instance_large.yaml");
+  CHECK(lc.name == "large");
+  CHECK(lc.orders == std::vector<int>{60, 70, 80});
+  CHECK(lc.days == 5);
+  for (const int n : lc.orders) {
+    const auto ic = scale_instance(lc, n);
+    CHECK(ic.name == "large_n" + std::to_string(n));
+    CHECK(ic.days == 5);
+    CHECK(static_cast<int>(ic.drivers.size()) == n / 5);
+    CHECK(ic.weekday_factor.size() >= 5);
+  }
+  // The T9 scale family is unchanged: one-day instances named scale_n<n>.
+  const auto sc = load_scale_config(config_dir() / "instance_scale.yaml");
+  CHECK(sc.days == 1);
+  CHECK(scale_instance(sc, 8).name == "scale_n8");
+}
+
+TEST_CASE("large family: every size x seed certifies (V1-T0 acceptance)", "[large]") {
+  const auto lc = load_scale_config(config_dir() / "instance_large.yaml");
+  for (const int n : lc.orders) {
+    for (const auto seed : lc.seeds) {
+      INFO("n " << n << " seed " << seed);
+      const auto c = week::generate_certified_week(scale_instance(lc, n), config(), seed);
+      REQUIRE(c.has_value());
+      CHECK(c->generated.week.orders.size() == static_cast<std::size_t>(5 * n));
+      CHECK(c->baseline.check.ok());
+    }
+  }
+}
+
+TEST_CASE("large family: byte-identical output, golden hash checked on every platform", "[large]") {
+  const auto lc = load_scale_config(config_dir() / "instance_large.yaml");
+  const auto a = week::generate_certified_week(scale_instance(lc, 60), config(), 1);
+  const auto b = week::generate_certified_week(scale_instance(lc, 60), config(), 1);
+  REQUIRE(a.has_value());
+  REQUIRE(b.has_value());
+  const std::string wa = to_canonical_text(nlohmann::json(a->generated.week));
+  const std::string ma = to_canonical_text(nlohmann::json(a->generated.week.matrix));
+  CHECK(wa == to_canonical_text(nlohmann::json(b->generated.week)));
+  // Golden values computed on Windows/MSVC; CI recomputes them on Linux/GCC.
+  CHECK(fnv1a(wa) == UINT64_C(0x16c6aa75ecfcd5b5));
+  CHECK(fnv1a(ma) == UINT64_C(0xc1a39e033ac8937b));
+}

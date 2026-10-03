@@ -110,11 +110,12 @@ ScaleConfig load_scale_config(const std::filesystem::path& file) {
   const auto src = file.filename().string();
   detail::YamlSection s(detail::parse_yaml(detail::read_text_file(file, src), src), src, "");
   ScaleConfig c;
-  s.text("name");
+  c.name = s.text("name");
   for (const double v : s.reals("orders", 1, 1000)) c.orders.push_back(static_cast<int>(v));
   for (const double v : s.reals("seeds", 0, 1e15)) c.seeds.push_back(static_cast<std::uint64_t>(v));
   c.drivers_per_orders = static_cast<int>(s.integer("drivers_per_orders", 1, 100));
   c.solver_profile = s.text("solver_profile");
+  if (s.has("days")) c.days = static_cast<int>(s.integer("days", 1, 7));
   const std::string base = s.text("base");
   s.reject_unknown();
   c.base = load_instance_config(file.parent_path() / base);
@@ -123,10 +124,11 @@ ScaleConfig load_scale_config(const std::filesystem::path& file) {
 
 InstanceConfig scale_instance(const ScaleConfig& s, int n) {
   InstanceConfig c = s.base;
-  c.name = "scale_n" + std::to_string(n);
-  c.days = 1;
+  c.name = s.name + "_n" + std::to_string(n);
+  c.days = s.days;
   c.orders_min = c.orders_max = n;
-  c.weekday_factor = {1.0};
+  if (s.days == 1) c.weekday_factor = {1.0};
+  if (static_cast<int>(c.weekday_factor.size()) < c.days) c.weekday_factor.resize(static_cast<std::size_t>(c.days), 1.0);
   const int K = (n + s.drivers_per_orders - 1) / s.drivers_per_orders;
   c.drivers.clear();
   c.trucks.clear();
