@@ -12,7 +12,7 @@ endfunction()
 
 legalvrp_app(legalvrp-generate generate.cpp legalvrp::week)  # data + baseline certification
 legalvrp_app(legalvrp-check    check.cpp    legalvrp::check legalvrp::data)  # data: instance files only
-legalvrp_app(legalvrp-run-week run_week.cpp legalvrp::week legalvrp::kpi)
+legalvrp_app(legalvrp-run-week run_week.cpp legalvrp::week legalvrp::kpi legalvrp::alns)
 
 if(LEGALVRP_WITH_GUROBI)
   legalvrp_app(legalvrp-scaling scaling.cpp legalvrp::week legalvrp::model legalvrp::data)

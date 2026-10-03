@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 
+#include "legalvrp/alns/alns.hpp"
 #include "legalvrp/data/io.hpp"
 #include "legalvrp/domain/json.hpp"
 #include "legalvrp/domain/paths.hpp"
@@ -33,7 +34,8 @@ int main(int argc, char** argv) {
   std::string solver_name = "milp", profile, run;
   double time_limit = -1;
   app.add_option("--instance", instance, "data/instances/<name>/<seed>")->required()->check(CLI::ExistingDirectory);
-  app.add_option("--solver", solver_name, "milp (default) or baseline")->check(CLI::IsMember({"milp", "baseline"}));
+  app.add_option("--solver", solver_name, "milp (default), alns or baseline")
+      ->check(CLI::IsMember({"milp", "alns", "baseline"}));
   app.add_option("--profile", profile, "solver.yaml profile (default: the instance name)");
   app.add_option("--time-limit", time_limit, "override TimeLimit per day (s)");
   app.add_option("--run", run, "run name (default <name>_<seed>_<solver>)");
@@ -46,7 +48,22 @@ int main(int argc, char** argv) {
     auto day_dir = [&](int d) { return out / ("day" + std::to_string(d)); };
 
     week::WeekRun result;
-    if (solver_name == "baseline") {
+    if (solver_name == "alns") {  // V1-T2: time limit per day (default 30 s)
+      alns::Options ao;
+      ao.time_limit_s = time_limit > 0 ? time_limit : 30.0;
+      result = week::run_week(week, [&](const DayInstance& day) {
+        const auto r = alns::solve(day, ao);
+        std::cout << "day " << day.day << ": " << day.orders.size() << " orders, ALNS " << r.iterations
+                  << " iterations in " << r.runtime_s << " s, cost " << r.cost << "\n";
+        return r.plan;
+      });
+      for (std::size_t d = 0; d < result.plans.size(); ++d) {
+        const fs::path dir = day_dir(static_cast<int>(d));
+        data::write_text_file(dir / "plan.json", to_canonical_text(nlohmann::json(result.plans[d])));
+        data::write_text_file(dir / "violations.json",
+                              to_canonical_text(nlohmann::json(result.day_checks[d].violations)));
+      }
+    } else if (solver_name == "baseline") {
       result = week::run_week(week, heuristics::territory_baseline);
       for (std::size_t d = 0; d < result.plans.size(); ++d) {
         const fs::path dir = day_dir(static_cast<int>(d));

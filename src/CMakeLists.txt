@@ -72,3 +72,7 @@ legalvrp_module(week
 if(LEGALVRP_WITH_GUROBI)
   target_sources(legalvrp_week PRIVATE ${L}/week/solve_day.cpp)  # MILP + checker orchestration
 endif()
+
+legalvrp_module(alns                    # V1-T2: ALNS for the daily problem
+  SOURCES ${L}/alns/alns.cpp
+  DEPS legalvrp::domain legalvrp::heuristics legalvrp::data)
