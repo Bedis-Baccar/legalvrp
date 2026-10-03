@@ -312,6 +312,18 @@ void from_json(const json& j, DayPlan& x) {
   j.at("solver_stats").get_to(x.solver_stats);
 }
 
+void to_json(json& j, const Violation& x) {
+  j = json{{"rule", x.rule}, {"driver_id", x.driver_id}, {"order_id", x.order_id},
+           {"amount", x.amount}, {"day", x.day}};
+}
+void from_json(const json& j, Violation& x) {
+  j.at("rule").get_to(x.rule);
+  j.at("driver_id").get_to(x.driver_id);
+  j.at("order_id").get_to(x.order_id);
+  j.at("amount").get_to(x.amount);
+  j.at("day").get_to(x.day);
+}
+
 std::string to_canonical_text(const json& j) { return j.dump(2) + "\n"; }
 
 }  // namespace legalvrp

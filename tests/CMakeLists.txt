@@ -26,6 +26,8 @@ if(LEGALVRP_WITH_GUROBI)
   target_link_libraries(test_gurobi_smoke PRIVATE legalvrp::model)
   legalvrp_test(test_milp gurobi unit/test_milp.cpp)
   target_link_libraries(test_milp PRIVATE legalvrp::week legalvrp::model)
+  legalvrp_test(test_solve gurobi unit/test_solve.cpp)
+  target_link_libraries(test_solve PRIVATE legalvrp::week legalvrp::model legalvrp::data)
 endif()
 
 legalvrp_test(test_route_eval unit unit/test_route_eval.cpp)

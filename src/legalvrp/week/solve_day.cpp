@@ -1,7 +1,9 @@
 #include "legalvrp/week/solve_day.hpp"
 
 #include <algorithm>
+#include <fstream>
 
+#include "legalvrp/domain/json.hpp"
 #include "legalvrp/heuristics/route_eval.hpp"
 #include "legalvrp/heuristics/territory.hpp"
 
@@ -51,7 +53,7 @@ DaySolve solve_day(GRBEnv& env, const DayInstance& day, model::MilpOptions optio
   out.baseline = heuristics::territory_baseline(day);
   out.baseline_check = check::check_day(day, out.baseline);
 
-  options.start = out.baseline;
+  if (options.warm_start) options.start = out.baseline;
   out.milp = model::solve_day_milp(env, day, options);
 
   auto accept = [&](DayPlan plan, PlanSource src) {
@@ -77,6 +79,33 @@ DaySolve solve_day(GRBEnv& env, const DayInstance& day, model::MilpOptions optio
   }
   accept(out.baseline, PlanSource::baseline_rejected);
   return out;
+}
+
+}  // namespace legalvrp::week
+
+namespace legalvrp::week {
+
+void write_day_outputs(const std::filesystem::path& dir, const DaySolve& s) {
+  using nlohmann::json;
+  std::filesystem::create_directories(dir);
+  const auto write = [&](const char* name, const json& j) {
+    std::ofstream out(dir / name, std::ios::binary | std::ios::trunc);
+    const std::string text = to_canonical_text(j);
+    out.write(text.data(), static_cast<std::streamsize>(text.size()));
+  };
+  write("plan.json", json(s.plan));
+  json stats = json(s.milp.stats);
+  stats["source"] = to_string(s.source);
+  stats["objective_recomputed"] = s.check.objective;
+  stats["baseline_objective"] = s.baseline_check.objective;
+  stats["start_accepted"] = s.milp.start_accepted;
+  stats["binaries"] = s.milp.binaries;
+  stats["arcs"] = s.milp.arcs;
+  stats["arcs_full"] = s.milp.arcs_full;
+  stats["cuts_added"] = s.milp.cuts_added;
+  if (s.milp.lp_bound) stats["lp_bound"] = *s.milp.lp_bound;
+  write("stats.json", stats);
+  write("violations.json", json(s.check.violations));
 }
 
 }  // namespace legalvrp::week

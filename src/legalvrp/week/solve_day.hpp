@@ -8,6 +8,7 @@
 //      baseline is returned and the day is flagged.
 // The returned plan always has zero checker violations.
 
+#include <filesystem>
 #include <string>
 
 #include "gurobi_c++.h"
@@ -35,5 +36,11 @@ struct DaySolve {
 };
 
 [[nodiscard]] DaySolve solve_day(GRBEnv& env, const DayInstance& day, model::MilpOptions options);
+
+// Brief §11 per-day outputs in `dir`: plan.json (the validated plan), stats.json (§6.7 solver
+// statistics + source, baseline and recomputed objectives, model size, cuts, start accepted),
+// violations.json (the checker's list: must be empty). Pass the same `dir` as
+// MilpOptions::log_dir with tag "gurobi" to get dir/gurobi.log.
+void write_day_outputs(const std::filesystem::path& dir, const DaySolve& solve);
 
 }  // namespace legalvrp::week

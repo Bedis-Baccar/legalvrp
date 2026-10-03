@@ -77,3 +77,10 @@ D4 constant 200 €, D5 contract + 10 %, D6 rolling.
 | D-033 | 2026-10-03 | Owner-requested **medium** instance (`instance_medium.yaml`: 25–30 orders a day, 6 drivers including one part-time and one temp-agency) and the `legalvrp-bench` tool (A: formulations on fresh days; B: rolling week MILP vs baseline) | Owner: test on small and medium to judge realism and effectiveness | accepted |
 | D-034 | 2026-10-03 | **Duty knapsacks** (strong formulation): per driver, `drive + Σ s_i visit_i + (P+R) used ≤ WB (used + brk)` (each work segment ≤ 6 h), `drive + Σ s_i visit_i + BR brk + (P+R) used ≤ (F − S) used` (the duty fits the shift), `svc ≥ drive + Σ s_i visit_i + (P+R) used` (temps de service ≥ work done) | The LP ignored the drivers' working-time budget (big-M time constraints vanish in the relaxation). Valid for every legal route; checked against enumeration. Measured: small gain (root LP +2–3 %) | accepted |
 | D-035 | 2026-10-03 | **Per-driver connectivity cuts** added to D-030: `Σ_{a∉S,b∈S} x[a,b,k] ≥ visit[i,k]` for each driver k, separated on the first 1 000 nodes (aggregate cuts everywhere). Default on | The aggregate cut lets one driver's inflow cover another driver's fractional cycle. Measured on `small` day 0 (20 orders, 120 s): final gap 28.9 % → **5.0 %**; day 3: 27.7 % → 18.6 %; callback time ≤ 9 s of 120 s | accepted |
+
+## T7 — solve wrapper (2026-10-03)
+
+| ID | Date | Decision | Why | Status |
+|---|---|---|---|---|
+| D-036 | 2026-10-03 | Per-day outputs (brief §11) by `week::write_day_outputs`: `plan.json` (validated plan), `stats.json` (§6.7 statistics + source, recomputed and baseline objectives, model size, cuts, start accepted), `violations.json` (empty), `gurobi.log` (via `log_dir` + tag). `MilpOptions::warm_start` can disable the MIP start (tests of the no-incumbent fallback). `MIPFocus` is configurable in `solver.yaml` | Brief §6.7, §11 | accepted |
+| D-037 | 2026-10-03 | Presolve statistics are best effort: Gurobi's `presolve()` throws on a model it proves infeasible, which used to pre-empt the IIS. Now the stats are −1 and the solve reports infeasibility and writes the `.ilp` | Found by the T7 IIS test | accepted |

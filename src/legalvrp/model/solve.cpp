@@ -81,11 +81,13 @@ MilpResult solve_day_milp(GRBEnv& env, const DayInstance& day, const MilpOptions
   st.num_vars = m.get(GRB_IntAttr_NumVars);
   st.num_constrs = m.get(GRB_IntAttr_NumConstrs);
   st.num_nz = m.get(GRB_IntAttr_NumNZs);
-  {
+  try {  // presolve throws on a model it proves infeasible: the solve below reports it (IIS)
     GRBModel pre = m.presolve();
     st.presolved_vars = pre.get(GRB_IntAttr_NumVars);
     st.presolved_constrs = pre.get(GRB_IntAttr_NumConstrs);
     st.presolved_nz = pre.get(GRB_IntAttr_NumNZs);
+  } catch (const GRBException&) {
+    st.presolved_vars = st.presolved_constrs = st.presolved_nz = -1;
   }
 
   if (o.compute_lp_bound) {

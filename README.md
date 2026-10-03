@@ -71,5 +71,5 @@ data/ results/   generated, git-ignored
 | T4 independent checker (day + week), 41-duty corpus, CLI | done |
 | T5 territory baseline (k-means, Hungarian, NN + repair + 2-opt), certified instances | done |
 | T6 daily MILP (strong + reference), enumeration ground truth, traps, connectivity cuts; benchmark `docs/BENCHMARK_V0.md` | done |
-| T7 solve wrapper (params, complete MIP start, logs, IIS, stats, extraction, checker fallback) | mostly done in T6; KPI wiring with T8 |
+| T7 solve wrapper: params, complete MIP start, logs, .lp, IIS, stats, extraction, checker fallback, per-day outputs | done |
 | T8–T9 | to do (T8 loop core exists: `week/loop`) |

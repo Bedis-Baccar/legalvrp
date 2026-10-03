@@ -38,6 +38,7 @@ struct MilpOptions {
   bool compute_lp_bound = false;       // also solve the LP relaxation (formulation tightness)
   bool connectivity_cuts = true;       // user cuts separated by max-flow (D-030)
   bool per_driver_cuts = true;         // also per-driver connectivity cuts near the root (D-030)
+  bool warm_start = true;              // week::solve_day: give the baseline as MIP start (§6.6)
 };
 
 struct MilpResult {

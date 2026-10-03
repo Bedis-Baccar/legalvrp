@@ -10,6 +10,7 @@
 #include <string>
 
 #include "legalvrp/domain/models.hpp"
+#include "legalvrp/domain/violation.hpp"
 
 namespace legalvrp {
 
@@ -44,6 +45,9 @@ void to_json(nlohmann::json& j, const SolverStats& x);
 void from_json(const nlohmann::json& j, SolverStats& x);
 void to_json(nlohmann::json& j, const DayPlan& x);
 void from_json(const nlohmann::json& j, DayPlan& x);
+
+void to_json(nlohmann::json& j, const Violation& x);
+void from_json(const nlohmann::json& j, Violation& x);
 
 // Canonical text: 2-space indent, sorted keys, LF, trailing newline. Byte-stable across platforms.
 [[nodiscard]] std::string to_canonical_text(const nlohmann::json& j);
