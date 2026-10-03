@@ -9,6 +9,7 @@
 // The returned plan always has zero checker violations.
 
 #include <filesystem>
+#include <optional>
 #include <string>
 
 #include "gurobi_c++.h"
@@ -36,6 +37,9 @@ struct DaySolve {
 };
 
 [[nodiscard]] DaySolve solve_day(GRBEnv& env, const DayInstance& day, model::MilpOptions options);
+
+// Same sequences as `plan`, schedules from the exact evaluator; nullopt if a sequence is illegal.
+[[nodiscard]] std::optional<DayPlan> retime_plan(const DayInstance& day, const DayPlan& plan);
 
 // Brief §11 per-day outputs in `dir`: plan.json (the validated plan), stats.json (§6.7 solver
 // statistics + source, baseline and recomputed objectives, model size, cuts, start accepted),

@@ -19,10 +19,7 @@ const char* to_string(PlanSource s) noexcept {
   return "?";
 }
 
-namespace {
-
-// Same sequences, schedules from the exact evaluator. nullopt if a sequence is illegal.
-std::optional<DayPlan> retime(const DayInstance& day, const DayPlan& plan) {
+std::optional<DayPlan> retime_plan(const DayInstance& day, const DayPlan& plan) {
   const heuristics::RouteEvaluator ev(day);
   DayPlan out = plan;
   out.routes.clear();
@@ -45,8 +42,6 @@ std::optional<DayPlan> retime(const DayInstance& day, const DayPlan& plan) {
   }
   return out;
 }
-
-}  // namespace
 
 DaySolve solve_day(GRBEnv& env, const DayInstance& day, model::MilpOptions options) {
   DaySolve out;
@@ -73,7 +68,7 @@ DaySolve solve_day(GRBEnv& env, const DayInstance& day, model::MilpOptions optio
     accept(*out.milp.plan, PlanSource::milp);
     return out;
   }
-  if (auto r = retime(day, *out.milp.plan); r && check::check_day(day, *r).ok()) {
+  if (auto r = retime_plan(day, *out.milp.plan); r && check::check_day(day, *r).ok()) {
     accept(std::move(*r), PlanSource::milp_retimed);
     return out;
   }

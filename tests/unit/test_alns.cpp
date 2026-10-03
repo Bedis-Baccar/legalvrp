@@ -4,6 +4,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <string>
@@ -160,4 +161,39 @@ TEST_CASE("ALNS: route pool keeps legal, correctly costed routes", "[alns][pool]
     REQUIRE(e.legal);
     CHECK(e.cost == Catch::Approx(col.cost).epsilon(1e-9));
   }
+}
+
+TEST_CASE("ALNS fairness (V1-T5): cost includes w x spread; a large weight narrows the spread", "[alns][fairness]") {
+  const auto small = data::read_week(fixtures_dir() / "instances" / "small" / "1");
+  std::vector<DriverWeekState> states;
+  bool first = true;
+  for (const auto& drv : small.drivers) {  // one full-time driver already has 25 h this week
+    const bool busy = first && drv.contract_class == "full_time";
+    first = first && !busy;
+    states.push_back({drv.id, busy ? 1500 : 0, busy ? 900 : 0, std::nullopt});
+  }
+  const DayInstance day = make_day_instance(small, 1, {}, states);
+  auto spread = [&](const DayPlan& p) {
+    const auto chk = check::check_day(day, p);
+    double hi = -1e18, lo = 1e18;
+    for (std::size_t k = 0; k < day.drivers.size(); ++k) {
+      if (day.drivers[k].contract_class != "full_time") continue;
+      double h = static_cast<double>(day.states[k].service_minutes_week);
+      for (const auto& f : chk.drivers) {
+        if (f.driver_id == day.drivers[k].id && f.used) h += static_cast<double>(f.service_minutes);
+      }
+      hi = std::max(hi, h);
+      lo = std::min(lo, h);
+    }
+    return hi - lo;
+  };
+  const auto off = alns::solve(day, fixed(400));
+  auto o = fixed(400);
+  o.fairness_weight = 2.0;
+  const auto on = alns::solve(day, o);
+  CHECK(check::check_day(day, off.plan).ok());
+  CHECK(check::check_day(day, on.plan).ok());
+  CHECK(off.cost == Catch::Approx(off.plan.objective).epsilon(1e-9));               // weight 0: V0 objective
+  CHECK(on.cost == Catch::Approx(on.plan.objective + 2.0 * spread(on.plan)).epsilon(1e-9));
+  CHECK(spread(on.plan) <= spread(off.plan));
 }

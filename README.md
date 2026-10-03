@@ -70,6 +70,7 @@ legalvrp-check    --instance data/instances/small/1 --plans results/small_1_milp
 legalvrp-bench    --instance data/instances/small/1                      # formulations + MILP vs baseline
 legalvrp-scaling  --config config/instance_scale.yaml                    # runtime and gap vs size
 legalvrp-myopia   --config config/instance_myopia.yaml                   # rolling vs clairvoyant week
+legalvrp-policies lookahead --config config/instance_myopia.yaml        # week policies vs myopic / clairvoyant
 ```
 
 Executables are in `build/<preset>/apps/`. Each run writes, per day, `plan.json`, `stats.json`,
@@ -79,7 +80,7 @@ Real data can be used by writing `week.json` and `matrix.json` ([docs/DATA.md](d
 ## Repository layout
 
 ```
-apps/            command-line tools (generate, check, run-week, bench, scaling, myopia)
+apps/            command-line tools (generate, check, run-week, bench, scaling, myopia, compare, policies)
 config/          rules, contracts, costs, solver parameters, instance generators (YAML)
 src/legalvrp/    one static library per module
   domain/          records, config loaders, compatibility, JSON, day builder
@@ -87,8 +88,10 @@ src/legalvrp/    one static library per module
   estimate/        service-time estimator interface (deterministic in V0)
   heuristics/      exact route evaluator, k-means, Hungarian, territory baseline, enumeration
   check/           independent legality checker (depends on domain only)
-  model/           preprocessing, MILP, connectivity cuts, solve wrapper, clairvoyant week
-  week/            rolling loop, weekly state, day orchestration, certification
+  model/           preprocessing, MILP, connectivity cuts, solve wrapper, clairvoyant week and windows
+  week/            rolling loop, weekly state, day orchestration, certification, look-ahead policy
+  alns/            adaptive large neighbourhood search for one day (fairness term optional)
+  pool/            route-pool set partitioning over ALNS routes
   kpi/             KPIs and week report
 tests/           Catch2 unit tests and fixtures (labelled duties, golden instances)
 docs/            model, decisions, specification, data, benchmarks
@@ -105,4 +108,6 @@ for development rules.
 V0 complete: tasks T0–T9 of the [specification](docs/PROJECT_BRIEF.md), T10 as an import path for
 real data, T11 (clairvoyant week). V1 in progress on branch `v1` ([plan](docs/V1_PLAN.md)): large
 instances, an O(n) exact route evaluator, ALNS (at least as good as the 300-s MILP on every tested
-day from 25 orders, ~1 % from the best known in 30 s at 60–100 orders; [benchmark](docs/BENCHMARK_V1.md)).
+day from 25 orders, ~1 % from the best known in 30 s at 60–100 orders; [benchmark](docs/BENCHMARK_V1.md)),
+and week policies: planning today + tomorrow recovers 92 % of the cost of day-by-day myopia;
+a fairness weight balances full-time hours at no measurable cost ([policies](docs/POLICIES_V1.md)).

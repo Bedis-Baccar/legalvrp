@@ -15,6 +15,15 @@ namespace legalvrp::week {
 
 using DaySolver = std::function<DayPlan(const DayInstance&)>;
 
+// What the loop knows at the start of a day beyond the instance (V1-T5 policies): every driver's
+// weekly state (the instance only holds the drivers available that day) and the carried orders as
+// ORIGINAL week orders (postponed_from set).
+struct DayContext {
+  const std::vector<DriverWeekState>& states;
+  const std::vector<Order>& carried;
+};
+using ContextSolver = std::function<DayPlan(const DayInstance&, const DayContext&)>;
+
 struct WeekRun {
   std::vector<DayPlan> plans;
   std::vector<DayInstance> days;          // the instances actually solved
@@ -23,5 +32,6 @@ struct WeekRun {
 };
 
 [[nodiscard]] WeekRun run_week(const WeekInstance& week, const DaySolver& solve);
+[[nodiscard]] WeekRun run_week_with_context(const WeekInstance& week, const ContextSolver& solve);
 
 }  // namespace legalvrp::week

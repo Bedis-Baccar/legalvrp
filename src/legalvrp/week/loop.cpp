@@ -5,14 +5,14 @@
 
 namespace legalvrp::week {
 
-WeekRun run_week(const WeekInstance& week, const DaySolver& solve) {
+WeekRun run_week_with_context(const WeekInstance& week, const ContextSolver& solve) {
   WeekRun out;
   std::vector<DriverWeekState> states = initial_states(week);
   std::vector<Order> carried;
 
   for (int d = 0; d < week.days; ++d) {
     DayInstance day = make_day_instance(week, d, carried, states);
-    DayPlan plan = solve(day);
+    DayPlan plan = solve(day, DayContext{states, carried});
     check::DayCheck dc = check::check_day(day, plan);
     update_states(states, dc, d);           // from recomputed facts, never from the plan
     carried = carried_orders(week, plan);   // original orders, first-due day kept
@@ -22,6 +22,10 @@ WeekRun run_week(const WeekInstance& week, const DaySolver& solve) {
   }
   out.week_check = check::check_week(week, out.plans);
   return out;
+}
+
+WeekRun run_week(const WeekInstance& week, const DaySolver& solve) {
+  return run_week_with_context(week, [&](const DayInstance& day, const DayContext&) { return solve(day); });
 }
 
 }  // namespace legalvrp::week

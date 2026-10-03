@@ -37,6 +37,11 @@ struct Options {
   double reaction = 0.1;
   bool collect_pool = false;        // keep the routes of accepted solutions (route pool, V1-T3)
   std::size_t max_pool = 50000;
+  // V1-T5 (iii) fairness: adds fairness_weight EUR per minute of (max - min) projected weekly
+  // service (state + today) over the day's drivers of contract `fairness_contract`. 0 = off
+  // (the search is then unchanged). Result::cost includes the term; the plan's objective does not.
+  double fairness_weight = 0.0;
+  std::string fairness_contract = "full_time";
   // Initial routes (one per driver, indices into day.orders); default: territory baseline.
   std::optional<std::vector<std::vector<std::size_t>>> start;
 };

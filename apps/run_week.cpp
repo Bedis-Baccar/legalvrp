@@ -1,6 +1,6 @@
 // Rolling Monday-Friday week — task T8 (PROJECT_BRIEF.md §8 algorithm, §11 outputs).
 //   legalvrp-run-week --instance data/instances/small/1 [--solver milp|baseline]
-//                     [--profile small] [--time-limit S] [--run NAME]
+//                     [--profile small] [--time-limit S] [--fairness W] [--run NAME]
 // Writes results/<run>/day<d>/{plan.json, stats.json, violations.json, gurobi.log} and
 // results/<run>/{week_kpis.json, week_report.md}. Exit code 0 only if the week-mode checker
 // reports zero violations.
@@ -33,11 +33,13 @@ int main(int argc, char** argv) {
   fs::path instance;
   std::string solver_name = "milp", profile, run;
   double time_limit = -1;
+  double fairness = 0.2;
   app.add_option("--instance", instance, "data/instances/<name>/<seed>")->required()->check(CLI::ExistingDirectory);
   app.add_option("--solver", solver_name, "milp (default), alns or baseline")
       ->check(CLI::IsMember({"milp", "alns", "baseline"}));
   app.add_option("--profile", profile, "solver.yaml profile (default: the instance name)");
   app.add_option("--time-limit", time_limit, "override TimeLimit per day (s)");
+  app.add_option("--fairness", fairness, "ALNS: EUR per minute of spread of full-time weekly hours (D-108)");
   app.add_option("--run", run, "run name (default <name>_<seed>_<solver>)");
   CLI11_PARSE(app, argc, argv);
 
@@ -51,6 +53,7 @@ int main(int argc, char** argv) {
     if (solver_name == "alns") {  // V1-T2: time limit per day (default 30 s)
       alns::Options ao;
       ao.time_limit_s = time_limit > 0 ? time_limit : 30.0;
+      ao.fairness_weight = fairness;
       result = week::run_week(week, [&](const DayInstance& day) {
         const auto r = alns::solve(day, ao);
         std::cout << "day " << day.day << ": " << day.orders.size() << " orders, ALNS " << r.iterations

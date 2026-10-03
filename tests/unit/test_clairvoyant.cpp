@@ -8,6 +8,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "gurobi_c++.h"
+#include "legalvrp/check/checker.hpp"
 #include "legalvrp/data/io.hpp"
 #include "legalvrp/data/instance_config.hpp"
 #include "legalvrp/domain/paths.hpp"
@@ -15,6 +16,7 @@
 #include "legalvrp/kpi/kpis.hpp"
 #include "legalvrp/model/clairvoyant.hpp"
 #include "legalvrp/week/certify.hpp"
+#include "legalvrp/week/lookahead.hpp"
 #include "legalvrp/week/loop.hpp"
 #include "legalvrp/week/solve_day.hpp"
 
@@ -113,4 +115,62 @@ TEST_CASE("clairvoyant on a reduced generated week: legal, never above rolling, 
   const auto kc = kpi::compute_week_kpis(w, crun.days, crun.plans, crun.week_check);
   CHECK(kc.cost_total <= kr.cost_total + 1e-6);
   CHECK(kc.cost_total == Catch::Approx(cl.stats.objective).epsilon(1e-6));
+}
+
+// ---- V1-T5: window model and week policies -------------------------------------------------
+
+TEST_CASE("look-ahead (h = 2) on the trap: Monday sees Tuesday's tail-lift order (595.20)", "[lookahead]") {
+  const WeekInstance w = myopia_trap();
+  week::LookaheadOptions lo;
+  lo.horizon = 2;
+  lo.day = exact();
+  lo.window = exact();
+  std::vector<week::LookaheadSource> src;
+  const auto run = week::run_week_with_context(w, [&](const DayInstance& d, const week::DayContext& ctx) {
+    auto r = week::solve_day_lookahead(env(), w, d, ctx, lo);
+    src.push_back(r.source);
+    return r.plan;
+  });
+  REQUIRE(run.week_check.ok());
+  const auto k = kpi::compute_week_kpis(w, run.days, run.plans, run.week_check);
+  CHECK(k.cost_total == Catch::Approx(595.20));
+  REQUIRE(src.size() == 2);
+  CHECK(src[0] == week::LookaheadSource::window);
+  CHECK(src[1] == week::LookaheadSource::myopic);  // last day: no window needed
+  REQUIRE(run.plans[0].routes.size() == 1);
+  CHECK(run.plans[0].routes[0].driver_id == "k2");
+}
+
+TEST_CASE("a one-day window from the rolling state and carry-over = the daily MILP", "[window]") {
+  const auto ic = data::load_instance_config(config_dir() / "instance_myopia.yaml");
+  const auto cw = week::generate_certified_week(ic, load_config(), 2);
+  REQUIRE(cw.has_value());
+  const WeekInstance& w = cw->generated.week;
+  model::MilpOptions o = exact();
+  o.solver.time_limit = 30;
+  int with_state = 0;
+  const auto run = week::run_week_with_context(w, [&](const DayInstance& d, const week::DayContext& ctx) {
+    const auto daily = week::solve_day(env(), d, o);
+    const auto win = model::solve_window(env(), w, model::WindowSpec{d.day, d.day, ctx.states, ctx.carried, {}, 0.0}, o);
+    INFO("day " << d.day);
+    CHECK(win.stats.status == "OPTIMAL");
+    CHECK(win.stats.objective == Catch::Approx(daily.check.objective).epsilon(1e-6));
+    REQUIRE(win.plans.size() == 1);
+    CHECK(check::check_day(d, win.plans[0]).ok());  // zero-state part + linking = the real day
+    for (const auto& s : ctx.states) with_state += s.service_minutes_week > 0 ? 1 : 0;
+    return daily.plan;
+  });
+  CHECK(run.week_check.ok());
+  CHECK(with_state > 0);  // the comparison did cover non-zero weekly states
+}
+
+TEST_CASE("scarce_reserve: exclusive orders per known day x duty x days left", "[lookahead]") {
+  WeekInstance w = myopia_trap();
+  CHECK(week::scarce_reserve(w, 0).empty());  // A: both drivers can serve it
+  CHECK(week::scarce_reserve(w, 1).empty());  // no day left after the window
+  w.days = 3;
+  const auto r = week::scarce_reserve(w, 1);  // B (tail-lift): only k1; 60 + 120 + 60 min over 2 days, 1 day left
+  REQUIRE(r.size() == 1);
+  CHECK(r[0].first == "k1");
+  CHECK(r[0].second == Catch::Approx(120.0));
 }

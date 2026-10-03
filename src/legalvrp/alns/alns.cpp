@@ -6,6 +6,8 @@
 #include <functional>
 #include <limits>
 #include <numeric>
+#include <tuple>
+#include <utility>
 #include <unordered_set>
 
 #include "legalvrp/data/rng.hpp"
@@ -23,6 +25,7 @@ using Seq = std::vector<std::size_t>;
 struct Solution {
   std::vector<Seq> routes;
   std::vector<double> rcost;  // route cost (quick), per driver
+  std::vector<double> svc;    // today's service minutes, per driver (fairness term)
   std::vector<int> where;     // driver of each order, -1 = bank
   Seq bank;
   double cost = 0.0;
@@ -46,6 +49,15 @@ class Search {
       for (std::size_t j = 0; j < n_; ++j) max_dist_ = std::max(max_dist_, day.matrix.dist(node_[i], node_[j]));
     }
     max_dist_ = std::max(max_dist_, 1.0);
+    fair_.assign(K_, false);
+    w0_.assign(K_, 0.0);
+    int fair_count = 0;
+    for (std::size_t k = 0; k < K_; ++k) {
+      fair_[k] = day.drivers[k].contract_class == o.fairness_contract;
+      if (k < day.states.size()) w0_[k] = static_cast<double>(day.states[k].service_minutes_week);
+      fair_count += fair_[k] ? 1 : 0;
+    }
+    fw_ = fair_count >= 2 ? o.fairness_weight : 0.0;
   }
 
   Result run();
@@ -55,10 +67,57 @@ class Search {
     const auto q = ev_.quick(k, s);
     return q.legal ? q.cost : kInf;
   }
+  // Route cost (kInf if illegal) and today's service minutes.
+  std::pair<double, double> route_eval(std::size_t k, const Seq& s) const {
+    const auto q = ev_.quick(k, s);
+    return q.legal ? std::pair{q.cost, static_cast<double>(q.service_minutes)} : std::pair{kInf, 0.0};
+  }
+  void set_route(Solution& s, std::size_t k) const { std::tie(s.rcost[k], s.svc[k]) = route_eval(k, s.routes[k]); }
+  // Fairness term: fw * (max - min) of the projected weekly service of the fairness drivers.
+  // with(k, h): the term if driver k's projected service were h (O(1) from the two extremes).
+  struct Spread {
+    double fw = 0.0, hi1 = -kInf, hi2 = -kInf, lo1 = kInf, lo2 = kInf;
+    std::size_t ihi = 0, ilo = 0;
+    double value() const { return fw == 0.0 ? 0.0 : fw * (hi1 - lo1); }
+    double with(std::size_t k, double h) const {
+      const double hi = std::max(h, k == ihi ? hi2 : hi1);
+      const double lo = std::min(h, k == ilo ? lo2 : lo1);
+      return fw * (hi - lo);
+    }
+  };
+  Spread spread(const Solution& s) const {
+    Spread sp;
+    sp.fw = fw_;
+    if (fw_ == 0.0) return sp;
+    for (std::size_t k = 0; k < K_; ++k) {
+      if (!fair_[k]) continue;
+      const double h = w0_[k] + s.svc[k];
+      if (h > sp.hi1) {
+        sp.hi2 = sp.hi1;
+        sp.hi1 = h;
+        sp.ihi = k;
+      } else if (h > sp.hi2) {
+        sp.hi2 = h;
+      }
+      if (h < sp.lo1) {
+        sp.lo2 = sp.lo1;
+        sp.lo1 = h;
+        sp.ilo = k;
+      } else if (h < sp.lo2) {
+        sp.lo2 = h;
+      }
+    }
+    return sp;
+  }
+  // Fairness change if driver k's service today becomes v (0 when off or k is outside the term).
+  double fair_delta(const Spread& sp, std::size_t k, double v) const {
+    return fw_ == 0.0 || !fair_[k] ? 0.0 : sp.with(k, w0_[k] + v) - sp.value();
+  }
   void recompute(Solution& s) const {
     s.cost = 0.0;
     for (std::size_t k = 0; k < K_; ++k) s.cost += s.rcost[k];
     for (const auto i : s.bank) s.cost += penalty_[i];
+    s.cost += spread(s).value();
   }
   Solution initial() const;
   void remove(Solution& s, std::size_t order) const;
@@ -82,6 +141,9 @@ class Search {
   std::vector<double> e_;
   std::vector<double> q_;
   double max_dist_ = 1.0;
+  std::vector<bool> fair_;     // driver enters the fairness term
+  std::vector<double> w0_;     // weekly service before today
+  double fw_ = 0.0;
   std::chrono::steady_clock::time_point t0_;
   std::unordered_set<std::string> pool_keys_;
   std::vector<Column> pool_;
@@ -97,11 +159,12 @@ Solution Search::initial() const {
   }
   s.where.assign(n_, -1);
   s.rcost.assign(K_, 0.0);
+  s.svc.assign(K_, 0.0);
   for (std::size_t k = 0; k < K_; ++k) {
-    s.rcost[k] = route_cost(k, s.routes[k]);
+    set_route(s, k);
     if (s.rcost[k] == kInf) {  // an illegal start route: its orders go to the bank
       s.routes[k].clear();
-      s.rcost[k] = route_cost(k, s.routes[k]);
+      set_route(s, k);
     }
     for (const auto i : s.routes[k]) s.where[i] = static_cast<int>(k);
   }
@@ -207,11 +270,11 @@ void Search::destroy(Solution& s, Destroy op, int q) {
   }
   for (std::size_t k = 0; k < K_; ++k) {
     if (!touched[k]) continue;
-    s.rcost[k] = route_cost(k, s.routes[k]);
+    set_route(s, k);
     if (s.rcost[k] == kInf) {  // removal broke legality (non-triangular times): empty the route
       const Seq r = s.routes[k];
       for (const auto i : r) remove(s, i);
-      s.rcost[k] = route_cost(k, s.routes[k]);
+      set_route(s, k);
     }
   }
 }
@@ -221,6 +284,7 @@ void Search::repair(Solution& s, Repair op, bool insert_all, double noise) {
     double delta = kInf;  // exact cost increase
     double key = kInf;    // delta + noise (Ropke & Pisinger 2006): guides choices only
     std::size_t pos = 0;
+    double svc = 0.0;     // today's service minutes of the new route (fairness)
   };
   Seq cand = s.bank;
   std::vector<std::vector<Best>> best(n_, std::vector<Best>(K_));
@@ -231,10 +295,10 @@ void Search::repair(Solution& s, Repair op, bool insert_all, double noise) {
     for (std::size_t pos = 0; pos <= r.size(); ++pos) {
       buf.assign(r.begin(), r.end());
       buf.insert(buf.begin() + static_cast<std::ptrdiff_t>(pos), i);
-      const double c = route_cost(k, buf);
+      const auto [c, v] = route_eval(k, buf);
       if (c == kInf) continue;
       const double key = (c - s.rcost[k]) + (noise > 0.0 ? noise * rng_.uniform(-1.0, 1.0) : 0.0);
-      if (key < b.key) b = {c - s.rcost[k], key, pos};
+      if (key < b.key) b = {c - s.rcost[k], key, pos, v};
     }
     best[i][k] = b;
   };
@@ -244,6 +308,8 @@ void Search::repair(Solution& s, Repair op, bool insert_all, double noise) {
   const int h = op == kRegret2 ? 2 : op == kRegret3 ? 3 : 1;
 
   while (!cand.empty()) {
+    const Spread sp = spread(s);  // fairness changes are recomputed as routes change
+    auto fd = [&](std::size_t i, std::size_t k) { return fair_delta(sp, k, best[i][k].svc); };
     std::size_t pick_idx = cand.size();
     double pick_key = -kInf;
     std::vector<double> ds;
@@ -252,8 +318,8 @@ void Search::repair(Solution& s, Repair op, bool insert_all, double noise) {
       ds.clear();
       double true_d1 = kInf;
       for (std::size_t k = 0; k < K_; ++k) {
-        ds.push_back(best[i][k].key);
-        true_d1 = std::min(true_d1, best[i][k].delta);
+        ds.push_back(best[i][k].key + fd(i, k));
+        true_d1 = std::min(true_d1, best[i][k].delta + fd(i, k));
       }
       std::ranges::sort(ds);
       const double d1 = ds.empty() ? kInf : ds[0];
@@ -278,17 +344,18 @@ void Search::repair(Solution& s, Repair op, bool insert_all, double noise) {
     const std::size_t i = cand[pick_idx];
     std::size_t k_best = 0;
     for (std::size_t k = 1; k < K_; ++k) {
-      if (best[i][k].key < best[i][k_best].key) k_best = k;
+      if (best[i][k].key + fd(i, k) < best[i][k_best].key + fd(i, k_best)) k_best = k;
     }
     auto& r = s.routes[k_best];
     r.insert(r.begin() + static_cast<std::ptrdiff_t>(best[i][k_best].pos), i);
     s.rcost[k_best] += best[i][k_best].delta;
+    s.svc[k_best] = best[i][k_best].svc;
     s.where[i] = static_cast<int>(k_best);
     s.bank.erase(std::ranges::find(s.bank, i));
     cand.erase(cand.begin() + static_cast<std::ptrdiff_t>(pick_idx));
     for (const auto j : cand) eval_route(j, k_best);
   }
-  for (std::size_t k = 0; k < K_; ++k) s.rcost[k] = route_cost(k, s.routes[k]);  // exact, no drift
+  for (std::size_t k = 0; k < K_; ++k) set_route(s, k);  // exact, no drift
   recompute(s);
 }
 
@@ -297,6 +364,7 @@ void Search::repair(Solution& s, Repair op, bool insert_all, double noise) {
 // sharing one long drive) be built, while lone unprofitable orders are dropped.
 void Search::drop_unprofitable(Solution& s) const {
   for (;;) {
+    const Spread sp = spread(s);
     double best_gain = kEps;
     std::size_t best_i = n_;
     for (std::size_t i = 0; i < n_; ++i) {
@@ -304,7 +372,8 @@ void Search::drop_unprofitable(Solution& s) const {
       const auto k = static_cast<std::size_t>(s.where[i]);
       Seq r = s.routes[k];
       r.erase(std::ranges::find(r, i));
-      const double gain = s.rcost[k] - route_cost(k, r) - penalty_[i];
+      const auto [c, v] = route_eval(k, r);
+      const double gain = s.rcost[k] - c - penalty_[i] - fair_delta(sp, k, v);
       if (gain > best_gain) {
         best_gain = gain;
         best_i = i;
@@ -313,7 +382,7 @@ void Search::drop_unprofitable(Solution& s) const {
     if (best_i == n_) break;
     const auto k = static_cast<std::size_t>(s.where[best_i]);
     remove(s, best_i);
-    s.rcost[k] = route_cost(k, s.routes[k]);
+    set_route(s, k);
   }
   recompute(s);
 }
@@ -321,16 +390,23 @@ void Search::drop_unprofitable(Solution& s) const {
 void Search::polish(Solution& s) const {
   for (std::size_t k = 0; k < K_; ++k) {
     Seq& r = s.routes[k];
+    // A move is kept if route cost + fairness change decreases (the change is 0 when off).
+    double c = 0.0, v = 0.0;
+    auto better = [&](const Seq& t) {
+      std::tie(c, v) = route_eval(k, t);
+      const Spread sp = spread(s);
+      return c + fair_delta(sp, k, v) < s.rcost[k] - kEps;
+    };
     for (bool improved = true; improved;) {
       improved = false;
       for (std::size_t a = 0; a + 1 < r.size() && !improved; ++a) {  // 2-opt
         for (std::size_t b = a + 1; b < r.size() && !improved; ++b) {
           Seq t = r;
           std::reverse(t.begin() + static_cast<std::ptrdiff_t>(a), t.begin() + static_cast<std::ptrdiff_t>(b) + 1);
-          const double c = route_cost(k, t);
-          if (c < s.rcost[k] - kEps) {
+          if (better(t)) {
             r = std::move(t);
             s.rcost[k] = c;
+            s.svc[k] = v;
             improved = true;
           }
         }
@@ -339,13 +415,13 @@ void Search::polish(Solution& s) const {
         for (std::size_t b = 0; b < r.size() && !improved; ++b) {
           if (a == b) continue;
           Seq t = r;
-          const std::size_t v = t[a];
+          const std::size_t u = t[a];
           t.erase(t.begin() + static_cast<std::ptrdiff_t>(a));
-          t.insert(t.begin() + static_cast<std::ptrdiff_t>(b), v);
-          const double c = route_cost(k, t);
-          if (c < s.rcost[k] - kEps) {
+          t.insert(t.begin() + static_cast<std::ptrdiff_t>(b), u);
+          if (better(t)) {
             r = std::move(t);
             s.rcost[k] = c;
+            s.svc[k] = v;
             improved = true;
           }
         }

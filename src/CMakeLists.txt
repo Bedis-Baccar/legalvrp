@@ -70,7 +70,8 @@ legalvrp_module(week
   SOURCES ${L}/week/state.cpp ${L}/week/loop.cpp ${L}/week/certify.cpp
   DEPS legalvrp::domain legalvrp::data legalvrp::heuristics legalvrp::check ${_week_model})
 if(LEGALVRP_WITH_GUROBI)
-  target_sources(legalvrp_week PRIVATE ${L}/week/solve_day.cpp)  # MILP + checker orchestration
+  target_sources(legalvrp_week PRIVATE ${L}/week/solve_day.cpp     # MILP + checker orchestration
+                                       ${L}/week/lookahead.cpp)    # V1-T5 week policies
 endif()
 
 legalvrp_module(alns                    # V1-T2: ALNS for the daily problem
