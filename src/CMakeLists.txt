@@ -44,6 +44,7 @@ legalvrp_module(estimate
 legalvrp_module(heuristics
   SOURCES ${L}/heuristics/route_eval.cpp ${L}/heuristics/territory.cpp
           ${L}/heuristics/kmeans.cpp ${L}/heuristics/assignment.cpp ${L}/heuristics/enumerate.cpp
+          ${L}/heuristics/route_quick.cpp
   DEPS legalvrp::domain)
 
 legalvrp_module(check

@@ -38,6 +38,15 @@ struct RouteEvaluation {
   std::vector<Violation> violations;  // when illegal: the most nearly legal break option's
 };
 
+struct QuickEvaluation {
+  bool legal = false;
+  Euros cost = 0.0;
+  Minutes service_minutes = 0;
+  Minutes driving_minutes = 0;
+  double km = 0.0;
+  int break_after = -1;  // position in the sequence, -1 = no break
+};
+
 class RouteEvaluator {
  public:
   // Keeps a reference to `day`; it must outlive the evaluator.
@@ -46,6 +55,12 @@ class RouteEvaluator {
   // `driver`: index into day.drivers; `orders`: indices into day.orders, in visiting order.
   [[nodiscard]] RouteEvaluation evaluate(std::size_t driver,
                                          std::span<const std::size_t> orders) const;
+
+  // Fast exact evaluation (V1-T1, D-102): same legality, temps de service, driving, km and cost as
+  // evaluate(), in O(n), by composing "earliest ready time" functions f(x) = max(x + d, r) on
+  // x <= L (time-window concatenation, Vidal et al. 2013) per break position. No schedule is
+  // produced: use evaluate() for the reported route.
+  [[nodiscard]] QuickEvaluation quick(std::size_t driver, std::span<const std::size_t> orders) const;
 
   [[nodiscard]] const DayInstance& day() const noexcept { return day_; }
 
