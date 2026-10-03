@@ -4,6 +4,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <cstdint>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -40,7 +41,7 @@ WeekInstance small_week(std::uint64_t seed) {
 TEST_CASE("Hungarian matches brute force on random rectangular matrices", "[assignment]") {
   std::uint64_t h = 99;
   auto next = [&] {
-    h = h * 6364136223846793005ULL + 1442695040888963407ULL;
+    h = h * UINT64_C(6364136223846793005) + UINT64_C(1442695040888963407);
     return (h >> 33) % 1000;
   };
   for (int trial = 0; trial < 200; ++trial) {

@@ -4,6 +4,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <cstdint>
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
@@ -56,21 +57,21 @@ struct TempDir {
 
 TEST_CASE("SplitMix64 matches the published reference", "[rng]") {
   std::uint64_t s = 0;
-  CHECK(splitmix64(s) == 0xe220a8397b1dcdafULL);
-  CHECK(splitmix64(s) == 0x6e789e6aa1b965f4ULL);
+  CHECK(splitmix64(s) == UINT64_C(0xe220a8397b1dcdaf));
+  CHECK(splitmix64(s) == UINT64_C(0x6e789e6aa1b965f4));
 }
 
 TEST_CASE("xoshiro256** golden values (independent bash reference)", "[rng]") {
   Rng a(0);
-  CHECK(a.next_u64() == 0x99ec5f36cb75f2b4ULL);
-  CHECK(a.next_u64() == 0xbf6e1f784956452aULL);
-  CHECK(a.next_u64() == 0x1a5f849d4933e6e0ULL);
-  CHECK(a.next_u64() == 0x6aa594f1262d2d2cULL);
+  CHECK(a.next_u64() == UINT64_C(0x99ec5f36cb75f2b4));
+  CHECK(a.next_u64() == UINT64_C(0xbf6e1f784956452a));
+  CHECK(a.next_u64() == UINT64_C(0x1a5f849d4933e6e0));
+  CHECK(a.next_u64() == UINT64_C(0x6aa594f1262d2d2c));
   Rng b(42);
-  CHECK(b.next_u64() == 0x15780b2e0c2ec716ULL);
-  CHECK(b.next_u64() == 0x6104d9866d113a7eULL);
-  CHECK(b.next_u64() == 0xae17533239e499a1ULL);
-  CHECK(b.next_u64() == 0xecb8ad4703b360a1ULL);
+  CHECK(b.next_u64() == UINT64_C(0x15780b2e0c2ec716));
+  CHECK(b.next_u64() == UINT64_C(0x6104d9866d113a7e));
+  CHECK(b.next_u64() == UINT64_C(0xae17533239e499a1));
+  CHECK(b.next_u64() == UINT64_C(0xecb8ad4703b360a1));
 }
 
 TEST_CASE("portable_exp is accurate", "[rng]") {

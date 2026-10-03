@@ -3,6 +3,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <cstdint>
 #include <algorithm>
 
 #include "legalvrp/check/checker.hpp"
@@ -219,10 +220,10 @@ TEST_CASE("every route the evaluator calls legal passes the checker with the sam
     std::uint64_t h = 777 + static_cast<std::uint64_t>(day_index);
     for (int trial = 0; trial < 60; ++trial) {
       std::vector<std::size_t> seq;
-      h = h * 6364136223846793005ULL + 1442695040888963407ULL;
+      h = h * UINT64_C(6364136223846793005) + UINT64_C(1442695040888963407);
       const std::size_t len = 1 + (h >> 33) % 5;
       while (seq.size() < len) {
-        h = h * 6364136223846793005ULL + 1442695040888963407ULL;
+        h = h * UINT64_C(6364136223846793005) + UINT64_C(1442695040888963407);
         const std::size_t i = (h >> 33) % day.orders.size();
         if (std::ranges::find(seq, i) == seq.end()) seq.push_back(i);
       }

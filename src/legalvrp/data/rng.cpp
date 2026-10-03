@@ -1,5 +1,6 @@
 #include "legalvrp/data/rng.hpp"
 
+#include <cstdint>
 #include <cassert>
 #include <limits>
 
@@ -10,9 +11,9 @@ constexpr std::uint64_t rotl(std::uint64_t x, int k) noexcept { return (x << k) 
 }  // namespace
 
 std::uint64_t splitmix64(std::uint64_t& state) noexcept {
-  std::uint64_t z = (state += 0x9e3779b97f4a7c15ULL);
-  z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
-  z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
+  std::uint64_t z = (state += UINT64_C(0x9e3779b97f4a7c15));
+  z = (z ^ (z >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+  z = (z ^ (z >> 27)) * UINT64_C(0x94d049bb133111eb);
   return z ^ (z >> 31);
 }
 
@@ -103,7 +104,7 @@ std::size_t Rng::categorical(std::span<const double> weights) noexcept {
 }
 
 Rng Rng::split(std::uint64_t stream_id) const noexcept {
-  std::uint64_t st = seed_ ^ (0xd1b54a32d192ed03ULL * (stream_id + 1));
+  std::uint64_t st = seed_ ^ (UINT64_C(0xd1b54a32d192ed03) * (stream_id + 1));
   return Rng(splitmix64(st));
 }
 

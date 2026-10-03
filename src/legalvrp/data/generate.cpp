@@ -1,5 +1,6 @@
 #include "legalvrp/data/generate.hpp"
 
+#include <cstdint>
 #include <algorithm>
 #include <set>
 #include <stdexcept>
@@ -54,7 +55,7 @@ void check_unique(const std::vector<T>& items, Proj id, const char* what,
 
 std::uint64_t attempt_seed(std::uint64_t seed, int attempt) noexcept {
   if (attempt == 0) return seed;
-  std::uint64_t st = seed ^ (0x9e3779b97f4a7c15ULL * static_cast<std::uint64_t>(attempt));
+  std::uint64_t st = seed ^ (UINT64_C(0x9e3779b97f4a7c15) * static_cast<std::uint64_t>(attempt));
   return splitmix64(st);
 }
 

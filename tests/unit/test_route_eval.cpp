@@ -4,6 +4,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <cstdint>
 #include <algorithm>
 #include <limits>
 #include <optional>
@@ -413,7 +414,7 @@ TEST_CASE("evaluator matches exhaustive brute force on generated routes", "[rout
   int legal_count = 0;
   int compared = 0;
   int with_break = 0;
-  for (const std::uint64_t seed : {4ULL, 9ULL}) {
+  for (const std::uint64_t seed : {UINT64_C(4), UINT64_C(9)}) {
   const auto week = data::generate_week(icfg, cfg, seed).week;
   for (int d = 0; d < week.days; ++d) {
     const DayInstance day = make_day_instance(week, d);
@@ -422,10 +423,10 @@ TEST_CASE("evaluator matches exhaustive brute force on generated routes", "[rout
     for (int trial = 0; trial < 40; ++trial) {
       // deterministic pseudo-random sequence of 1..4 distinct orders
       std::vector<std::size_t> seq;
-      h = h * 6364136223846793005ULL + 1442695040888963407ULL;
+      h = h * UINT64_C(6364136223846793005) + UINT64_C(1442695040888963407);
       const std::size_t len = 1 + (h >> 33) % 4;
       while (seq.size() < len) {
-        h = h * 6364136223846793005ULL + 1442695040888963407ULL;
+        h = h * UINT64_C(6364136223846793005) + UINT64_C(1442695040888963407);
         const std::size_t i = (h >> 33) % day.orders.size();
         if (std::ranges::find(seq, i) == seq.end()) seq.push_back(i);
       }
