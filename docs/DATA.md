@@ -13,11 +13,11 @@ Generate: `build/msvc-release/apps/legalvrp-generate --config config/instance_sm
 Golden copies for tests: `tests/fixtures/instances/{tiny,small}/1` (D-015), certified (D-027).
 `data/` and `results/` are git-ignored. External data is fetched only by an explicit command.
 
-## Using real data (T10, owner decision 2026-10-03: import path only, no fetching)
+## Using real data (T10: import path only, no fetching)
 
 T10 as written in the brief (SIRENE download + OpenRouteService/OSRM matrices fetched by the
-program) was **not implemented**: it needs network access, an API key only the owner can
-obtain, multi-GB downloads and two heavy C++ dependencies (HTTP client, PROJ), and it does not
+program) was **not implemented**: it needs network access, an API key that must be obtained
+separately, multi-GB downloads and two heavy C++ dependencies (HTTP client, PROJ), and it does not
 change any conclusion about the method. What it would bring — real customers and road travel
 times — can be plugged in without code, by writing the two instance files from any source:
 

@@ -1,6 +1,6 @@
 # `legalvrp` V0 — sizing, complexity projection, input data
 
-Companion to `PROJECT_BRIEF.md` (the V0 specification).
+Companion to [`PROJECT_BRIEF.md`](PROJECT_BRIEF.md) (the V0 specification).
 
 ---
 

@@ -38,7 +38,7 @@ Median 5.6 %, mean 11.6 %; clairvoyant solved in 9–177 s.
 1. The rolling MILP is near-optimal most weeks, but **weekly resources that are both scarce and
    capped (special equipment × weekly hours) can make myopia very expensive**. The `small`
    week of T8 showed the mild form (part-time overtime, Gini 0.10 vs 0.05).
-2. Cheap remedies, without a full weekly model, for V1 (owner decision, not implemented):
+2. Cheap remedies, without a full weekly model, for V1 (not implemented):
    reserve capacity of scarce-skill drivers for the orders only they can serve (a look-ahead
    term or a soft budget per day on capped drivers), or plan with a short horizon of known
    orders (e.g. today + tomorrow).

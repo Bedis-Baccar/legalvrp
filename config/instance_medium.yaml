@@ -1,4 +1,4 @@
-# medium: stress test beyond the brief's sizes (owner request, 2026-10-03).
+# medium: stress test beyond the brief's sizes.
 # 25-30 orders a day, 6 drivers; same customer types as small.
 name: medium
 days: 5

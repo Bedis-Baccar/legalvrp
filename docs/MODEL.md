@@ -11,7 +11,7 @@ are the Gurobi variable and constraint names.
 - The MILP may place waiting before the break node; evaluator, brute force and checker must allow this too (F1, D-007 accepted).
 - Pruning extensions and tighter C11 big-M: F4/F5, D-009 proposed. They are not yet part of the specification below.
 
-**Amendments (owner decisions, 2026-10-02)**
+**Amendments (2026-10-02)**
 - **Fixed duty start (D-018).** A used driver's duty runs from the shift start $S_k$ to $t^E_k + R$. Prep $P$ is done in $[S_k, t^0_k]$; any time at the depot before departure is work. Hence C14 and C16 use $S_k$ in place of $t^0_k - P$, and $M^w_k = F_k - S_k$. Departure may still be later than $S_k + P$, but this no longer shortens the duty. An unused driver does not come in ($\theta_k = 0$).
 - **Postponement (D-019).** $p_i$ is no longer a constant. On day $d$, for an order first due on day $d_i^0$: $p_i = p^{\text{base}} \cdot \rho^{\,d - d_i^0}$, and on the last day of the horizon $p_i = \max(p^{\text{base}} \cdot \rho^{\,d - d_i^0},\ p^{\text{end}})$, because postponing on that day leaves the order unserved this week. Values in `config/costs.yaml`.
 - **Daytime duties, no night work (D-020).** Every shift lies in [05:00, 19:00] (`earliest_duty_start`, `latest_duty_end` in `config/rules.yaml`; $F_k = \min(S_k + 765, 19{:}00)$). Code des transports L3312-1 caps daily work at 10 h if a duty includes work between 00:00 and 05:00 or the driver is a night worker (≥ 50 h a month in the 21:00–06:00 night period). Neither can happen inside this window (≤ 1 h/day in the night period, ≈ 22 h/month), so the model needs no night constraint.

@@ -85,5 +85,5 @@ excluded from S-access customers". Hence `compatible(k, i) ⇔ size(k) ≤ acces
 (¬needs_tail_lift(i) ∨ tail_lift(k)) ∧ q_i ≤ Q_k`, with S < M < L. The §4 sentence
 reads the other way round.
 
-**Resolved 2026-10-02 by D-008:** the owner removed access classes entirely.
+**Resolved 2026-10-02 by D-008:** access classes were removed entirely.
 Any truck serves any customer, so the question no longer arises.

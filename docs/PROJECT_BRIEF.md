@@ -1,6 +1,6 @@
 # Project brief — `legalvrp` V0
 
-**Original V0 specification**, written before implementation (it assumed Python + gurobipy). The repository implements it in C++20; deviations and later decisions are logged in `docs/DECISIONS.md`, and `docs/MODEL.md` is the single source of truth for the mathematics.
+**Original V0 specification**, written before implementation (it assumed Python + gurobipy). The repository implements it in C++20; every deviation and every decision taken since is logged in [`DECISIONS.md`](DECISIONS.md), and [`MODEL.md`](MODEL.md) is the single source of truth for the mathematics.
 
 ---
 

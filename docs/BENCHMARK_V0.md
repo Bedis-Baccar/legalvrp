@@ -108,7 +108,7 @@ The MILP's workload is less even: it saves by idling the 07:00 full-time driver 
 (18.9 h in the week) while the 06:00 part-time driver, whose start suits the 06:00–10:00
 grocery windows, works 25.2 h and 72 min above its 24 h threshold. Each daily model sees only
 its own day; the cost of this myopia is what optional T11 (clairvoyant week) would measure.
-If balance matters to the owner, a fairness term or a minimum-hours rule would be a model
+If balance matters, a fairness term or a minimum-hours rule would be a model
 decision (logged as an open question, not implemented).
 
 > **Note (D-042, added after T11 work).** The weekly costs in §3 and §6 are sums of the daily
