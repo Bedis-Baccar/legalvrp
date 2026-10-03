@@ -9,6 +9,7 @@ daily MILPs solved exactly with Gurobi, checked by an independent legality check
 - Review and open findings: [docs/REVIEW_V0.md](docs/REVIEW_V0.md) · decisions: [docs/DECISIONS.md](docs/DECISIONS.md)
 - Sizing and data sources: [docs/SIZING.md](docs/SIZING.md), [docs/DATA.md](docs/DATA.md)
 - Tighter formulations, literature: [docs/FORMULATION_RESEARCH.md](docs/FORMULATION_RESEARCH.md)
+- Benchmark MILP vs baseline (small, medium): [docs/BENCHMARK_V0.md](docs/BENCHMARK_V0.md)
 - Model validation document: [docs/validation/model_validation.pdf](docs/validation/model_validation.pdf)
 
 ## Requirements
@@ -69,4 +70,6 @@ data/ results/   generated, git-ignored
 | Owner decisions D-018..D-022 (fixed start, penalties, daytime duties, T6 formulation) | done |
 | T4 independent checker (day + week), 41-duty corpus, CLI | done |
 | T5 territory baseline (k-means, Hungarian, NN + repair + 2-opt), certified instances | done |
-| T6–T9 | to do, in order (see brief §12) |
+| T6 daily MILP (strong + reference), enumeration ground truth, traps, connectivity cuts; benchmark `docs/BENCHMARK_V0.md` | done |
+| T7 solve wrapper (params, complete MIP start, logs, IIS, stats, extraction, checker fallback) | mostly done in T6; KPI wiring with T8 |
+| T8–T9 | to do (T8 loop core exists: `week/loop`) |

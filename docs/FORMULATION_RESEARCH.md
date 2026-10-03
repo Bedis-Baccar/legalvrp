@@ -89,3 +89,12 @@ formulations scale poorly; T9 will show where this one stops.
   for vehicle routing problems. arXiv:2403.00262.
 
 Legal sources for D-020: Code des transports art. L3312-1 (Légifrance); Directive 2002/15/EC art. 7.
+
+## 5. Measured outcome (2026-10-03, details in `docs/BENCHMARK_V0.md`)
+
+S1–S6 alone halved the final gap of the brief's model but left 25–54 % at 15–20 orders after
+30 s. The decisive additions were **connectivity cuts** (D-030), above all their **per-driver**
+version (D-035): `small` day 0 went from 54 % to 5 % in 120 s, and 15-order days now solve to
+proven optimality in 10–16 s. Duty knapsacks (D-034) add 2–3 % to the root bound.
+MIPFocus 3 did not help. At 25–30 orders (`medium`) gaps of 13–36 % remain after 60 s: the
+compact formulation's frontier on this machine, as anticipated in §3.

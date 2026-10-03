@@ -43,7 +43,7 @@ legalvrp_module(estimate
 
 legalvrp_module(heuristics
   SOURCES ${L}/heuristics/route_eval.cpp ${L}/heuristics/territory.cpp
-          ${L}/heuristics/kmeans.cpp ${L}/heuristics/assignment.cpp
+          ${L}/heuristics/kmeans.cpp ${L}/heuristics/assignment.cpp ${L}/heuristics/enumerate.cpp
   DEPS legalvrp::domain)
 
 legalvrp_module(check
@@ -57,11 +57,16 @@ legalvrp_module(kpi
 if(LEGALVRP_WITH_GUROBI)
   legalvrp_module(model
     SOURCES ${L}/model/bigm.cpp ${L}/model/milp_day.cpp ${L}/model/solve.cpp ${L}/model/extract.cpp
+            ${L}/model/cuts.cpp
     DEPS legalvrp::domain Gurobi::Gurobi)
   target_compile_definitions(legalvrp_model PUBLIC LEGALVRP_HAS_GUROBI=1)
+  target_link_libraries(legalvrp_model PRIVATE yaml-cpp::yaml-cpp)  # solver.yaml
   set(_week_model legalvrp::model)
 endif()
 
 legalvrp_module(week
   SOURCES ${L}/week/state.cpp ${L}/week/loop.cpp ${L}/week/certify.cpp
   DEPS legalvrp::domain legalvrp::data legalvrp::heuristics legalvrp::check ${_week_model})
+if(LEGALVRP_WITH_GUROBI)
+  target_sources(legalvrp_week PRIVATE ${L}/week/solve_day.cpp)  # MILP + checker orchestration
+endif()

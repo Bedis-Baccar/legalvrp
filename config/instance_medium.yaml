@@ -1,0 +1,34 @@
+# medium: stress test beyond the brief's sizes (owner request, 2026-10-03).
+# 25-30 orders a day, 6 drivers; same customer types as small.
+name: medium
+days: 5
+orders_per_day: [25, 30]
+customer_pool_factor: 2.0          # pool = 60 customers
+towns: [4, 5]
+town_distance_km: [15, 60]
+customer_spread_km: [3, 6]
+detour_factor: 1.3
+speed_kmh: 55
+access_minutes_per_leg: 4
+asymmetric_noise: 0.05
+customer_types:
+  grocery:    {share: 0.40, window: [360, 600], pallets_lambda: 2.0, tail_lift_prob: 0.15, order_weight: 1.0}
+  restaurant: {share: 0.40, window: [510, 690], pallets_lambda: 0.5, tail_lift_prob: 0.25, order_weight: 1.0}
+  site:       {share: 0.20, window: [420, 900], pallets_lambda: 2.5, tail_lift_prob: 0.00, order_weight: 0.6}
+weekday_factor: [1.15, 1.0, 1.0, 1.10, 0.90]
+drivers:
+  - {contract: full_time, shift_start: 330}    # 05:30
+  - {contract: full_time, shift_start: 360}    # 06:00
+  - {contract: full_time, shift_start: 390}    # 06:30
+  - {contract: full_time, shift_start: 420}    # 07:00
+  - {contract: part_time, shift_start: 360}    # 06:00
+  - {contract: temp_agency, shift_start: 360}  # 06:00, paid per minute + day fee
+trucks:
+  - {capacity_pallets: 12, has_tail_lift: true}
+  - {capacity_pallets: 15, has_tail_lift: false}
+  - {capacity_pallets: 15, has_tail_lift: false}
+  - {capacity_pallets: 18, has_tail_lift: false}
+  - {capacity_pallets: 15, has_tail_lift: true}
+  - {capacity_pallets: 18, has_tail_lift: false}
+shift_span_max: 765
+max_postponed_share: 0.20

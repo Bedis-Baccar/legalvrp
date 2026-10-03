@@ -16,4 +16,5 @@ legalvrp_app(legalvrp-run-week run_week.cpp legalvrp::week legalvrp::kpi)
 
 if(LEGALVRP_WITH_GUROBI)
   legalvrp_app(legalvrp-scaling scaling.cpp legalvrp::model legalvrp::heuristics legalvrp::data)
+  legalvrp_app(legalvrp-bench   bench.cpp    legalvrp::week legalvrp::model)  # MILP vs baseline (T6/T7)
 endif()
