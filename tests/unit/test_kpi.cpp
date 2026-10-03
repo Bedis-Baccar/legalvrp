@@ -45,7 +45,8 @@ TEST_CASE("baseline week: KPIs account for every order and match the checker", "
     cost += run.week_check.days[d].objective;
     for (const auto& f : run.week_check.days[d].drivers) km += f.km;
   }
-  CHECK(k.cost_total == Catch::Approx(cost));
+  CHECK(k.sum_daily_objectives == Catch::Approx(cost));
+  CHECK(k.cost_total <= k.sum_daily_objectives + 1e-6);  // daily objectives re-count weekly overtime (D-042)
   CHECK(k.km == Catch::Approx(km));
   CHECK(k.on_time_rate == 1.0);
   CHECK(k.hours_gini >= 0.0);

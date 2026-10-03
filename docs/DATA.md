@@ -12,3 +12,30 @@ Output layout: `data/instances/<name>/<seed>/{week.json, matrix.json, truth.json
 Generate: `build/msvc-release/apps/legalvrp-generate --config config/instance_small.yaml --seed 1`.
 Golden copies for tests: `tests/fixtures/instances/{tiny,small}/1` (D-015), certified (D-027).
 `data/` and `results/` are git-ignored. External data is fetched only by an explicit command.
+
+## Using real data (T10, owner decision 2026-10-03: import path only, no fetching)
+
+T10 as written in the brief (SIRENE download + OpenRouteService/OSRM matrices fetched by the
+program) was **not implemented**: it needs network access, an API key only the owner can
+obtain, multi-GB downloads and two heavy C++ dependencies (HTTP client, PROJ), and it does not
+change any conclusion about the method. What it would bring — real customers and road travel
+times — can be plugged in without code, by writing the two instance files from any source:
+
+`week.json` (schema = `WeekInstance` in `src/legalvrp/domain/json.cpp`)
+- `customers[]`: `id`, `name`, `type` (grocery | restaurant | site), `x_km`, `y_km` (any planar
+  coordinates in km, used only by the baseline's k-means; for WGS84 use a local projection),
+  optional `lat`, `lon`, `window_start`, `window_end` (minutes from midnight), `needs_tail_lift`.
+- `orders[]`: `id`, `customer_id`, `day` (0 = Monday), `pallets`, `service_mu` (≥ 1),
+  `service_sigma` (0), `postpone_penalty` (base, e.g. 200).
+- `drivers[]`, `trucks[]`, `depot`, `rules`, `contracts`, `costs` (copy them from a generated
+  instance and edit), `name`, `seed`, `days`, `certified`, `attempt`.
+
+`matrix.json` (schema = `Matrix`)
+- `node_ids`: the depot id first, then every customer id in the order of `customers[]`.
+- `time_min`: square integer matrix of travel minutes (asymmetric allowed, zero diagonal) — e.g.
+  an OSRM/ORS duration matrix converted to minutes, rounded up, + parking time per leg.
+- `dist_km`: square matrix of road kilometres.
+
+Validation: `data::validate_week` (ids, windows, s ≥ 1, matrix shape and integers) runs in the
+tests; every tool then works unchanged (`legalvrp-run-week --instance <dir>`, `legalvrp-bench`,
+`legalvrp-check`). Licences of the source data (SIRENE: Licence Ouverte 2.0; ORS terms) apply.

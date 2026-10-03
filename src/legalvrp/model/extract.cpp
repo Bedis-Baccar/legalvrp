@@ -43,7 +43,8 @@ bool MilpModel::set_start(const DayPlan& plan) {
   for (auto& arcs : x_) {
     for (auto& [arc, v] : arcs) v.set(GRB_DoubleAttr_Start, 0.0);
   }
-  for (std::size_t i = 0; i < n; ++i) u_[i].set(GRB_DoubleAttr_Start, 1.0);
+  const bool weekly = weekly_part();
+  for (std::size_t i = 0; i < n && !weekly; ++i) u_[i].set(GRB_DoubleAttr_Start, 1.0);
   for (std::size_t k = 0; k < K; ++k) {
     for (std::size_t i = 0; i < n; ++i) {
       if (!p.compat[k][i]) continue;
@@ -74,7 +75,7 @@ bool MilpModel::set_start(const DayPlan& plan) {
       a_[k].set(GRB_DoubleAttr_Start, S);
       b_[k].set(GRB_DoubleAttr_Start, 0.0);
       svc_[k].set(GRB_DoubleAttr_Start, 0.0);
-      ext_[k].set(GRB_DoubleAttr_Start, std::max(0, st.service_minutes_week - con.weekly_threshold));
+      if (!weekly) ext_[k].set(GRB_DoubleAttr_Start, std::max(0, st.service_minutes_week - con.weekly_threshold));
       continue;
     }
     int prev = p.depot_out;
@@ -86,7 +87,7 @@ bool MilpModel::set_start(const DayPlan& plan) {
       const auto ui = static_cast<std::size_t>(i);
       x_[k].at({prev, i}).set(GRB_DoubleAttr_Start, 1.0);
       driven += p.tau(prev, i);
-      u_[ui].set(GRB_DoubleAttr_Start, 0.0);
+      if (!weekly) u_[ui].set(GRB_DoubleAttr_Start, 0.0);
       T(i, static_cast<int>(k)).set(GRB_DoubleAttr_Start, rt->service_starts[pos]);
       D(i, static_cast<int>(k)).set(GRB_DoubleAttr_Start, driven);
       if (rt->break_after_order_id == rt->order_ids[pos]) {
@@ -104,7 +105,7 @@ bool MilpModel::set_start(const DayPlan& plan) {
     a_[k].set(GRB_DoubleAttr_Start, a);
     b_[k].set(GRB_DoubleAttr_Start, b);
     svc_[k].set(GRB_DoubleAttr_Start, theta);
-    ext_[k].set(GRB_DoubleAttr_Start, std::max(0.0, st.service_minutes_week + theta - con.weekly_threshold));
+    if (!weekly) ext_[k].set(GRB_DoubleAttr_Start, std::max(0.0, st.service_minutes_week + theta - con.weekly_threshold));
   }
   return true;
 }
@@ -155,9 +156,10 @@ DayPlan MilpModel::extract() const {
     plan.routes.push_back(std::move(rt));
   }
   for (std::size_t i = 0; i < static_cast<std::size_t>(p.n); ++i) {
-    if (u_[i].get(GRB_DoubleAttr_X) > 0.5) plan.postponed_order_ids.push_back(day_.orders[i].id);
+    const bool not_served = weekly_part() ? served_[i].getValue() < 0.5 : u_[i].get(GRB_DoubleAttr_X) > 0.5;
+    if (not_served) plan.postponed_order_ids.push_back(day_.orders[i].id);
   }
-  plan.objective = model_.get(GRB_DoubleAttr_ObjVal);
+  plan.objective = weekly_part() ? 0.0 : model_.get(GRB_DoubleAttr_ObjVal);  // weekly: set by the caller
   return plan;
 }
 

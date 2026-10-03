@@ -64,7 +64,14 @@ WeekKpis compute_week_kpis(const WeekInstance& week, const std::vector<DayInstan
         on_time += (r.service_starts[i] >= c.window_start && r.service_starts[i] <= c.window_end) ? 1 : 0;
       }
     }
-    k.cost_total += dk.cost;
+    k.sum_daily_objectives += dk.cost;
+    k.cost_total += dc.postponement_cost;
+    for (std::size_t j = 0; j < dc.drivers.size(); ++j) {  // route costs without overtime
+      const auto& f = dc.drivers[j];
+      const Contract& con = day.contract(day.drivers[j].contract_class);
+      k.cost_total += day.costs.cost_per_km * f.km + con.cost_per_min_regular * f.service_minutes +
+                      (f.used ? con.fixed_cost_if_used : 0.0);
+    }
     k.km += dk.km;
     k.served += dk.served;
     k.postponement_decisions += dk.postponed;
@@ -73,6 +80,7 @@ WeekKpis compute_week_kpis(const WeekInstance& week, const std::vector<DayInstan
   std::vector<double> ft_hours;
   for (auto& dw : k.drivers) {
     dw.extra_minutes = std::max(0, dw.service_minutes - dw.threshold);
+    k.cost_total += std::ranges::find(week.contracts, dw.contract, &Contract::name)->cost_per_min_extra * dw.extra_minutes;
     k.extra_minutes_total += dw.extra_minutes;
     if (dw.contract == full_time_contract) ft_hours.push_back(dw.service_minutes / 60.0);
   }

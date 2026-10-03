@@ -110,3 +110,9 @@ grocery windows, works 25.2 h and 72 min above its 24 h threshold. Each daily mo
 its own day; the cost of this myopia is what optional T11 (clairvoyant week) would measure.
 If balance matters to the owner, a fairness term or a minimum-hours rule would be a model
 decision (logged as an open question, not implemented).
+
+> **Note (D-042, added after T11 work).** The weekly costs in §3 and §6 are sums of the daily
+> objectives, which re-count weekly overtime on each day after the threshold is crossed. With
+> 72–135 overtime minutes per week at ≤ 0.45 €/min, the overstatement is at most a few tens of
+> euros per week — the conclusions (−36 % / −25 %) are unchanged. `legalvrp-run-week` now reports
+> the true weekly cost as `cost_total` and the old figure as `sum_daily_objectives`.

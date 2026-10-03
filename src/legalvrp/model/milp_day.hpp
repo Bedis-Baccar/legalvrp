@@ -13,6 +13,7 @@
 // names and the ids of orders and drivers.
 
 #include <map>
+#include <string>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -27,6 +28,18 @@ namespace legalvrp::model {
 class MilpModel {
  public:
   MilpModel(GRBEnv& env, const DayInstance& day, Formulation f);
+
+  // One day inside a shared weekly (clairvoyant) model, T11: no u, no cover, no weekly caps,
+  // no overtime and no symmetry rule (not valid across days); its km, regular-time and fixed
+  // costs are added to `objective`. Names are prefixed with `prefix`.
+  MilpModel(GRBModel& shared, const DayInstance& day, Formulation f, std::string prefix, GRBLinExpr& objective);
+
+  // Weekly part accessors: orders served today (sum over drivers of visit), driving and
+  // temps de service per driver.
+  [[nodiscard]] const GRBLinExpr& served(int i) const { return served_[static_cast<std::size_t>(i)]; }
+  [[nodiscard]] const GRBLinExpr& drive(int k) const { return drive_[static_cast<std::size_t>(k)]; }
+  [[nodiscard]] const GRBVar& svc(int k) const { return svc_[static_cast<std::size_t>(k)]; }
+  [[nodiscard]] bool weekly_part() const noexcept { return objective_sink_ != nullptr; }
 
   [[nodiscard]] GRBModel& grb() noexcept { return model_; }
   [[nodiscard]] const Prep& prep() const noexcept { return prep_; }
@@ -53,7 +66,11 @@ class MilpModel {
 
   const DayInstance& day_;
   Prep prep_;
-  GRBModel model_;
+  std::unique_ptr<GRBModel> owned_;
+  GRBModel& model_;
+  std::string prefix_;
+  GRBLinExpr* objective_sink_ = nullptr;
+  std::vector<GRBLinExpr> served_, drive_;
   int binaries_ = 0;
 
   std::vector<std::map<std::pair<int, int>, GRBVar>> x_;  // per driver, arc -> var

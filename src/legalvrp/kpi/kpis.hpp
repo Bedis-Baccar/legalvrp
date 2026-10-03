@@ -2,7 +2,9 @@
 // legalvrp::kpi — week KPIs (PROJECT_BRIEF §11), computed only from the checker's
 // recomputation of the extracted routes, never from model variables.
 //
-//   cost_total      sum of the days' recomputed objectives (routes + postponements)
+//   cost_total      true weekly cost: km + regular time + fixed + overtime on the FINAL weekly
+//                   hours + postponement penalties. (Summing the daily objectives would count
+//                   overtime several times: each day's objective includes the week's excess so far.)
 //   km              total distance
 //   drivers_used    per day
 //   service_hours   per driver per day and per week
@@ -50,7 +52,8 @@ struct WeekKpis {
   std::uint64_t seed = 0;
   std::vector<DayKpis> days;
   std::vector<DriverWeek> drivers;
-  Euros cost_total = 0.0;
+  Euros cost_total = 0.0;            // TRUE weekly cost: routes + overtime on final weekly hours + penalties
+  Euros sum_daily_objectives = 0.0;  // sum of the days' objectives (counts overtime cumulatively, D-042)
   double km = 0.0;
   int served = 0;
   int postponement_decisions = 0;

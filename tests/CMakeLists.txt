@@ -30,6 +30,8 @@ if(LEGALVRP_WITH_GUROBI)
   target_link_libraries(test_solve PRIVATE legalvrp::week legalvrp::model legalvrp::data)
   legalvrp_test(test_week_loop gurobi unit/test_week_loop.cpp)
   target_link_libraries(test_week_loop PRIVATE legalvrp::week legalvrp::kpi)
+  legalvrp_test(test_clairvoyant gurobi unit/test_clairvoyant.cpp)
+  target_link_libraries(test_clairvoyant PRIVATE legalvrp::week legalvrp::kpi legalvrp::model legalvrp::data)
 endif()
 
 legalvrp_test(test_route_eval unit unit/test_route_eval.cpp)

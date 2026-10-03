@@ -10,7 +10,13 @@ double dbl(Minutes m) { return static_cast<double>(m); }
 }  // namespace
 
 MilpModel::MilpModel(GRBEnv& env, const DayInstance& day, Formulation f)
-    : day_(day), prep_(prepare(day, f)), model_(env) {
+    : day_(day), prep_(prepare(day, f)), owned_(std::make_unique<GRBModel>(env)), model_(*owned_) {
+  build();
+}
+
+MilpModel::MilpModel(GRBModel& shared, const DayInstance& day, Formulation f, std::string prefix,
+                     GRBLinExpr& objective)
+    : day_(day), prep_(prepare(day, f)), model_(shared), prefix_(std::move(prefix)), objective_sink_(&objective) {
   build();
 }
 
@@ -41,7 +47,8 @@ void MilpModel::build() {
     if (v == p.depot_in) return "E";
     return day_.orders[static_cast<std::size_t>(v)].id;
   };
-  const auto kid = [&](std::size_t k) { return day_.drivers[k].id; };
+  const bool weekly = objective_sink_ != nullptr;
+  const auto kid = [&](std::size_t k) { return prefix_ + day_.drivers[k].id; };
   const auto ix = [](std::size_t a) { return static_cast<int>(a); };
 
   // ---------------------------------------------------------------- variables
@@ -53,7 +60,7 @@ void MilpModel::build() {
       ++binaries_;
     }
   }
-  for (std::size_t i = 0; i < n; ++i) {
+  for (std::size_t i = 0; i < n && !weekly; ++i) {  // weekly parts: postponement is decided per week
     u_.push_back(model_.addVar(p.servable[i] ? 0.0 : 1.0, 1, 0, GRB_BINARY, "u[" + oid(ix(i)) + "]"));
     ++binaries_;
   }
@@ -90,7 +97,7 @@ void MilpModel::build() {
     a_.push_back(model_.addVar(S, F, 0, GRB_CONTINUOUS, "a[" + kid(k) + "]"));
     b_.push_back(model_.addVar(0, strong ? DB : DD, 0, GRB_CONTINUOUS, "b[" + kid(k) + "]"));
     svc_.push_back(model_.addVar(0, DS, 0, GRB_CONTINUOUS, "svc[" + kid(k) + "]"));
-    ext_.push_back(model_.addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS, "ext[" + kid(k) + "]"));
+    if (!weekly) ext_.push_back(model_.addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS, "ext[" + kid(k) + "]"));
   }
 
   // ---------------------------------------------------------------- expressions
@@ -113,18 +120,23 @@ void MilpModel::build() {
     for (std::size_t i = 0; i < n; ++i) {
       if (p.compat[k][i]) brk[k] += y_[k][i];
     }
-    objective += con.cost_per_min_regular * svc_[k] + con.cost_per_min_extra * ext_[k] +
-                 con.fixed_cost_if_used * used[k];
+    objective += con.cost_per_min_regular * svc_[k] + con.fixed_cost_if_used * used[k];
+    if (!weekly) objective += con.cost_per_min_extra * ext_[k];
   }
-  for (std::size_t i = 0; i < n; ++i) objective += p.penalty[i] * u_[i];
-  model_.setObjective(objective, GRB_MINIMIZE);
+  if (weekly) {
+    *objective_sink_ += objective;  // overtime and postponement are weekly terms
+  } else {
+    for (std::size_t i = 0; i < n; ++i) objective += p.penalty[i] * u_[i];
+    model_.setObjective(objective, GRB_MINIMIZE);
+  }
 
   // ---------------------------------------------------------------- C1-C4
+  served_.assign(n, GRBLinExpr());
   for (std::size_t i = 0; i < n; ++i) {
-    GRBLinExpr cover = u_[i];
-    for (std::size_t k = 0; k < K; ++k) cover += visit[k][i];
-    model_.addConstr(cover == 1, "cover[" + oid(ix(i)) + "]");
+    for (std::size_t k = 0; k < K; ++k) served_[i] += visit[k][i];
+    if (!weekly) model_.addConstr(served_[i] + u_[i] == 1, "cover[" + oid(ix(i)) + "]");
   }
+  drive_ = drive;
   for (std::size_t k = 0; k < K; ++k) {
     model_.addConstr(leave[k] == 1, "leave[" + kid(k) + "]");
     GRBLinExpr load = 0;
@@ -254,13 +266,15 @@ void MilpModel::build() {
     model_.addConstr(tE_[k] + R - S <= WB + Mw1 * brk[k], "work_nobreak" + K_);
     model_.addConstr(drive[k] <= DD, "drive_day" + K_);                                      // C15
     model_.addConstr(svc_[k] >= tE_[k] + R - S - BR * brk[k] - (F - S) * (1 - used[k]), "svc_def" + K_);  // C16
-    model_.addConstr(svc_[k] <= con.weekly_service_max - st.service_minutes_week, "week_svc" + K_);  // C17
-    model_.addConstr(drive[k] <= WD - st.driving_minutes_week, "week_drv" + K_);
-    model_.addConstr(ext_[k] >= dbl(st.service_minutes_week) + svc_[k] - con.weekly_threshold, "extra" + K_);  // C18
+    if (!weekly) {  // weekly parts: caps and overtime on weekly totals (clairvoyant model)
+      model_.addConstr(svc_[k] <= con.weekly_service_max - st.service_minutes_week, "week_svc" + K_);  // C17
+      model_.addConstr(drive[k] <= WD - st.driving_minutes_week, "week_drv" + K_);
+      model_.addConstr(ext_[k] >= dbl(st.service_minutes_week) + svc_[k] - con.weekly_threshold, "extra" + K_);  // C18
+    }
   }
 
   // ---------------------------------------------------------------- symmetry (§6.6)
-  for (std::size_t k = 0; k + 1 < K; ++k) {
+  for (std::size_t k = 0; k + 1 < K && !weekly; ++k) {  // not valid across days of a week
     const Driver& d1 = day_.drivers[k];
     const Driver& d2 = day_.drivers[k + 1];
     const Truck& t1 = day_.truck(d1.truck_id);

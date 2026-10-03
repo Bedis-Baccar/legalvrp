@@ -11,6 +11,7 @@ daily MILPs solved exactly with Gurobi, checked by an independent legality check
 - Tighter formulations, literature: [docs/FORMULATION_RESEARCH.md](docs/FORMULATION_RESEARCH.md)
 - Benchmark MILP vs baseline (small, medium): [docs/BENCHMARK_V0.md](docs/BENCHMARK_V0.md)
 - Scaling experiment (T9): [docs/SCALING_V0.md](docs/SCALING_V0.md)
+- Price of myopia (T11): [docs/MYOPIA_V0.md](docs/MYOPIA_V0.md)
 - Model validation document: [docs/validation/model_validation.pdf](docs/validation/model_validation.pdf)
 
 ## Requirements
@@ -75,3 +76,5 @@ data/ results/   generated, git-ignored
 | T7 solve wrapper: params, complete MIP start, logs, .lp, IIS, stats, extraction, checker fallback, per-day outputs | done |
 | T8 rolling week, weekly state, KPIs (incl. Gini), week_kpis.json + week_report.md, `legalvrp-run-week` | done |
 | T9 scaling experiment (n = 8…40 × 5 seeds, 300 s): `docs/SCALING_V0.md` | done |
+| T10 (optional) real geography: reduced to a documented import path (`docs/DATA.md`), no fetching (D-043) | done (reduced) |
+| T11 (optional) clairvoyant weekly MILP, price of myopia: `docs/MYOPIA_V0.md` (D-044) | done |

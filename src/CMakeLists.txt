@@ -57,6 +57,7 @@ legalvrp_module(kpi
 if(LEGALVRP_WITH_GUROBI)
   legalvrp_module(model
     SOURCES ${L}/model/bigm.cpp ${L}/model/milp_day.cpp ${L}/model/solve.cpp ${L}/model/extract.cpp
+            ${L}/model/clairvoyant.cpp
             ${L}/model/cuts.cpp
     DEPS legalvrp::domain Gurobi::Gurobi)
   target_compile_definitions(legalvrp_model PUBLIC LEGALVRP_HAS_GUROBI=1)

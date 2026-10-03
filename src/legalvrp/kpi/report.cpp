@@ -37,7 +37,7 @@ json to_json(const WeekKpis& k) {
                        {"driving_hours_week", d.driving_minutes / 60.0}, {"threshold_hours", d.threshold / 60.0},
                        {"extra_minutes", d.extra_minutes}, {"days_worked", d.days_worked}});
   }
-  return {{"instance", k.instance}, {"seed", k.seed}, {"cost_total", k.cost_total}, {"km", k.km},
+  return {{"instance", k.instance}, {"seed", k.seed}, {"cost_total", k.cost_total}, {"sum_daily_objectives", k.sum_daily_objectives}, {"km", k.km},
           {"served", k.served}, {"postponement_decisions", k.postponement_decisions},
           {"unserved_end", k.unserved_end}, {"unserved_order_ids", k.unserved_order_ids},
           {"on_time_rate", k.on_time_rate}, {"hours_gini", k.hours_gini},

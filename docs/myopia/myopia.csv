@@ -1,0 +1,6 @@
+seed,orders,rolling_cost,clairvoyant_cost,clairvoyant_bound,clairvoyant_gap,clairvoyant_status,clairvoyant_runtime_s,myopia_eur,myopia_pct,myopia_upper_pct,rolling_postponements,clair_postponements,rolling_overtime_min,clair_overtime_min,rolling_gini,clair_gini,rolling_km,clair_km,checkers_ok
+1,24,2790.67,2633.21,2633.21,0,OPTIMAL,50.232,157.467,0.0564262,0.0564262,1,1,0,0,0,0,1602.03,1504.54,1
+2,28,4216.55,2299.53,2293.59,0.00258242,OPTIMAL,79.992,1917.02,0.454642,0.45605,3,2,40,48,0,0,1235.44,1160.67,1
+3,25,1947.51,1947.46,1947.46,0,OPTIMAL,8.966,0.05,2.56739e-05,2.56777e-05,0,0,0,0,0,0,1202.51,1202.51,1
+4,25,1799.25,1799.06,1792.74,0.00350982,OPTIMAL,29.144,0.19,0.0001056,0.00361505,0,0,0,0,0,0,1110.99,1110.99,1
+5,27,2419.34,2257.06,2257.06,0,OPTIMAL,176.508,162.281,0.0670765,0.0670765,0,0,142,31,0,0,1460.03,1386.52,1
