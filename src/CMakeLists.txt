@@ -76,3 +76,9 @@ endif()
 legalvrp_module(alns                    # V1-T2: ALNS for the daily problem
   SOURCES ${L}/alns/alns.cpp
   DEPS legalvrp::domain legalvrp::heuristics legalvrp::data)
+
+if(LEGALVRP_WITH_GUROBI)
+  legalvrp_module(pool                  # V1-T3: route-pool set partitioning
+    SOURCES ${L}/pool/pool.cpp
+    DEPS legalvrp::domain legalvrp::alns legalvrp::heuristics Gurobi::Gurobi)
+endif()

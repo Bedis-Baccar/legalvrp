@@ -33,6 +33,8 @@ if(LEGALVRP_WITH_GUROBI)
   legalvrp_test(test_clairvoyant gurobi unit/test_clairvoyant.cpp)
   legalvrp_test(test_alns_milp gurobi unit/test_alns_milp.cpp)
   target_link_libraries(test_alns_milp PRIVATE legalvrp::alns legalvrp::check legalvrp::model legalvrp::data)
+  legalvrp_test(test_pool gurobi unit/test_pool.cpp)
+  target_link_libraries(test_pool PRIVATE legalvrp::pool legalvrp::check legalvrp::data)
   target_link_libraries(test_clairvoyant PRIVATE legalvrp::week legalvrp::kpi legalvrp::model legalvrp::data)
 endif()
 
