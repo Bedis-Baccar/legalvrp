@@ -20,6 +20,7 @@
 #include "legalvrp/domain/paths.hpp"
 #include "legalvrp/domain/rules.hpp"
 #include "legalvrp/estimate/deterministic.hpp"
+#include "legalvrp/week/certify.hpp"
 
 using namespace legalvrp;
 using namespace legalvrp::data;
@@ -142,10 +143,13 @@ TEST_CASE("generator reproduces the committed golden fixtures byte for byte", "[
   // Cross-platform check: fixtures were produced on Windows/MSVC; CI regenerates them on
   // Linux/GCC. Regenerate after an intentional change with:
   //   legalvrp-generate --config config/instance_<name>.yaml --seed 1 --out tests/fixtures/instances/<name>/1
+  // (certified, T5)
   for (const char* name : {"tiny", "small"}) {
     const fs::path golden = fixtures_dir() / "instances" / name / "1";
     REQUIRE(fs::exists(golden / "week.json"));
-    const auto g = generate_week(instance_cfg(name), config(), 1);
+    const auto c = week::generate_certified_week(instance_cfg(name), config(), 1);
+    REQUIRE(c.has_value());
+    const auto& g = c->generated;
     TempDir t(name);
     write_week(t.path, g.week, g.truth);
     for (const char* f : {"week.json", "matrix.json", "truth.json"}) {

@@ -1,5 +1,6 @@
 {
-  "certified": false,
+  "attempt": 1,
+  "certified": true,
   "contracts": [
     {
       "cost_per_min_extra": 0.45,
@@ -35,23 +36,23 @@
   "customers": [
     {
       "id": "c001",
-      "name": "grocery 1",
+      "name": "site 1",
       "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": 31.704,
-      "y_km": -50.127
+      "type": "site",
+      "window_end": 900,
+      "window_start": 420,
+      "x_km": -29.687,
+      "y_km": 51.275
     },
     {
       "id": "c002",
-      "name": "grocery 2",
+      "name": "site 2",
       "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": 28.961,
-      "y_km": -50.1
+      "type": "site",
+      "window_end": 900,
+      "window_start": 420,
+      "x_km": 5.44,
+      "y_km": 61.682
     },
     {
       "id": "c003",
@@ -60,58 +61,58 @@
       "type": "restaurant",
       "window_end": 690,
       "window_start": 510,
-      "x_km": 28.209,
-      "y_km": -49.656
+      "x_km": 8.023,
+      "y_km": 53.023
     },
     {
       "id": "c004",
-      "name": "grocery 4",
-      "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": -15.599,
-      "y_km": 58.032
-    },
-    {
-      "id": "c005",
-      "name": "grocery 5",
-      "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": 24.352,
-      "y_km": -43.761
-    },
-    {
-      "id": "c006",
-      "name": "site 6",
-      "needs_tail_lift": false,
-      "type": "site",
-      "window_end": 900,
-      "window_start": 420,
-      "x_km": 36.275,
-      "y_km": 12.578
-    },
-    {
-      "id": "c007",
-      "name": "grocery 7",
-      "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": -16.633,
-      "y_km": 54.004
-    },
-    {
-      "id": "c008",
-      "name": "restaurant 8",
+      "name": "restaurant 4",
       "needs_tail_lift": false,
       "type": "restaurant",
       "window_end": 690,
       "window_start": 510,
-      "x_km": 24.479,
-      "y_km": -46.63
+      "x_km": -31.45,
+      "y_km": 50.051
+    },
+    {
+      "id": "c005",
+      "name": "restaurant 5",
+      "needs_tail_lift": false,
+      "type": "restaurant",
+      "window_end": 690,
+      "window_start": 510,
+      "x_km": 10.938,
+      "y_km": 58.861
+    },
+    {
+      "id": "c006",
+      "name": "grocery 6",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": 9.044,
+      "y_km": 58.425
+    },
+    {
+      "id": "c007",
+      "name": "restaurant 7",
+      "needs_tail_lift": true,
+      "type": "restaurant",
+      "window_end": 690,
+      "window_start": 510,
+      "x_km": -7.05,
+      "y_km": 16.212
+    },
+    {
+      "id": "c008",
+      "name": "site 8",
+      "needs_tail_lift": false,
+      "type": "site",
+      "window_end": 900,
+      "window_start": 420,
+      "x_km": -1.522,
+      "y_km": 18.995
     },
     {
       "id": "c009",
@@ -120,18 +121,18 @@
       "type": "grocery",
       "window_end": 600,
       "window_start": 360,
-      "x_km": 35.397,
-      "y_km": 15.764
+      "x_km": -30.83,
+      "y_km": 46.787
     },
     {
       "id": "c010",
-      "name": "restaurant 10",
+      "name": "grocery 10",
       "needs_tail_lift": false,
-      "type": "restaurant",
-      "window_end": 690,
-      "window_start": 510,
-      "x_km": 23.955,
-      "y_km": -46.692
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": -6.302,
+      "y_km": 14.697
     },
     {
       "id": "c011",
@@ -140,8 +141,8 @@
       "type": "site",
       "window_end": 900,
       "window_start": 420,
-      "x_km": -55.17,
-      "y_km": 11.405
+      "x_km": -5.989,
+      "y_km": 21.39
     },
     {
       "id": "c012",
@@ -150,38 +151,38 @@
       "type": "restaurant",
       "window_end": 690,
       "window_start": 510,
-      "x_km": -51.628,
-      "y_km": 8.305
+      "x_km": -29.667,
+      "y_km": 50.754
     },
     {
       "id": "c013",
-      "name": "site 13",
-      "needs_tail_lift": false,
-      "type": "site",
-      "window_end": 900,
-      "window_start": 420,
-      "x_km": -49.696,
-      "y_km": 7.577
-    },
-    {
-      "id": "c014",
-      "name": "site 14",
-      "needs_tail_lift": false,
-      "type": "site",
-      "window_end": 900,
-      "window_start": 420,
-      "x_km": -20.318,
-      "y_km": 51.899
-    },
-    {
-      "id": "c015",
-      "name": "grocery 15",
+      "name": "grocery 13",
       "needs_tail_lift": false,
       "type": "grocery",
       "window_end": 600,
       "window_start": 360,
-      "x_km": -54.96,
-      "y_km": 8.199
+      "x_km": 8.533,
+      "y_km": 51.955
+    },
+    {
+      "id": "c014",
+      "name": "grocery 14",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": 4.306,
+      "y_km": 60.437
+    },
+    {
+      "id": "c015",
+      "name": "site 15",
+      "needs_tail_lift": false,
+      "type": "site",
+      "window_end": 900,
+      "window_start": 420,
+      "x_km": 10.792,
+      "y_km": 57.189
     },
     {
       "id": "c016",
@@ -190,18 +191,18 @@
       "type": "grocery",
       "window_end": 600,
       "window_start": 360,
-      "x_km": 24.427,
-      "y_km": -47.174
+      "x_km": 7.225,
+      "y_km": 57.793
     },
     {
       "id": "c017",
-      "name": "restaurant 17",
-      "needs_tail_lift": false,
-      "type": "restaurant",
-      "window_end": 690,
-      "window_start": 510,
-      "x_km": -51.024,
-      "y_km": 9.688
+      "name": "grocery 17",
+      "needs_tail_lift": true,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": 11.182,
+      "y_km": 54.83
     },
     {
       "id": "c018",
@@ -210,18 +211,18 @@
       "type": "grocery",
       "window_end": 600,
       "window_start": 360,
-      "x_km": 29.785,
-      "y_km": -44.552
+      "x_km": -32.45,
+      "y_km": 47.119
     },
     {
       "id": "c019",
-      "name": "site 19",
+      "name": "grocery 19",
       "needs_tail_lift": false,
-      "type": "site",
-      "window_end": 900,
-      "window_start": 420,
-      "x_km": -20.136,
-      "y_km": 59.221
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": -5.024,
+      "y_km": 15.787
     },
     {
       "id": "c020",
@@ -230,38 +231,38 @@
       "type": "grocery",
       "window_end": 600,
       "window_start": 360,
-      "x_km": -49.605,
-      "y_km": 12.752
+      "x_km": 3.485,
+      "y_km": 57.317
     },
     {
       "id": "c021",
-      "name": "site 21",
-      "needs_tail_lift": false,
-      "type": "site",
-      "window_end": 900,
-      "window_start": 420,
-      "x_km": -19.675,
-      "y_km": 58.448
-    },
-    {
-      "id": "c022",
-      "name": "restaurant 22",
-      "needs_tail_lift": false,
-      "type": "restaurant",
-      "window_end": 690,
-      "window_start": 510,
-      "x_km": 26.732,
-      "y_km": -44.417
-    },
-    {
-      "id": "c023",
-      "name": "grocery 23",
+      "name": "grocery 21",
       "needs_tail_lift": false,
       "type": "grocery",
       "window_end": 600,
       "window_start": 360,
-      "x_km": -21.555,
-      "y_km": 57.366
+      "x_km": 5.364,
+      "y_km": 53.142
+    },
+    {
+      "id": "c022",
+      "name": "grocery 22",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": 9.136,
+      "y_km": 58.353
+    },
+    {
+      "id": "c023",
+      "name": "site 23",
+      "needs_tail_lift": false,
+      "type": "site",
+      "window_end": 900,
+      "window_start": 420,
+      "x_km": -8.536,
+      "y_km": 23.41
     },
     {
       "id": "c024",
@@ -270,78 +271,78 @@
       "type": "grocery",
       "window_end": 600,
       "window_start": 360,
-      "x_km": -54.242,
-      "y_km": 9.63
+      "x_km": 7.811,
+      "y_km": 52.784
     },
     {
       "id": "c025",
-      "name": "grocery 25",
-      "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": -48.222,
-      "y_km": 13.181
-    },
-    {
-      "id": "c026",
-      "name": "restaurant 26",
+      "name": "restaurant 25",
       "needs_tail_lift": false,
       "type": "restaurant",
       "window_end": 690,
       "window_start": 510,
-      "x_km": -19.187,
-      "y_km": 53.089
+      "x_km": -31.933,
+      "y_km": 47.568
+    },
+    {
+      "id": "c026",
+      "name": "grocery 26",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": 6.643,
+      "y_km": 52.953
     },
     {
       "id": "c027",
       "name": "grocery 27",
-      "needs_tail_lift": false,
+      "needs_tail_lift": true,
       "type": "grocery",
       "window_end": 600,
       "window_start": 360,
-      "x_km": 32.235,
-      "y_km": -46.274
+      "x_km": -33.017,
+      "y_km": 48.996
     },
     {
       "id": "c028",
-      "name": "grocery 28",
+      "name": "site 28",
       "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": 30.318,
-      "y_km": -49.472
+      "type": "site",
+      "window_end": 900,
+      "window_start": 420,
+      "x_km": 5.981,
+      "y_km": 61.645
     },
     {
       "id": "c029",
-      "name": "grocery 29",
+      "name": "restaurant 29",
       "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": -51.982,
-      "y_km": 6.303
+      "type": "restaurant",
+      "window_end": 690,
+      "window_start": 510,
+      "x_km": -8.968,
+      "y_km": 22.188
     },
     {
       "id": "c030",
-      "name": "grocery 30",
-      "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": -54.21,
-      "y_km": 10.928
+      "name": "restaurant 30",
+      "needs_tail_lift": true,
+      "type": "restaurant",
+      "window_end": 690,
+      "window_start": 510,
+      "x_km": 5.974,
+      "y_km": 52.926
     },
     {
       "id": "c031",
-      "name": "grocery 31",
-      "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": -19.098,
-      "y_km": 53.397
+      "name": "restaurant 31",
+      "needs_tail_lift": true,
+      "type": "restaurant",
+      "window_end": 690,
+      "window_start": 510,
+      "x_km": -3.323,
+      "y_km": 16.168
     },
     {
       "id": "c032",
@@ -350,18 +351,18 @@
       "type": "restaurant",
       "window_end": 690,
       "window_start": 510,
-      "x_km": -17.427,
-      "y_km": 58.921
+      "x_km": 8.398,
+      "y_km": 56.024
     },
     {
       "id": "c033",
-      "name": "site 33",
+      "name": "grocery 33",
       "needs_tail_lift": false,
-      "type": "site",
-      "window_end": 900,
-      "window_start": 420,
-      "x_km": 34.6,
-      "y_km": 8.265
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": -31.628,
+      "y_km": 47.672
     },
     {
       "id": "c034",
@@ -370,8 +371,8 @@
       "type": "restaurant",
       "window_end": 690,
       "window_start": 510,
-      "x_km": -19.103,
-      "y_km": 51.553
+      "x_km": 7.653,
+      "y_km": 53.93
     },
     {
       "id": "c035",
@@ -380,58 +381,58 @@
       "type": "restaurant",
       "window_end": 690,
       "window_start": 510,
-      "x_km": -51.843,
-      "y_km": 14.884
+      "x_km": -29.281,
+      "y_km": 49.066
     },
     {
       "id": "c036",
       "name": "restaurant 36",
+      "needs_tail_lift": false,
+      "type": "restaurant",
+      "window_end": 690,
+      "window_start": 510,
+      "x_km": -5.726,
+      "y_km": 17.107
+    },
+    {
+      "id": "c037",
+      "name": "grocery 37",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": 11.169,
+      "y_km": 57.849
+    },
+    {
+      "id": "c038",
+      "name": "grocery 38",
+      "needs_tail_lift": false,
+      "type": "grocery",
+      "window_end": 600,
+      "window_start": 360,
+      "x_km": -2.839,
+      "y_km": 20.559
+    },
+    {
+      "id": "c039",
+      "name": "restaurant 39",
       "needs_tail_lift": true,
       "type": "restaurant",
       "window_end": 690,
       "window_start": 510,
-      "x_km": -49.377,
-      "y_km": 13.572
-    },
-    {
-      "id": "c037",
-      "name": "restaurant 37",
-      "needs_tail_lift": false,
-      "type": "restaurant",
-      "window_end": 690,
-      "window_start": 510,
-      "x_km": -51.775,
-      "y_km": 15.688
-    },
-    {
-      "id": "c038",
-      "name": "site 38",
-      "needs_tail_lift": false,
-      "type": "site",
-      "window_end": 900,
-      "window_start": 420,
-      "x_km": 24.632,
-      "y_km": -44.867
-    },
-    {
-      "id": "c039",
-      "name": "grocery 39",
-      "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": -13.055,
-      "y_km": 53.857
+      "x_km": -7.501,
+      "y_km": 16.894
     },
     {
       "id": "c040",
-      "name": "grocery 40",
-      "needs_tail_lift": false,
-      "type": "grocery",
-      "window_end": 600,
-      "window_start": 360,
-      "x_km": 28.786,
-      "y_km": -46.586
+      "name": "restaurant 40",
+      "needs_tail_lift": true,
+      "type": "restaurant",
+      "window_end": 690,
+      "window_start": 510,
+      "x_km": -6.304,
+      "y_km": 21.964
     }
   ],
   "days": 5,
@@ -501,16 +502,16 @@
   "name": "small",
   "orders": [
     {
-      "customer_id": "c001",
+      "customer_id": "c003",
       "day": 0,
       "id": "d0-o01",
-      "pallets": 5,
+      "pallets": 1,
       "postpone_penalty": 200.0,
-      "service_mu": 40,
+      "service_mu": 16,
       "service_sigma": 0
     },
     {
-      "customer_id": "c003",
+      "customer_id": "c004",
       "day": 0,
       "id": "d0-o02",
       "pallets": 1,
@@ -522,13 +523,13 @@
       "customer_id": "c005",
       "day": 0,
       "id": "d0-o03",
-      "pallets": 4,
+      "pallets": 1,
       "postpone_penalty": 200.0,
-      "service_mu": 34,
+      "service_mu": 16,
       "service_sigma": 0
     },
     {
-      "customer_id": "c012",
+      "customer_id": "c006",
       "day": 0,
       "id": "d0-o04",
       "pallets": 1,
@@ -537,16 +538,16 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c014",
+      "customer_id": "c007",
       "day": 0,
       "id": "d0-o05",
-      "pallets": 2,
+      "pallets": 1,
       "postpone_penalty": 200.0,
-      "service_mu": 22,
+      "service_mu": 16,
       "service_sigma": 0
     },
     {
-      "customer_id": "c015",
+      "customer_id": "c009",
       "day": 0,
       "id": "d0-o06",
       "pallets": 2,
@@ -555,61 +556,61 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c018",
+      "customer_id": "c011",
       "day": 0,
       "id": "d0-o07",
-      "pallets": 4,
-      "postpone_penalty": 200.0,
-      "service_mu": 34,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c019",
-      "day": 0,
-      "id": "d0-o08",
-      "pallets": 5,
-      "postpone_penalty": 200.0,
-      "service_mu": 40,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c020",
-      "day": 0,
-      "id": "d0-o09",
-      "pallets": 4,
-      "postpone_penalty": 200.0,
-      "service_mu": 34,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c022",
-      "day": 0,
-      "id": "d0-o10",
-      "pallets": 1,
-      "postpone_penalty": 200.0,
-      "service_mu": 16,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c023",
-      "day": 0,
-      "id": "d0-o11",
-      "pallets": 1,
-      "postpone_penalty": 200.0,
-      "service_mu": 16,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c024",
-      "day": 0,
-      "id": "d0-o12",
       "pallets": 2,
       "postpone_penalty": 200.0,
       "service_mu": 22,
       "service_sigma": 0
     },
     {
-      "customer_id": "c026",
+      "customer_id": "c012",
+      "day": 0,
+      "id": "d0-o08",
+      "pallets": 1,
+      "postpone_penalty": 200.0,
+      "service_mu": 16,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c013",
+      "day": 0,
+      "id": "d0-o09",
+      "pallets": 3,
+      "postpone_penalty": 200.0,
+      "service_mu": 28,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c014",
+      "day": 0,
+      "id": "d0-o10",
+      "pallets": 2,
+      "postpone_penalty": 200.0,
+      "service_mu": 22,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c015",
+      "day": 0,
+      "id": "d0-o11",
+      "pallets": 3,
+      "postpone_penalty": 200.0,
+      "service_mu": 28,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c017",
+      "day": 0,
+      "id": "d0-o12",
+      "pallets": 3,
+      "postpone_penalty": 200.0,
+      "service_mu": 28,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c018",
       "day": 0,
       "id": "d0-o13",
       "pallets": 2,
@@ -618,25 +619,25 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c029",
+      "customer_id": "c028",
       "day": 0,
       "id": "d0-o14",
-      "pallets": 4,
+      "pallets": 3,
       "postpone_penalty": 200.0,
-      "service_mu": 34,
+      "service_mu": 28,
       "service_sigma": 0
     },
     {
-      "customer_id": "c032",
+      "customer_id": "c029",
       "day": 0,
       "id": "d0-o15",
-      "pallets": 1,
+      "pallets": 2,
       "postpone_penalty": 200.0,
-      "service_mu": 16,
+      "service_mu": 22,
       "service_sigma": 0
     },
     {
-      "customer_id": "c034",
+      "customer_id": "c031",
       "day": 0,
       "id": "d0-o16",
       "pallets": 1,
@@ -645,7 +646,7 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c037",
+      "customer_id": "c033",
       "day": 0,
       "id": "d0-o17",
       "pallets": 1,
@@ -654,25 +655,52 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c005",
+      "customer_id": "c036",
+      "day": 0,
+      "id": "d0-o18",
+      "pallets": 1,
+      "postpone_penalty": 200.0,
+      "service_mu": 16,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c037",
+      "day": 0,
+      "id": "d0-o19",
+      "pallets": 4,
+      "postpone_penalty": 200.0,
+      "service_mu": 34,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c040",
+      "day": 0,
+      "id": "d0-o20",
+      "pallets": 1,
+      "postpone_penalty": 200.0,
+      "service_mu": 16,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c003",
       "day": 1,
       "id": "d1-o01",
-      "pallets": 3,
+      "pallets": 1,
       "postpone_penalty": 200.0,
-      "service_mu": 28,
+      "service_mu": 16,
       "service_sigma": 0
     },
     {
-      "customer_id": "c006",
+      "customer_id": "c004",
       "day": 1,
       "id": "d1-o02",
-      "pallets": 3,
+      "pallets": 1,
       "postpone_penalty": 200.0,
-      "service_mu": 28,
+      "service_mu": 16,
       "service_sigma": 0
     },
     {
-      "customer_id": "c008",
+      "customer_id": "c005",
       "day": 1,
       "id": "d1-o03",
       "pallets": 2,
@@ -681,34 +709,34 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c009",
+      "customer_id": "c008",
       "day": 1,
       "id": "d1-o04",
-      "pallets": 2,
+      "pallets": 5,
       "postpone_penalty": 200.0,
-      "service_mu": 22,
+      "service_mu": 40,
       "service_sigma": 0
     },
     {
-      "customer_id": "c017",
+      "customer_id": "c010",
       "day": 1,
       "id": "d1-o05",
-      "pallets": 1,
-      "postpone_penalty": 200.0,
-      "service_mu": 16,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c018",
-      "day": 1,
-      "id": "d1-o06",
       "pallets": 4,
       "postpone_penalty": 200.0,
       "service_mu": 34,
       "service_sigma": 0
     },
     {
-      "customer_id": "c020",
+      "customer_id": "c014",
+      "day": 1,
+      "id": "d1-o06",
+      "pallets": 1,
+      "postpone_penalty": 200.0,
+      "service_mu": 16,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c016",
       "day": 1,
       "id": "d1-o07",
       "pallets": 4,
@@ -717,34 +745,34 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c021",
+      "customer_id": "c018",
       "day": 1,
       "id": "d1-o08",
+      "pallets": 4,
+      "postpone_penalty": 200.0,
+      "service_mu": 34,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c020",
+      "day": 1,
+      "id": "d1-o09",
       "pallets": 3,
       "postpone_penalty": 200.0,
       "service_mu": 28,
       "service_sigma": 0
     },
     {
-      "customer_id": "c022",
-      "day": 1,
-      "id": "d1-o09",
-      "pallets": 2,
-      "postpone_penalty": 200.0,
-      "service_mu": 22,
-      "service_sigma": 0
-    },
-    {
       "customer_id": "c025",
       "day": 1,
       "id": "d1-o10",
-      "pallets": 5,
+      "pallets": 1,
       "postpone_penalty": 200.0,
-      "service_mu": 40,
+      "service_mu": 16,
       "service_sigma": 0
     },
     {
-      "customer_id": "c027",
+      "customer_id": "c026",
       "day": 1,
       "id": "d1-o11",
       "pallets": 3,
@@ -753,43 +781,43 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c028",
+      "customer_id": "c027",
       "day": 1,
       "id": "d1-o12",
-      "pallets": 2,
-      "postpone_penalty": 200.0,
-      "service_mu": 22,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c030",
-      "day": 1,
-      "id": "d1-o13",
-      "pallets": 5,
-      "postpone_penalty": 200.0,
-      "service_mu": 40,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c033",
-      "day": 1,
-      "id": "d1-o14",
       "pallets": 4,
       "postpone_penalty": 200.0,
       "service_mu": 34,
       "service_sigma": 0
     },
     {
-      "customer_id": "c034",
+      "customer_id": "c029",
       "day": 1,
-      "id": "d1-o15",
+      "id": "d1-o13",
+      "pallets": 2,
+      "postpone_penalty": 200.0,
+      "service_mu": 22,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c032",
+      "day": 1,
+      "id": "d1-o14",
       "pallets": 1,
       "postpone_penalty": 200.0,
       "service_mu": 16,
       "service_sigma": 0
     },
     {
-      "customer_id": "c035",
+      "customer_id": "c033",
+      "day": 1,
+      "id": "d1-o15",
+      "pallets": 2,
+      "postpone_penalty": 200.0,
+      "service_mu": 22,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c036",
       "day": 1,
       "id": "d1-o16",
       "pallets": 2,
@@ -801,22 +829,22 @@
       "customer_id": "c037",
       "day": 1,
       "id": "d1-o17",
-      "pallets": 1,
+      "pallets": 2,
       "postpone_penalty": 200.0,
-      "service_mu": 16,
+      "service_mu": 22,
       "service_sigma": 0
     },
     {
       "customer_id": "c038",
       "day": 1,
       "id": "d1-o18",
-      "pallets": 4,
+      "pallets": 5,
       "postpone_penalty": 200.0,
-      "service_mu": 34,
+      "service_mu": 40,
       "service_sigma": 0
     },
     {
-      "customer_id": "c039",
+      "customer_id": "c040",
       "day": 1,
       "id": "d1-o19",
       "pallets": 1,
@@ -825,34 +853,34 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c001",
+      "customer_id": "c003",
       "day": 2,
       "id": "d2-o01",
-      "pallets": 6,
-      "postpone_penalty": 200.0,
-      "service_mu": 46,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c007",
-      "day": 2,
-      "id": "d2-o02",
       "pallets": 2,
       "postpone_penalty": 200.0,
       "service_mu": 22,
       "service_sigma": 0
     },
     {
-      "customer_id": "c008",
+      "customer_id": "c010",
       "day": 2,
-      "id": "d2-o03",
-      "pallets": 1,
+      "id": "d2-o02",
+      "pallets": 5,
       "postpone_penalty": 200.0,
-      "service_mu": 16,
+      "service_mu": 40,
       "service_sigma": 0
     },
     {
-      "customer_id": "c010",
+      "customer_id": "c018",
+      "day": 2,
+      "id": "d2-o03",
+      "pallets": 2,
+      "postpone_penalty": 200.0,
+      "service_mu": 22,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c019",
       "day": 2,
       "id": "d2-o04",
       "pallets": 2,
@@ -861,7 +889,7 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c011",
+      "customer_id": "c020",
       "day": 2,
       "id": "d2-o05",
       "pallets": 3,
@@ -870,52 +898,52 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c012",
+      "customer_id": "c022",
       "day": 2,
       "id": "d2-o06",
+      "pallets": 7,
+      "postpone_penalty": 200.0,
+      "service_mu": 52,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c023",
+      "day": 2,
+      "id": "d2-o07",
+      "pallets": 5,
+      "postpone_penalty": 200.0,
+      "service_mu": 40,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c025",
+      "day": 2,
+      "id": "d2-o08",
       "pallets": 1,
       "postpone_penalty": 200.0,
       "service_mu": 16,
       "service_sigma": 0
     },
     {
-      "customer_id": "c013",
-      "day": 2,
-      "id": "d2-o07",
-      "pallets": 2,
-      "postpone_penalty": 200.0,
-      "service_mu": 22,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c016",
-      "day": 2,
-      "id": "d2-o08",
-      "pallets": 2,
-      "postpone_penalty": 200.0,
-      "service_mu": 22,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c020",
+      "customer_id": "c026",
       "day": 2,
       "id": "d2-o09",
+      "pallets": 4,
+      "postpone_penalty": 200.0,
+      "service_mu": 34,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c027",
+      "day": 2,
+      "id": "d2-o10",
       "pallets": 3,
       "postpone_penalty": 200.0,
       "service_mu": 28,
       "service_sigma": 0
     },
     {
-      "customer_id": "c022",
-      "day": 2,
-      "id": "d2-o10",
-      "pallets": 1,
-      "postpone_penalty": 200.0,
-      "service_mu": 16,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c024",
+      "customer_id": "c030",
       "day": 2,
       "id": "d2-o11",
       "pallets": 2,
@@ -924,7 +952,7 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c025",
+      "customer_id": "c033",
       "day": 2,
       "id": "d2-o12",
       "pallets": 4,
@@ -933,7 +961,7 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c026",
+      "customer_id": "c036",
       "day": 2,
       "id": "d2-o13",
       "pallets": 1,
@@ -942,52 +970,34 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c027",
-      "day": 2,
-      "id": "d2-o14",
-      "pallets": 4,
-      "postpone_penalty": 200.0,
-      "service_mu": 34,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c031",
-      "day": 2,
-      "id": "d2-o15",
-      "pallets": 1,
-      "postpone_penalty": 200.0,
-      "service_mu": 16,
-      "service_sigma": 0
-    },
-    {
       "customer_id": "c037",
       "day": 2,
-      "id": "d2-o16",
-      "pallets": 1,
-      "postpone_penalty": 200.0,
-      "service_mu": 16,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c040",
-      "day": 2,
-      "id": "d2-o17",
+      "id": "d2-o14",
       "pallets": 3,
       "postpone_penalty": 200.0,
       "service_mu": 28,
       "service_sigma": 0
     },
     {
-      "customer_id": "c001",
-      "day": 3,
-      "id": "d3-o01",
-      "pallets": 6,
+      "customer_id": "c038",
+      "day": 2,
+      "id": "d2-o15",
+      "pallets": 4,
       "postpone_penalty": 200.0,
-      "service_mu": 46,
+      "service_mu": 34,
       "service_sigma": 0
     },
     {
       "customer_id": "c002",
+      "day": 3,
+      "id": "d3-o01",
+      "pallets": 2,
+      "postpone_penalty": 200.0,
+      "service_mu": 22,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c005",
       "day": 3,
       "id": "d3-o02",
       "pallets": 1,
@@ -996,39 +1006,39 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c005",
+      "customer_id": "c006",
       "day": 3,
       "id": "d3-o03",
-      "pallets": 2,
+      "pallets": 4,
       "postpone_penalty": 200.0,
-      "service_mu": 22,
+      "service_mu": 34,
       "service_sigma": 0
     },
     {
-      "customer_id": "c008",
+      "customer_id": "c009",
       "day": 3,
       "id": "d3-o04",
+      "pallets": 4,
+      "postpone_penalty": 200.0,
+      "service_mu": 34,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c013",
+      "day": 3,
+      "id": "d3-o05",
       "pallets": 1,
       "postpone_penalty": 200.0,
       "service_mu": 16,
       "service_sigma": 0
     },
     {
-      "customer_id": "c009",
-      "day": 3,
-      "id": "d3-o05",
-      "pallets": 3,
-      "postpone_penalty": 200.0,
-      "service_mu": 28,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c015",
+      "customer_id": "c014",
       "day": 3,
       "id": "d3-o06",
-      "pallets": 3,
+      "pallets": 2,
       "postpone_penalty": 200.0,
-      "service_mu": 28,
+      "service_mu": 22,
       "service_sigma": 0
     },
     {
@@ -1041,7 +1051,7 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c017",
+      "customer_id": "c018",
       "day": 3,
       "id": "d3-o08",
       "pallets": 2,
@@ -1050,25 +1060,25 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c021",
+      "customer_id": "c019",
       "day": 3,
       "id": "d3-o09",
-      "pallets": 6,
+      "pallets": 1,
       "postpone_penalty": 200.0,
-      "service_mu": 46,
+      "service_mu": 16,
       "service_sigma": 0
     },
     {
-      "customer_id": "c023",
+      "customer_id": "c021",
       "day": 3,
       "id": "d3-o10",
-      "pallets": 5,
+      "pallets": 3,
       "postpone_penalty": 200.0,
-      "service_mu": 40,
+      "service_mu": 28,
       "service_sigma": 0
     },
     {
-      "customer_id": "c024",
+      "customer_id": "c022",
       "day": 3,
       "id": "d3-o11",
       "pallets": 3,
@@ -1077,133 +1087,160 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c027",
+      "customer_id": "c023",
       "day": 3,
       "id": "d3-o12",
-      "pallets": 1,
+      "pallets": 2,
       "postpone_penalty": 200.0,
-      "service_mu": 16,
+      "service_mu": 22,
       "service_sigma": 0
     },
     {
-      "customer_id": "c030",
+      "customer_id": "c025",
       "day": 3,
       "id": "d3-o13",
+      "pallets": 2,
+      "postpone_penalty": 200.0,
+      "service_mu": 22,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c029",
+      "day": 3,
+      "id": "d3-o14",
+      "pallets": 3,
+      "postpone_penalty": 200.0,
+      "service_mu": 28,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c033",
+      "day": 3,
+      "id": "d3-o15",
       "pallets": 5,
       "postpone_penalty": 200.0,
       "service_mu": 40,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c034",
+      "day": 3,
+      "id": "d3-o16",
+      "pallets": 2,
+      "postpone_penalty": 200.0,
+      "service_mu": 22,
       "service_sigma": 0
     },
     {
       "customer_id": "c035",
       "day": 3,
-      "id": "d3-o14",
-      "pallets": 2,
+      "id": "d3-o17",
+      "pallets": 3,
       "postpone_penalty": 200.0,
-      "service_mu": 22,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c036",
-      "day": 3,
-      "id": "d3-o15",
-      "pallets": 2,
-      "postpone_penalty": 200.0,
-      "service_mu": 22,
+      "service_mu": 28,
       "service_sigma": 0
     },
     {
       "customer_id": "c037",
       "day": 3,
-      "id": "d3-o16",
-      "pallets": 1,
+      "id": "d3-o18",
+      "pallets": 3,
       "postpone_penalty": 200.0,
-      "service_mu": 16,
+      "service_mu": 28,
       "service_sigma": 0
     },
     {
-      "customer_id": "c040",
+      "customer_id": "c039",
       "day": 3,
-      "id": "d3-o17",
-      "pallets": 4,
-      "postpone_penalty": 200.0,
-      "service_mu": 34,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c001",
-      "day": 4,
-      "id": "d4-o01",
+      "id": "d3-o19",
       "pallets": 2,
       "postpone_penalty": 200.0,
       "service_mu": 22,
       "service_sigma": 0
     },
     {
-      "customer_id": "c002",
+      "customer_id": "c040",
+      "day": 3,
+      "id": "d3-o20",
+      "pallets": 2,
+      "postpone_penalty": 200.0,
+      "service_mu": 22,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c003",
+      "day": 4,
+      "id": "d4-o01",
+      "pallets": 1,
+      "postpone_penalty": 200.0,
+      "service_mu": 16,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c007",
       "day": 4,
       "id": "d4-o02",
+      "pallets": 2,
+      "postpone_penalty": 200.0,
+      "service_mu": 22,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c010",
+      "day": 4,
+      "id": "d4-o03",
+      "pallets": 3,
+      "postpone_penalty": 200.0,
+      "service_mu": 28,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c014",
+      "day": 4,
+      "id": "d4-o04",
+      "pallets": 2,
+      "postpone_penalty": 200.0,
+      "service_mu": 22,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c015",
+      "day": 4,
+      "id": "d4-o05",
+      "pallets": 6,
+      "postpone_penalty": 200.0,
+      "service_mu": 46,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c019",
+      "day": 4,
+      "id": "d4-o06",
       "pallets": 4,
       "postpone_penalty": 200.0,
       "service_mu": 34,
       "service_sigma": 0
     },
     {
-      "customer_id": "c007",
-      "day": 4,
-      "id": "d4-o03",
-      "pallets": 1,
-      "postpone_penalty": 200.0,
-      "service_mu": 16,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c010",
-      "day": 4,
-      "id": "d4-o04",
-      "pallets": 1,
-      "postpone_penalty": 200.0,
-      "service_mu": 16,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c011",
-      "day": 4,
-      "id": "d4-o05",
-      "pallets": 7,
-      "postpone_penalty": 200.0,
-      "service_mu": 52,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c012",
-      "day": 4,
-      "id": "d4-o06",
-      "pallets": 1,
-      "postpone_penalty": 200.0,
-      "service_mu": 16,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c016",
+      "customer_id": "c020",
       "day": 4,
       "id": "d4-o07",
-      "pallets": 5,
+      "pallets": 2,
       "postpone_penalty": 200.0,
-      "service_mu": 40,
+      "service_mu": 22,
       "service_sigma": 0
     },
     {
-      "customer_id": "c017",
+      "customer_id": "c022",
       "day": 4,
       "id": "d4-o08",
-      "pallets": 1,
+      "pallets": 3,
       "postpone_penalty": 200.0,
-      "service_mu": 16,
+      "service_mu": 28,
       "service_sigma": 0
     },
     {
-      "customer_id": "c018",
+      "customer_id": "c024",
       "day": 4,
       "id": "d4-o09",
       "pallets": 2,
@@ -1212,16 +1249,16 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c020",
+      "customer_id": "c025",
       "day": 4,
       "id": "d4-o10",
-      "pallets": 1,
+      "pallets": 2,
       "postpone_penalty": 200.0,
-      "service_mu": 16,
+      "service_mu": 22,
       "service_sigma": 0
     },
     {
-      "customer_id": "c022",
+      "customer_id": "c028",
       "day": 4,
       "id": "d4-o11",
       "pallets": 2,
@@ -1230,48 +1267,39 @@
       "service_sigma": 0
     },
     {
-      "customer_id": "c025",
+      "customer_id": "c031",
       "day": 4,
       "id": "d4-o12",
-      "pallets": 2,
+      "pallets": 1,
       "postpone_penalty": 200.0,
-      "service_mu": 22,
+      "service_mu": 16,
       "service_sigma": 0
     },
     {
-      "customer_id": "c026",
+      "customer_id": "c033",
       "day": 4,
       "id": "d4-o13",
-      "pallets": 2,
+      "pallets": 4,
       "postpone_penalty": 200.0,
-      "service_mu": 22,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c027",
-      "day": 4,
-      "id": "d4-o14",
-      "pallets": 2,
-      "postpone_penalty": 200.0,
-      "service_mu": 22,
-      "service_sigma": 0
-    },
-    {
-      "customer_id": "c035",
-      "day": 4,
-      "id": "d4-o15",
-      "pallets": 2,
-      "postpone_penalty": 200.0,
-      "service_mu": 22,
+      "service_mu": 34,
       "service_sigma": 0
     },
     {
       "customer_id": "c036",
       "day": 4,
-      "id": "d4-o16",
-      "pallets": 2,
+      "id": "d4-o14",
+      "pallets": 1,
       "postpone_penalty": 200.0,
-      "service_mu": 22,
+      "service_mu": 16,
+      "service_sigma": 0
+    },
+    {
+      "customer_id": "c039",
+      "day": 4,
+      "id": "d4-o15",
+      "pallets": 1,
+      "postpone_penalty": 200.0,
+      "service_mu": 16,
       "service_sigma": 0
     }
   ],

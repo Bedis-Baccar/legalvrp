@@ -230,7 +230,8 @@ void to_json(json& j, const WeekInstance& x) {
   j = json{{"name", x.name},           {"seed", x.seed},       {"days", x.days},
            {"depot", x.depot},         {"customers", x.customers}, {"orders", x.orders},
            {"drivers", x.drivers},     {"trucks", x.trucks},   {"rules", x.rules},
-           {"contracts", x.contracts}, {"costs", x.costs},     {"certified", x.certified}};
+           {"contracts", x.contracts}, {"costs", x.costs},     {"certified", x.certified},
+           {"attempt", x.attempt}};
 }
 void from_json(const json& j, WeekInstance& x) {
   j.at("name").get_to(x.name);
@@ -245,6 +246,7 @@ void from_json(const json& j, WeekInstance& x) {
   j.at("contracts").get_to(x.contracts);
   j.at("costs").get_to(x.costs);
   j.at("certified").get_to(x.certified);
+  j.at("attempt").get_to(x.attempt);
 }
 
 // ---- Route, SolverStats, DayPlan

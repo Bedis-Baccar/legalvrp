@@ -68,4 +68,5 @@ data/ results/   generated, git-ignored
 | T3 exact route evaluator (temporal network), brute-force cross-check | done |
 | Owner decisions D-018..D-022 (fixed start, penalties, daytime duties, T6 formulation) | done |
 | T4 independent checker (day + week), 41-duty corpus, CLI | done |
-| T5–T9 | to do, in order (see brief §12) |
+| T5 territory baseline (k-means, Hungarian, NN + repair + 2-opt), certified instances | done |
+| T6–T9 | to do, in order (see brief §12) |

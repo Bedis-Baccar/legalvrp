@@ -1,5 +1,26 @@
 #pragma once
-// legalvrp::heuristics — Seeded k-means (k-means++ init) on customer coordinates.
-// Task T5 (PROJECT_BRIEF.md §12).
+// legalvrp::heuristics — k-means on 2D points (Lloyd), deterministic.
+// Initialisation: farthest-first (maximin) starting from the point farthest from the origin
+// (the depot); ties go to the lowest index. No randomness, so the baseline is reproducible
+// on every platform without an RNG.
 
-namespace legalvrp::heuristics {}  // namespace legalvrp::heuristics
+#include <cstddef>
+#include <vector>
+
+namespace legalvrp::heuristics {
+
+struct Point2 {
+  double x = 0.0;
+  double y = 0.0;
+};
+
+struct KMeansResult {
+  std::vector<std::size_t> label;  // cluster of each point, in [0, k)
+  std::vector<Point2> centers;
+};
+
+// k is clamped to [1, points.size()]; empty input gives an empty result.
+[[nodiscard]] KMeansResult kmeans(const std::vector<Point2>& points, std::size_t k,
+                                  int max_iterations = 100);
+
+}  // namespace legalvrp::heuristics

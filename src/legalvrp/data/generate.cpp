@@ -52,10 +52,17 @@ void check_unique(const std::vector<T>& items, Proj id, const char* what,
 
 }  // namespace
 
-GeneratedWeek generate_week(const InstanceConfig& cfg, const Config& config, std::uint64_t seed) {
+std::uint64_t attempt_seed(std::uint64_t seed, int attempt) noexcept {
+  if (attempt == 0) return seed;
+  std::uint64_t st = seed ^ (0x9e3779b97f4a7c15ULL * static_cast<std::uint64_t>(attempt));
+  return splitmix64(st);
+}
+
+GeneratedWeek generate_week(const InstanceConfig& cfg, const Config& config, std::uint64_t seed,
+                            int attempt) {
   check_against_config(cfg, config, "instance_" + cfg.name + ".yaml");
 
-  const Rng root(seed);
+  const Rng root(attempt_seed(seed, attempt));
   Rng geo_rng = root.split(1);
   Rng noise_rng = root.split(2);
   const Rng orders_rng = root.split(3);
@@ -80,6 +87,7 @@ GeneratedWeek generate_week(const InstanceConfig& cfg, const Config& config, std
   w.contracts = config.contracts;
   w.costs = config.costs;
   w.certified = false;
+  w.attempt = attempt;
 
   for (const auto& o : w.orders) out.truth[o.id] = o.service_mu;  // truth = estimate in V0
 

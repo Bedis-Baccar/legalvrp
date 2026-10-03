@@ -165,6 +165,7 @@ struct WeekInstance {
   Contracts contracts;
   Costs costs;
   bool certified = false;                  // baseline + checker certification (T5)
+  int attempt = 0;                         // generator attempt that produced this week (T5)
 };
 
 struct Route {

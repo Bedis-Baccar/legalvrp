@@ -1,5 +1,6 @@
 {
-  "certified": false,
+  "attempt": 0,
+  "certified": true,
   "contracts": [
     {
       "cost_per_min_extra": 0.45,

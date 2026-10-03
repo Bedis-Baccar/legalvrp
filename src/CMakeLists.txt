@@ -63,5 +63,5 @@ if(LEGALVRP_WITH_GUROBI)
 endif()
 
 legalvrp_module(week
-  SOURCES ${L}/week/state.cpp ${L}/week/loop.cpp
-  DEPS legalvrp::domain legalvrp::heuristics legalvrp::check ${_week_model})
+  SOURCES ${L}/week/state.cpp ${L}/week/loop.cpp ${L}/week/certify.cpp
+  DEPS legalvrp::domain legalvrp::data legalvrp::heuristics legalvrp::check ${_week_model})
