@@ -342,3 +342,24 @@ TEST_CASE("DeterministicEstimator returns service_mu with sigma 0", "[estimate]"
     CHECK(e[i].sigma == 0);
   }
 }
+
+// ============================================================ scale instances (T9)
+
+TEST_CASE("scale config: sizes, seeds, K = ceil(n/5), certified one-day instances", "[scale]") {
+  const auto sc = load_scale_config(config_dir() / "instance_scale.yaml");
+  CHECK(sc.orders == std::vector<int>{8, 10, 12, 15, 20, 25, 30, 40});
+  CHECK(sc.seeds.size() == 5);
+  CHECK(sc.solver_profile == "scale");
+  for (const int n : {8, 12, 40}) {
+    const auto ic = scale_instance(sc, n);
+    CHECK(ic.days == 1);
+    CHECK(ic.orders_min == n);
+    CHECK(ic.orders_max == n);
+    CHECK(static_cast<int>(ic.drivers.size()) == (n + 4) / 5);
+    CHECK(ic.trucks.size() == ic.drivers.size());
+  }
+  const auto c = week::generate_certified_week(scale_instance(sc, 12), config(), 1);
+  REQUIRE(c.has_value());
+  CHECK(c->generated.week.orders.size() == 12);
+  CHECK(c->generated.week.drivers.size() == 3);
+}

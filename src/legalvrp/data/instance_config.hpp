@@ -1,6 +1,7 @@
 #pragma once
 // legalvrp::data — instance generator parameters (config/instance_<name>.yaml, §5.1).
 
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -53,5 +54,25 @@ struct InstanceConfig {
 // Throws ConfigError naming the file and the dotted key.
 [[nodiscard]] InstanceConfig parse_instance_config(std::string_view yaml, std::string_view source);
 [[nodiscard]] InstanceConfig load_instance_config(const std::filesystem::path& file);
+
+}  // namespace legalvrp::data
+
+namespace legalvrp::data {
+
+// config/instance_scale.yaml (task T9): sizes, seeds and the base instance whose geography,
+// customer types, contracts and driver/truck templates are reused.
+struct ScaleConfig {
+  std::vector<int> orders;            // n per day
+  std::vector<std::uint64_t> seeds;
+  int drivers_per_orders = 5;         // K = ceil(n / drivers_per_orders)
+  std::string solver_profile = "scale";
+  InstanceConfig base;
+};
+
+[[nodiscard]] ScaleConfig load_scale_config(const std::filesystem::path& file);
+
+// One-day instance config with exactly n orders and K = ceil(n / drivers_per_orders) drivers,
+// driver and truck templates cycled from the base.
+[[nodiscard]] InstanceConfig scale_instance(const ScaleConfig& s, int n);
 
 }  // namespace legalvrp::data

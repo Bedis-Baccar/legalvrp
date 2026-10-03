@@ -91,3 +91,10 @@ D4 constant 200 €, D5 contract + 10 %, D6 rolling.
 |---|---|---|---|---|
 | D-038 | 2026-10-03 | `week/state`: one place for the weekly state update (`update_states`, from the checker's facts only) and the carry-over (`carried_orders`: original orders with their first due day). Used by `run_week`, hence by certification and the CLI | Brief §13 ("state drifts if updated from θ"); no duplicated logic | accepted |
 | D-039 | 2026-10-03 | KPIs (`kpi/kpis`) only from the checker's recomputation: `cost_total`, `km`, `drivers_used`, service hours per driver per day/week, extra minutes above thresholds, postponements per day, unserved at the end, `on_time_rate` (service start inside the window; 1.0 by construction in V0), `hours_gini` over full-time drivers (Σ\|x_i−x_j\| / 2n²·mean), solver statistics per day. `legalvrp-run-week` writes `results/<run>/day<d>/{plan,stats,violations}.json + gurobi.log`, `week_kpis.json`, `week_report.md`; exit code 0 only with zero week-mode violations | Brief §11 | accepted |
+
+## T9 — scaling experiment (2026-10-03)
+
+| ID | Date | Decision | Why | Status |
+|---|---|---|---|---|
+| D-040 | 2026-10-03 | Scale instances derive from `instance_small.yaml` (geography, customer types, contracts): one day, exactly n orders, K = ⌈n/5⌉ drivers with driver and truck templates cycled; each is certified (D-027) before solving. `legalvrp-scaling` solves every (n, seed) end to end (baseline start → strong MILP + connectivity cuts → checker), TimeLimit 300 s, MIPGap 1 %, writes `scaling.csv` (flushed per row), `summary.md` and SVG figures generated in C++ | Brief T9; no plotting dependency (no Python toolchain on the machine), CSV stays the data of record | accepted |
+| D-041 | 2026-10-03 | Scaling results recorded in `docs/SCALING_V0.md` (+ CSV and SVG in `docs/scaling/`): frontier n = 25 (median gap > 1 % at 300 s). The experiment used end-of-horizon penalties (one-day instances = last day); `--regular-day` added to measure regular weekdays | Brief T9; honest reporting of a methodological artefact found after the run | accepted |

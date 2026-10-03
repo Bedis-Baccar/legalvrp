@@ -103,3 +103,38 @@ InstanceConfig load_instance_config(const std::filesystem::path& file) {
 }
 
 }  // namespace legalvrp::data
+
+namespace legalvrp::data {
+
+ScaleConfig load_scale_config(const std::filesystem::path& file) {
+  const auto src = file.filename().string();
+  detail::YamlSection s(detail::parse_yaml(detail::read_text_file(file, src), src), src, "");
+  ScaleConfig c;
+  s.text("name");
+  for (const double v : s.reals("orders", 1, 1000)) c.orders.push_back(static_cast<int>(v));
+  for (const double v : s.reals("seeds", 0, 1e15)) c.seeds.push_back(static_cast<std::uint64_t>(v));
+  c.drivers_per_orders = static_cast<int>(s.integer("drivers_per_orders", 1, 100));
+  c.solver_profile = s.text("solver_profile");
+  const std::string base = s.text("base");
+  s.reject_unknown();
+  c.base = load_instance_config(file.parent_path() / base);
+  return c;
+}
+
+InstanceConfig scale_instance(const ScaleConfig& s, int n) {
+  InstanceConfig c = s.base;
+  c.name = "scale_n" + std::to_string(n);
+  c.days = 1;
+  c.orders_min = c.orders_max = n;
+  c.weekday_factor = {1.0};
+  const int K = (n + s.drivers_per_orders - 1) / s.drivers_per_orders;
+  c.drivers.clear();
+  c.trucks.clear();
+  for (int k = 0; k < K; ++k) {
+    c.drivers.push_back(s.base.drivers[static_cast<std::size_t>(k) % s.base.drivers.size()]);
+    c.trucks.push_back(s.base.trucks[static_cast<std::size_t>(k) % s.base.trucks.size()]);
+  }
+  return c;
+}
+
+}  // namespace legalvrp::data
