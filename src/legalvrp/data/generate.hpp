@@ -2,6 +2,7 @@
 // legalvrp::data — instance generation pipeline (§5.1).
 //
 // Streams: geography = split(1), matrix noise = split(2), orders = split(3) (+ one per day),
+// true service minutes = split(4) (V1-T6),
 // so changing one component never shifts the draws of another.
 //
 // Certification (§5.1 "Validity") lives in week/certify.hpp: it plays the baseline over the week
@@ -20,7 +21,7 @@ namespace legalvrp::data {
 
 struct GeneratedWeek {
   WeekInstance week;
-  TrueService truth;  // = service_mu in V0
+  TrueService truth;  // generator side (truth.json); = service_mu, sigma 0 without a truth model
 };
 
 // Throws ConfigError if the instance config is inconsistent with the rules/contracts,

@@ -6,6 +6,7 @@
 #   model   <- domain, Gurobi        (MIP start arrives as a DayPlan, not via heuristics)
 #   week    <- domain, heuristics, check, [model]
 #   kpi     <- domain, check         (KPIs from the checker's recomputation, §11)
+#   sim     <- domain, check, data   (V1-T6: replays a given plan; never solves)
 #
 # tests/unit/test_layering.cpp additionally scans #include lines.
 
@@ -77,6 +78,10 @@ endif()
 legalvrp_module(alns                    # V1-T2: ALNS for the daily problem
   SOURCES ${L}/alns/alns.cpp
   DEPS legalvrp::domain legalvrp::heuristics legalvrp::data)
+
+legalvrp_module(sim                     # V1-T6: plans executed with the true service minutes
+  SOURCES ${L}/sim/realise.cpp
+  DEPS legalvrp::domain legalvrp::check legalvrp::data)
 
 if(LEGALVRP_WITH_GUROBI)
   legalvrp_module(pool                  # V1-T3: route-pool set partitioning

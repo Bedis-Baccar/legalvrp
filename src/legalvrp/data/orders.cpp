@@ -57,4 +57,27 @@ std::vector<Order> make_orders(const InstanceConfig& cfg, const std::vector<Cust
   return out;
 }
 
+double true_service_mean(const CustomerTypeParams& type, Pallets pallets) noexcept {
+  return type.service_fixed + type.service_per_pallet * static_cast<double>(pallets);
+}
+
+Minutes sample_service(double mean, double cv, Rng& rng) noexcept {
+  const double x = rng.lognormal(mean, cv);
+  return std::max<Minutes>(1, static_cast<Minutes>(std::floor(x + 0.5)));
+}
+
+TrueService make_truth(const InstanceConfig& cfg, const std::vector<Customer>& customers,
+                       const std::vector<Order>& orders, Rng rng) {
+  TrueService t;
+  for (const auto& o : orders) {
+    const Customer& c = *std::ranges::find(customers, o.customer_id, &Customer::id);
+    const CustomerTypeParams& p = params_of(cfg, c.type);
+    const double mean = true_service_mean(p, o.pallets);
+    t.mean[o.id] = mean;
+    t.sigma[o.id] = std::floor(p.service_cv * mean * 1000.0 + 0.5) / 1000.0;
+    t.minutes[o.id] = sample_service(mean, p.service_cv, rng);
+  }
+  return t;
+}
+
 }  // namespace legalvrp::data

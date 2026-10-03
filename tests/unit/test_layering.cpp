@@ -36,7 +36,7 @@ const fs::path kSrc = legalvrp::repo_root() / "src" / "legalvrp";
 
 TEST_CASE("checker depends on domain only", "[layering]") {
   const auto hits = forbidden_includes(kSrc / "check",
-                                       {"model", "heuristics", "week", "data", "kpi", "estimate"});
+                                       {"model", "heuristics", "week", "data", "kpi", "estimate", "sim"});
   INFO([&] { std::string s; for (const auto& h : hits) s += h + "\n"; return s; }());
   CHECK(hits.empty());
 }
@@ -49,5 +49,10 @@ TEST_CASE("domain depends on nothing else", "[layering]") {
 
 TEST_CASE("model does not reach into heuristics or week", "[layering]") {
   const auto hits = forbidden_includes(kSrc / "model", {"heuristics", "week", "check"});
+  CHECK(hits.empty());
+}
+
+TEST_CASE("the day simulator replays plans and never solves", "[layering]") {
+  const auto hits = forbidden_includes(kSrc / "sim", {"model", "heuristics", "week", "alns", "pool", "kpi"});
   CHECK(hits.empty());
 }

@@ -12,9 +12,9 @@ speed_kmh: 55
 access_minutes_per_leg: 4
 asymmetric_noise: 0.05
 customer_types:
-  grocery:    {share: 0.40, window: [360, 600], pallets_lambda: 2.0, tail_lift_prob: 0.15, order_weight: 1.0}
-  restaurant: {share: 0.40, window: [510, 690], pallets_lambda: 0.5, tail_lift_prob: 0.25, order_weight: 1.0}
-  site:       {share: 0.20, window: [420, 900], pallets_lambda: 2.5, tail_lift_prob: 0.00, order_weight: 0.6}
+  grocery:    {share: 0.40, window: [360, 600], pallets_lambda: 2.0, tail_lift_prob: 0.15, order_weight: 1.0, service_true: [12, 6, 0.30]}
+  restaurant: {share: 0.40, window: [510, 690], pallets_lambda: 0.5, tail_lift_prob: 0.25, order_weight: 1.0, service_true: [14, 7, 0.45]}
+  site:       {share: 0.20, window: [420, 900], pallets_lambda: 2.5, tail_lift_prob: 0.00, order_weight: 0.6, service_true: [18, 6, 0.55]}
 weekday_factor: [1.15, 1.0, 1.0, 1.10, 0.90]
 drivers:
   - {contract: part_time, shift_start: 360}    # 06:00, threshold 24 h

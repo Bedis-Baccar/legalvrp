@@ -180,7 +180,11 @@ TEST_CASE("generated weeks satisfy every invariant (5 seeds x tiny/small)", "[ge
         CHECK(o.service_sigma == 0);
         CHECK(o.pallets >= 1);
         CHECK(o.pallets <= largest);
-        CHECK(g.truth.at(o.id) == o.service_mu);              // truth = estimate in V0
+        const Customer& cu = *std::ranges::find(w.customers, o.customer_id, &Customer::id);
+        const auto& tt = *std::ranges::find(cfg.customer_types, cu.type, &CustomerTypeParams::type);
+        CHECK(g.truth.mean.at(o.id) == Catch::Approx(true_service_mean(tt, o.pallets)));  // V1-T6 truth model
+        CHECK(g.truth.sigma.at(o.id) == Catch::Approx(tt.service_cv * g.truth.mean.at(o.id)).margin(1e-3));
+        CHECK(g.truth.minutes.at(o.id) >= 1);
         CHECK(customers_by_day[o.day].insert(o.customer_id).second);  // <= 1 order/customer/day
       }
       for (int d = 0; d < w.days; ++d) {

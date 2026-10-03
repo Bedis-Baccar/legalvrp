@@ -15,4 +15,5 @@
 | [V1_PLAN.md](V1_PLAN.md) | V1 plan: ALNS at scale, route-pool MIP, look-ahead week policies, uncertain service times, legal relaxations |
 | [BENCHMARK_V1.md](BENCHMARK_V1.md) | V1: ALNS vs MILP vs route pool on 60 instances (8–100 orders), time to quality, with [data](compare/) |
 | [POLICIES_V1.md](POLICIES_V1.md) | V1: week policies (look-ahead, scarce-skill reserve) vs myopic and clairvoyant; fairness cost-vs-Gini curve, with [data](policies/) |
+| [ROBUSTNESS_V1.md](ROBUSTNESS_V1.md) | V1: plans executed with true (uncertain) service times: share of late or illegal duties per solver, bias vs noise, with [data](robustness/) |
 | [validation/](validation/) | Model validation document (LaTeX + PDF) |

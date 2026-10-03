@@ -2,7 +2,10 @@
 // legalvrp::data — instance files.
 //   <dir>/week.json    WeekInstance without the matrix (rules, contracts, costs embedded)
 //   <dir>/matrix.json  node_ids, time_min (integer rows), dist_km (rows)
-//   <dir>/truth.json   true service minutes per order (equal to service_mu in V0, §9)
+//   <dir>/truth.json   generator side, never read by the planner (V1-T6): per order the realised
+//                      service minutes ("service_true") and the true distribution ("service_mean",
+//                      "service_sigma"); equal to service_mu with sigma 0 when a config has no
+//                      service_true model (V0)
 // Files are written in binary mode with LF line endings: byte-identical on every OS.
 
 #include <filesystem>
@@ -13,7 +16,11 @@
 
 namespace legalvrp::data {
 
-using TrueService = std::map<std::string, Minutes>;  // order id -> minutes
+struct TrueService {
+  std::map<std::string, Minutes> minutes;  // realised service minutes per order
+  std::map<std::string, double> mean;      // true mean (generator)
+  std::map<std::string, double> sigma;     // true standard deviation (generator)
+};
 
 void write_text_file(const std::filesystem::path& file, const std::string& text);
 [[nodiscard]] std::string read_text_file(const std::filesystem::path& file);

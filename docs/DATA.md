@@ -13,6 +13,15 @@ Generate: `build/msvc-release/apps/legalvrp-generate --config config/instance_sm
 Golden copies for tests: `tests/fixtures/instances/{tiny,small}/1` (D-015), certified (D-027).
 `data/` and `results/` are git-ignored. External data is fetched only by an explicit command.
 
+`truth.json` (V1-T6) is the generator's side of service times and is never read by a planner:
+`service_true` (the week's realised minutes per order), `service_mean` and `service_sigma` (the
+true distribution: lognormal, mean = fixed + per_pallet × pallets and cv by customer type, from
+`service_true: [fixed, per_pallet, cv]` in the instance config). Planners use `service_mu` =
+10 + 6 × pallets from `week.json`. The truth has its own RNG stream (`split(4)`), so it never
+changes `week.json` or `matrix.json`. Without a `service_true` model the truth equals
+`service_mu` with σ = 0 (V0). `legalvrp-robustness` executes plans with these truths
+([ROBUSTNESS_V1.md](ROBUSTNESS_V1.md)).
+
 ## Using real data (T10: import path only, no fetching)
 
 T10 as written in the brief (SIRENE download + OpenRouteService/OSRM matrices fetched by the

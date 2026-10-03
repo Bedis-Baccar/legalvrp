@@ -90,7 +90,7 @@ GeneratedWeek generate_week(const InstanceConfig& cfg, const Config& config, std
   w.certified = false;
   w.attempt = attempt;
 
-  for (const auto& o : w.orders) out.truth[o.id] = o.service_mu;  // truth = estimate in V0
+  out.truth = make_truth(cfg, w.customers, w.orders, root.split(4));  // = service_mu without a truth model
 
   if (const auto problems = validate_week(w); !problems.empty()) {
     throw std::logic_error("generator produced an invalid week: " + problems.front());

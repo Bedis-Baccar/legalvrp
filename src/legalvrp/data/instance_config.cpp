@@ -56,6 +56,15 @@ InstanceConfig parse_instance_config(std::string_view yaml, std::string_view sou
     p.pallets_lambda = t.real("pallets_lambda", 0.0, 50.0);
     p.tail_lift_prob = t.real("tail_lift_prob", 0.0, 1.0);
     p.order_weight = t.real("order_weight", 0.0, 100.0);
+    if (t.has("service_true")) {  // optional: [fixed, per_pallet, cv]
+      const auto v = t.reals("service_true", 0.0, 1000.0);
+      if (v.size() != 3) t.fail("service_true", "expected [fixed, per_pallet, cv]");
+      if (v[0] + v[1] < 1.0) t.fail("service_true", "mean service must be >= 1 min for one pallet");
+      if (v[2] > 3.0) t.fail("service_true", "cv must be <= 3");
+      p.service_fixed = v[0];
+      p.service_per_pallet = v[1];
+      p.service_cv = v[2];
+    }
     t.reject_unknown();
     share_total += p.share;
     c.customer_types.push_back(p);

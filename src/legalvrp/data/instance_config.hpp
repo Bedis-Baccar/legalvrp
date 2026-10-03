@@ -19,6 +19,11 @@ struct CustomerTypeParams {
   double pallets_lambda = 0.0;   // pallets = 1 + Poisson(lambda), capped at the largest truck
   double tail_lift_prob = 0.0;   // probability the customer needs a tail-lift
   double order_weight = 1.0;     // relative chance of ordering on a given day
+  // True service minutes (V1-T6): lognormal, mean = fixed + per_pallet * pallets, cv = sigma / mean.
+  // The defaults reproduce the planning estimate exactly (10 + 6 * pallets, no variance, V0).
+  double service_fixed = 10.0;
+  double service_per_pallet = 6.0;
+  double service_cv = 0.0;
 };
 
 struct DriverTemplate {

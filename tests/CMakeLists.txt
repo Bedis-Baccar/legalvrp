@@ -53,3 +53,5 @@ legalvrp_test(test_route_quick unit unit/test_route_quick.cpp)
 target_link_libraries(test_route_quick PRIVATE legalvrp::heuristics legalvrp::data)
 legalvrp_test(test_alns unit unit/test_alns.cpp)
 target_link_libraries(test_alns PRIVATE legalvrp::alns legalvrp::check legalvrp::data)
+legalvrp_test(test_sim unit unit/test_sim.cpp)  # V1-T6
+target_link_libraries(test_sim PRIVATE legalvrp::sim legalvrp::alns legalvrp::data)

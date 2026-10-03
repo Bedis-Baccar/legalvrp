@@ -104,4 +104,5 @@ instance ─► baseline ─►│ day solver = ALNS (any size)  ──► route
 | V1-T3 route pool | done, kept optional | never worse than its ALNS phase; no systematic gain at equal total time — D-104, D-105 |
 | V1-T4 scale benchmark | done | `BENCHMARK_V1.md`: 60 instances 8–100 orders, all legal |
 | V1-T5 week policies | done | look-ahead (today + tomorrow) recovers 92 % of the myopia gap, never worse; reserve optional; fairness default 0.2 €/min (Gini 0.14 → 0.04 on `small`, +0.03 %) — `POLICIES_V1.md`, D-106 … D-108 |
-| V1-T6 … T10 | to do | next: uncertain service times |
+| V1-T6 uncertain service times | done | true durations in `truth.json` (lognormal by type); executed with them, 40–49 % of optimised duties become late or illegal (29–38 % for the baseline); half of it is estimation bias — `ROBUSTNESS_V1.md`, D-109 … D-111 |
+| V1-T7 … T10 | to do | next: learned estimator and buffers (T7) |

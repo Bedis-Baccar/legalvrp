@@ -1,7 +1,8 @@
 #include "legalvrp/data/rng.hpp"
 
-#include <cstdint>
 #include <cassert>
+#include <cmath>
+#include <cstdint>
 #include <limits>
 
 namespace legalvrp::data {
@@ -33,6 +34,26 @@ double portable_exp(double x) noexcept {
   }
   for (int i = 0; i < m; ++i) sum *= sum;
   return sum;
+}
+
+double portable_log(double x) noexcept {
+  assert(x > 0.0);
+  // x = f * 2^e with f in [sqrt(1/2), sqrt(2)); ln f = 2 atanh(y), y = (f - 1) / (f + 1), |y| < 0.172.
+  int e = 0;
+  double f = std::frexp(x, &e);  // f in [0.5, 1): exact
+  if (f < 0.70710678118654752) {
+    f *= 2.0;
+    --e;
+  }
+  const double y = (f - 1.0) / (f + 1.0);
+  const double y2 = y * y;
+  double term = y;
+  double sum = 0.0;
+  for (int k = 0; k < 16; ++k) {  // y^(2k+1) / (2k+1); 0.172^33 < 1e-25
+    sum += term / (2 * k + 1);
+    term *= y2;
+  }
+  return 2.0 * sum + e * 0.69314718055994531;
 }
 
 Rng::Rng(std::uint64_t seed) noexcept : seed_(seed) {
@@ -101,6 +122,24 @@ std::size_t Rng::categorical(std::span<const double> weights) noexcept {
     if (u < acc) return i;
   }
   return last_positive;  // u rounded up to total
+}
+
+double Rng::normal() noexcept {
+  for (;;) {
+    const double u = uniform(-1.0, 1.0);
+    const double v = uniform(-1.0, 1.0);
+    const double s = u * u + v * v;
+    if (s >= 1.0 || s == 0.0) continue;
+    return u * std::sqrt(-2.0 * portable_log(s) / s);  // the second variate (v) is not used
+  }
+}
+
+double Rng::lognormal(double mean, double cv) noexcept {
+  if (cv <= 0.0) return mean;
+  // X = exp(m + s Z): E[X] = exp(m + s^2 / 2), CV^2 = exp(s^2) - 1.
+  const double s2 = portable_log(1.0 + cv * cv);
+  const double m = portable_log(mean) - 0.5 * s2;
+  return portable_exp(m + std::sqrt(s2) * normal());
 }
 
 Rng Rng::split(std::uint64_t stream_id) const noexcept {

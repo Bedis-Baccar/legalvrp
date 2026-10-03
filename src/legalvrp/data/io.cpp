@@ -30,7 +30,9 @@ std::string read_text_file(const fs::path& file) {
 void write_week(const fs::path& dir, const WeekInstance& week, const TrueService& truth) {
   write_text_file(dir / "week.json", to_canonical_text(json(week)));
   write_text_file(dir / "matrix.json", to_canonical_text(json(week.matrix)));
-  write_text_file(dir / "truth.json", to_canonical_text(json{{"service_true", truth}}));
+  write_text_file(dir / "truth.json", to_canonical_text(json{{"service_true", truth.minutes},
+                                                             {"service_mean", truth.mean},
+                                                             {"service_sigma", truth.sigma}}));
 }
 
 WeekInstance read_week(const fs::path& dir) {
@@ -44,7 +46,19 @@ WeekInstance read_week(const fs::path& dir) {
 }
 
 TrueService read_truth(const fs::path& dir) {
-  return json::parse(read_text_file(dir / "truth.json")).at("service_true").get<TrueService>();
+  const json j = json::parse(read_text_file(dir / "truth.json"));
+  TrueService t;
+  t.minutes = j.at("service_true").get<std::map<std::string, Minutes>>();
+  if (j.contains("service_mean")) {
+    t.mean = j.at("service_mean").get<std::map<std::string, double>>();
+    t.sigma = j.at("service_sigma").get<std::map<std::string, double>>();
+  } else {  // V0 file: deterministic truth
+    for (const auto& [id, m] : t.minutes) {
+      t.mean[id] = static_cast<double>(m);
+      t.sigma[id] = 0.0;
+    }
+  }
+  return t;
 }
 
 }  // namespace legalvrp::data

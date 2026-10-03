@@ -11,10 +11,12 @@ detour_factor: 1.3                 # road km = euclidean km * 1.3
 speed_kmh: 55
 access_minutes_per_leg: 4          # parking/manoeuvring per leg, all trucks
 asymmetric_noise: 0.05             # +-5 % on travel time, per direction
+# service_true (V1-T6): true service minutes, lognormal [fixed, per_pallet, cv] (mean = fixed +
+# per_pallet * pallets); the planner still uses 10 + 6 * pallets. Drives truth.json only.
 customer_types:
-  grocery:    {share: 0.40, window: [360, 600], pallets_lambda: 2.0, tail_lift_prob: 0.15, order_weight: 1.0}  # 06:00-10:00
-  restaurant: {share: 0.40, window: [510, 690], pallets_lambda: 0.5, tail_lift_prob: 0.25, order_weight: 1.0}  # 08:30-11:30
-  site:       {share: 0.20, window: [420, 900], pallets_lambda: 2.5, tail_lift_prob: 0.00, order_weight: 0.6}  # 07:00-15:00
+  grocery:    {share: 0.40, window: [360, 600], pallets_lambda: 2.0, tail_lift_prob: 0.15, order_weight: 1.0, service_true: [12, 6, 0.30]}  # 06:00-10:00
+  restaurant: {share: 0.40, window: [510, 690], pallets_lambda: 0.5, tail_lift_prob: 0.25, order_weight: 1.0, service_true: [14, 7, 0.45]}  # 08:30-11:30
+  site:       {share: 0.20, window: [420, 900], pallets_lambda: 2.5, tail_lift_prob: 0.00, order_weight: 0.6, service_true: [18, 6, 0.55]}  # 07:00-15:00
 weekday_factor: [1.15, 1.0, 1.0, 1.10, 0.90]   # Mon..Fri (Mon, Thu heavier)
 drivers:
   - {contract: full_time, shift_start: 330}    # 05:30
