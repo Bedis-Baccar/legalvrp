@@ -72,4 +72,5 @@ data/ results/   generated, git-ignored
 | T5 territory baseline (k-means, Hungarian, NN + repair + 2-opt), certified instances | done |
 | T6 daily MILP (strong + reference), enumeration ground truth, traps, connectivity cuts; benchmark `docs/BENCHMARK_V0.md` | done |
 | T7 solve wrapper: params, complete MIP start, logs, .lp, IIS, stats, extraction, checker fallback, per-day outputs | done |
-| T8–T9 | to do (T8 loop core exists: `week/loop`) |
+| T8 rolling week, weekly state, KPIs (incl. Gini), week_kpis.json + week_report.md, `legalvrp-run-week` | done |
+| T9 scaling experiment | to do |

@@ -92,3 +92,21 @@ time and overtime; the total is still 25 % cheaper.
    evaluator as the pricing feasibility check; ALNS for scale).
 4. The brief's original formulation is not usable at these sizes; the strengthening is what
    makes the MILP useful.
+
+## 6. Week report with KPIs (T8, `legalvrp-run-week`, `small` seed 1, 120 s/day)
+
+| KPI | baseline | MILP |
+|---|---|---|
+| cost_total (€) | 6 869.46 | **4 385.10** |
+| km | 2 858.0 | 2 542.1 |
+| served / unserved at the end | 88 / 1 | 89 / 0 |
+| on_time_rate | 1.000 | 1.000 |
+| hours_gini (full-time drivers) | **0.046** | 0.101 |
+| extra minutes above thresholds | 82 | 72 |
+
+The MILP's workload is less even: it saves by idling the 07:00 full-time driver on light days
+(18.9 h in the week) while the 06:00 part-time driver, whose start suits the 06:00–10:00
+grocery windows, works 25.2 h and 72 min above its 24 h threshold. Each daily model sees only
+its own day; the cost of this myopia is what optional T11 (clairvoyant week) would measure.
+If balance matters to the owner, a fairness term or a minimum-hours rule would be a model
+decision (logged as an open question, not implemented).

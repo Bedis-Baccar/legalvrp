@@ -84,3 +84,10 @@ D4 constant 200 €, D5 contract + 10 %, D6 rolling.
 |---|---|---|---|---|
 | D-036 | 2026-10-03 | Per-day outputs (brief §11) by `week::write_day_outputs`: `plan.json` (validated plan), `stats.json` (§6.7 statistics + source, recomputed and baseline objectives, model size, cuts, start accepted), `violations.json` (empty), `gurobi.log` (via `log_dir` + tag). `MilpOptions::warm_start` can disable the MIP start (tests of the no-incumbent fallback). `MIPFocus` is configurable in `solver.yaml` | Brief §6.7, §11 | accepted |
 | D-037 | 2026-10-03 | Presolve statistics are best effort: Gurobi's `presolve()` throws on a model it proves infeasible, which used to pre-empt the IIS. Now the stats are −1 and the solve reports infeasibility and writes the `.ilp` | Found by the T7 IIS test | accepted |
+
+## T8 — week loop, KPIs, report (2026-10-03)
+
+| ID | Date | Decision | Why | Status |
+|---|---|---|---|---|
+| D-038 | 2026-10-03 | `week/state`: one place for the weekly state update (`update_states`, from the checker's facts only) and the carry-over (`carried_orders`: original orders with their first due day). Used by `run_week`, hence by certification and the CLI | Brief §13 ("state drifts if updated from θ"); no duplicated logic | accepted |
+| D-039 | 2026-10-03 | KPIs (`kpi/kpis`) only from the checker's recomputation: `cost_total`, `km`, `drivers_used`, service hours per driver per day/week, extra minutes above thresholds, postponements per day, unserved at the end, `on_time_rate` (service start inside the window; 1.0 by construction in V0), `hours_gini` over full-time drivers (Σ\|x_i−x_j\| / 2n²·mean), solver statistics per day. `legalvrp-run-week` writes `results/<run>/day<d>/{plan,stats,violations}.json + gurobi.log`, `week_kpis.json`, `week_report.md`; exit code 0 only with zero week-mode violations | Brief §11 | accepted |
