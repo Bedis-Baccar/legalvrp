@@ -9,7 +9,8 @@ set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 FetchContent_Declare(nlohmann_json
   URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
   URL_HASH SHA256=42f6e95cad6ec532fd372391373363b62a14af6d771056dbfc86160e6dfff7aa
-  DOWNLOAD_EXTRACT_TIMESTAMP ON)
+  DOWNLOAD_EXTRACT_TIMESTAMP ON
+  SYSTEM)
 
 # YAML configs (config/*.yaml).
 set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -19,19 +20,21 @@ set(YAML_CPP_INSTALL OFF CACHE BOOL "" FORCE)
 set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(yaml-cpp
   GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-  GIT_TAG        0.8.0
-  GIT_SHALLOW    ON)
+  GIT_TAG        yaml-cpp-0.9.0
+  GIT_SHALLOW    ON
+  SYSTEM)
 
 # Command-line parsing for the apps (header-only).
 FetchContent_Declare(CLI11
   GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
   GIT_TAG        v2.5.0
-  GIT_SHALLOW    ON)
+  GIT_SHALLOW    ON
+  SYSTEM)
 
 FetchContent_MakeAvailable(nlohmann_json yaml-cpp CLI11)
 
-# yaml-cpp 0.8.0 declares cmake_minimum_required < 3.5, rejected by CMake 4.x.
-# Handled by CMAKE_POLICY_VERSION_MINIMUM in CMakePresets.json.
+# yaml-cpp 0.9.0: 0.8.0 misses <cstdint> and fails with GCC >= 13 on Linux.
+# SYSTEM: third-party headers do not trigger our -Werror warnings.
 
 if(LEGALVRP_BUILD_TESTS)
   set(CATCH_INSTALL_DOCS OFF CACHE BOOL "" FORCE)
@@ -39,7 +42,8 @@ if(LEGALVRP_BUILD_TESTS)
   FetchContent_Declare(Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
     GIT_TAG        v3.8.1
-    GIT_SHALLOW    ON)
+    GIT_SHALLOW    ON
+    SYSTEM)
   FetchContent_MakeAvailable(Catch2)
   list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/extras")
 endif()
