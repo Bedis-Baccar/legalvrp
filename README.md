@@ -103,5 +103,6 @@ for development rules.
 ## Status
 
 V0 complete: tasks T0–T9 of the [specification](docs/PROJECT_BRIEF.md), T10 as an import path for
-real data, T11 (clairvoyant week). Next (V1): heuristics for days beyond ~25 orders (ALNS,
-branch-and-price with the exact route evaluator as oracle) and a learned service-time layer.
+real data, T11 (clairvoyant week). V1 in progress on branch `v1` ([plan](docs/V1_PLAN.md)): large
+instances, an O(n) exact route evaluator, ALNS (at least as good as the 300-s MILP on every tested
+day from 25 orders, ~1 % from the best known in 30 s at 60–100 orders; [benchmark](docs/BENCHMARK_V1.md)).

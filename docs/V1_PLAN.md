@@ -93,3 +93,14 @@ instance ─► baseline ─►│ day solver = ALNS (any size)  ──► route
 | ALNS quality hard to judge beyond 25 orders | Pool MIP bound-free comparisons, MILP incumbents at long limits, optional column-generation bounds |
 | Uncertainty model is invented (no real durations) | Keep distributions in config; plan to calibrate on LaDe / Amazon data shapes (V0 SIZING §3) |
 | Scope creep | Task order and acceptance criteria as in V0; V2 list for everything else |
+
+## 8. Status (2026-10-04)
+
+| Task | State | Evidence |
+|---|---|---|
+| V1-T0 large instances | done | 15/15 size × seed weeks certified; golden hash (cross-platform) — D-101 |
+| V1-T1 fast exact evaluation | done | 0 mismatches on 100 000 cases; 48× faster — D-102 |
+| V1-T2 ALNS | done | exact on 20/20 regime days; = MILP optimum where proven; ≤ MILP-300 s on every instance from 25 orders — D-103, D-105 |
+| V1-T3 route pool | done, kept optional | never worse than its ALNS phase; no systematic gain at equal total time — D-104, D-105 |
+| V1-T4 scale benchmark | done | `BENCHMARK_V1.md`: 60 instances 8–100 orders, all legal |
+| V1-T5 … T10 | to do | next: week policies (look-ahead, scarce-skill protection, fairness) |

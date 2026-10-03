@@ -13,4 +13,5 @@
 | [SCALING_V0.md](SCALING_V0.md) | Runtime and gap vs number of orders (8–40), with [data and figures](scaling/) |
 | [MYOPIA_V0.md](MYOPIA_V0.md) | Rolling week vs clairvoyant weekly MILP, with [data](myopia/) |
 | [V1_PLAN.md](V1_PLAN.md) | V1 plan: ALNS at scale, route-pool MIP, look-ahead week policies, uncertain service times, legal relaxations |
+| [BENCHMARK_V1.md](BENCHMARK_V1.md) | V1: ALNS vs MILP vs route pool on 60 instances (8–100 orders), time to quality, with [data](compare/) |
 | [validation/](validation/) | Model validation document (LaTeX + PDF) |

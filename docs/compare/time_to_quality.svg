@@ -1,0 +1,38 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='760' height='460' font-family='sans-serif' font-size='12'>
+<rect width='100%' height='100%' fill='white'/>
+<text x='345' y='22' text-anchor='middle' font-size='15'>ALNS time to quality</text>
+<line x1='70' y1='400' x2='620' y2='400' stroke='black'/>
+<line x1='70' y1='40' x2='70' y2='400' stroke='black'/>
+<text x='345' y='445' text-anchor='middle'>time (s, log scale)</text>
+<text transform='translate(18,220) rotate(-90)' text-anchor='middle'>median gap to best known (%)</text>
+<text x='70' y='418' text-anchor='middle'>0.1</text>
+<text x='214.894' y='418' text-anchor='middle'>0.5</text>
+<text x='277.296' y='418' text-anchor='middle'>1</text>
+<text x='339.698' y='418' text-anchor='middle'>2</text>
+<text x='422.189' y='418' text-anchor='middle'>5</text>
+<text x='484.592' y='418' text-anchor='middle'>10</text>
+<text x='521.095' y='418' text-anchor='middle'>15</text>
+<text x='583.497' y='418' text-anchor='middle'>30</text>
+<text x='620' y='418' text-anchor='middle'>45</text>
+<line x1='70' y1='400' x2='620' y2='400' stroke='#ddd'/><text x='62' y='404' text-anchor='end'>0.0</text>
+<line x1='70' y1='310' x2='620' y2='310' stroke='#ddd'/><text x='62' y='314' text-anchor='end'>4.1</text>
+<line x1='70' y1='220' x2='620' y2='220' stroke='#ddd'/><text x='62' y='224' text-anchor='end'>8.2</text>
+<line x1='70' y1='130' x2='620' y2='130' stroke='#ddd'/><text x='62' y='134' text-anchor='end'>12.3</text>
+<line x1='70' y1='40' x2='620' y2='40' stroke='#ddd'/><text x='62' y='44' text-anchor='end'>16.4</text>
+<path d='M70.0 400.0 L214.9 400.0 L277.3 400.0 L339.7 400.0 L422.2 400.0 L484.6 400.0 L521.1 400.0' fill='none' stroke='#1b9e77' stroke-width='2'/>
+<text x='630' y='50' fill='#1b9e77'>n = 15</text>
+<path d='M70.0 400.0 L214.9 400.0 L277.3 400.0 L339.7 400.0 L422.2 400.0 L484.6 400.0 L521.1 400.0' fill='none' stroke='#d95f02' stroke-width='2'/>
+<text x='630' y='66' fill='#d95f02'>n = 20</text>
+<path d='M70.0 391.6 L214.9 396.9 L277.3 397.2 L339.7 397.2 L422.2 398.9 L484.6 400.0 L521.1 400.0 L583.5 400.0 L620.0 400.0' fill='none' stroke='#7570b3' stroke-width='2'/>
+<text x='630' y='82' fill='#7570b3'>n = 30</text>
+<path d='M70.0 349.5 L214.9 366.1 L277.3 377.3 L339.7 380.8 L422.2 388.1 L484.6 391.9 L521.1 398.0 L583.5 400.0 L620.0 400.0' fill='none' stroke='#e7298a' stroke-width='2'/>
+<text x='630' y='98' fill='#e7298a'>n = 40</text>
+<path d='M70.0 263.2 L214.9 322.7 L277.3 326.4 L339.7 326.4 L422.2 361.5 L484.6 377.4 L521.1 387.2 L583.5 399.3 L620.0 400.0' fill='none' stroke='#66a61e' stroke-width='2'/>
+<text x='630' y='114' fill='#66a61e'>n = 60</text>
+<path d='M70.0 150.5 L214.9 303.7 L277.3 335.0 L339.7 342.5 L422.2 354.5 L484.6 356.6 L521.1 384.2 L583.5 398.8 L620.0 400.0' fill='none' stroke='#e6ab02' stroke-width='2'/>
+<text x='630' y='130' fill='#e6ab02'>n = 70</text>
+<path d='M70.0 145.4 L214.9 278.0 L277.3 287.0 L339.7 303.1 L422.2 343.7 L484.6 362.2 L521.1 370.8 L583.5 398.6 L620.0 398.6' fill='none' stroke='#a6761d' stroke-width='2'/>
+<text x='630' y='146' fill='#a6761d'>n = 80</text>
+<path d='M70.0 40.0 L214.9 241.5 L277.3 271.6 L339.7 285.0 L422.2 321.7 L484.6 342.4 L521.1 360.1 L583.5 394.6 L620.0 399.7' fill='none' stroke='#666666' stroke-width='2'/>
+<text x='630' y='162' fill='#666666'>n = 100</text>
+</svg>
