@@ -1,5 +1,6 @@
 # legalvrp
-n[![ci](https://github.com/Bedis-Baccar/legalvrp/actions/workflows/ci.yml/badge.svg)](https://github.com/Bedis-Baccar/legalvrp/actions/workflows/ci.yml)
+
+[![ci](https://github.com/Bedis-Baccar/legalvrp/actions/workflows/ci.yml/badge.svg)](https://github.com/Bedis-Baccar/legalvrp/actions/workflows/ci.yml)
 
 **Vehicle routing with legal driver hours** for regional pallet distribution, in C++20 with Gurobi.
 
