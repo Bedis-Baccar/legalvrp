@@ -85,7 +85,6 @@ RouteEvaluation RouteEvaluator::evaluate(std::size_t k, std::span<const std::siz
   const Minutes F = drv.shift_end_max;
   const Minutes P = r.depot_prep;
   const Minutes R = r.depot_close;
-  const Minutes BR = r.break_length;
 
   RouteEvaluation out;
   out.route.driver_id = drv.id;
@@ -131,15 +130,16 @@ RouteEvaluation RouteEvaluator::evaluate(std::size_t k, std::span<const std::siz
   }
   Minutes drive_total = 0;
   for (const auto x : leg) drive_total += x;
+  std::vector<Minutes> before(n);  // driving done on arrival at stop i (= at a break after it)
+  Minutes driven = 0;
+  for (std::size_t i = 0; i < n; ++i) before[i] = driven += leg[i];
 
   // STN nodes: 0 = zero reference, 1 = t0, 2..n+1 = T_i, n+2 = tE.
   const int Z = 0, T0 = 1, TE = static_cast<int>(n) + 2;
   auto Tn = [](std::size_t i) { return static_cast<int>(i) + 2; };
 
-  // brk = -1: no break; otherwise break right after seq[brk].
-  auto build = [&](int brk, Stage stage) {
+  auto build = [&](const BreakPattern& pat, Stage stage) {
     Stn g(static_cast<int>(n) + 3);
-    const bool has_break = brk >= 0;
     // shift: S + P <= t0;  tE <= F - R;  tE >= t0
     g.ge(Z, T0, S + P);
     g.le(Z, T0, F);
@@ -150,36 +150,42 @@ RouteEvaluation RouteEvaluator::evaluate(std::size_t k, std::span<const std::siz
       g.ge(Z, Tn(i), orders_[seq[i]].e);
       g.le(Z, Tn(i), orders_[seq[i]].l);
     }
-    // travel + service (+ break after the break node)
+    // travel + service (+ the break after a break node)
     g.ge(T0, Tn(0), leg[0]);
     for (std::size_t i = 0; i < n; ++i) {
-      const Minutes done = orders_[seq[i]].s + (static_cast<int>(i) == brk ? BR : 0);
+      const Minutes done = orders_[seq[i]].s + pat.minutes_after(static_cast<int>(i));
       if (i + 1 < n) {
         g.ge(Tn(i), Tn(i + 1), done + leg[i + 1]);
       } else {
         g.ge(Tn(i), TE, done + leg[n]);
       }
     }
-    // work segments (C14), fixed duty start S (D-018)
-    if (has_break) {
-      const auto b = static_cast<std::size_t>(brk);
-      const Minutes sb = orders_[seq[b]].s;
-      if (stage != Stage::schedule && stage != Stage::work_after) {
-        g.le(Z, Tn(b), S + r.work_before_break - sb);            // (T_b + s_b) - S <= WB
+    // work stretches between S, the breaks and tE + R (C14, fixed duty start S, D-018)
+    const bool first_on = stage != Stage::schedule && stage != Stage::work_after;
+    const bool last_on = stage != Stage::schedule && stage != Stage::work_before;
+    const bool middle_on = stage != Stage::schedule && stage != Stage::work_before && stage != Stage::work_after;
+    if (pat.count() == 0) {
+      if (stage != Stage::schedule) g.le(Z, TE, S + r.work_before_break - R);  // (tE + R) - S <= WB
+    } else {
+      const auto b1 = static_cast<std::size_t>(pat.i);
+      const Minutes s1 = orders_[seq[b1]].s;
+      if (first_on) g.le(Z, Tn(b1), S + r.work_before_break - s1);  // (T_b1 + s_b1) - S <= WB
+      if (pat.count() == 2 && middle_on) {                            // (T_b2 + s_b2) - (T_b1 + s_b1 + m1) <= WB
+        const auto b2 = static_cast<std::size_t>(pat.j);
+        g.le(Tn(b1), Tn(b2), r.work_before_break + s1 + pat.mi - orders_[seq[b2]].s);
       }
-      if (stage != Stage::schedule && stage != Stage::work_before) {
-        g.le(Tn(b), TE, r.work_before_break - R + sb + BR);      // (tE + R) - (T_b + s_b + BR) <= WB
-      }
-    } else if (stage != Stage::schedule) {
-      g.le(Z, TE, S + r.work_before_break - R);                  // (tE + R) - S <= WB
+      const auto bl = static_cast<std::size_t>(pat.count() == 2 ? pat.j : pat.i);
+      const Minutes ml = pat.count() == 2 ? pat.mj : pat.mi;
+      if (last_on) g.le(Tn(bl), TE, r.work_before_break - R + orders_[seq[bl]].s + ml);  // (tE + R) - (T_bl + s_bl + ml) <= WB
     }
-    // service caps: theta = tE + R - S - BR*[break]
-    const Minutes br_credit = has_break ? BR : 0;
+    // service caps: theta = tE + R - S - breaks
+    const Minutes credit = pat.total();
     if (stage == Stage::daily_service || stage == Stage::weekly_service) {
-      g.le(Z, TE, S + r.daily_service_max - R + br_credit);
+      const Minutes cap = pat.short_break ? std::min(r.daily_service_max, r.short_break_work_max) : r.daily_service_max;
+      g.le(Z, TE, S + cap - R + credit);
     }
     if (stage == Stage::weekly_service) {
-      g.le(Z, TE, S + c.weekly_service_max - dd.week_service - R + br_credit);
+      g.le(Z, TE, S + c.weekly_service_max - dd.week_service - R + credit);
     }
     return g;
   };
@@ -187,8 +193,8 @@ RouteEvaluation RouteEvaluator::evaluate(std::size_t k, std::span<const std::siz
   // Earliest return (= min theta); then latest departure; then earliest service starts.
   // Each step only fixes a variable inside its feasible interval, which an STN can always
   // extend to a full solution. nullopt if infeasible.
-  auto solve = [&](int brk, Stage stage) -> std::optional<Timing> {
-    Stn g = build(brk, stage);
+  auto solve = [&](const BreakPattern& pat, Stage stage) -> std::optional<Timing> {
+    Stn g = build(pat, stage);
     const auto to_z = g.distances(Z, true);  // d(v, Z); earliest x_v = -d(v, Z)
     if (!to_z) return std::nullopt;
     const long long te_min = -(*to_z)[static_cast<std::size_t>(TE)];
@@ -210,32 +216,35 @@ RouteEvaluation RouteEvaluator::evaluate(std::size_t k, std::span<const std::siz
   };
 
   struct Best {
-    int brk = -2;
+    BreakPattern pat;
     Timing timing;
     Minutes theta = 0;
   };
   std::optional<Best> best;
-  // Most nearly legal failing option, for the diagnosis: (progress, violations).
+  auto consider = [&](const BreakPattern& pat, const Timing& t) {
+    const Minutes theta = t.tE + R - S - pat.total();
+    if (!best || theta < best->theta) best = Best{pat, t, theta};  // ties: the first option
+  };
+
+  // V0 options (no break, one full break), with the diagnosis of the most nearly legal failure:
+  // (progress, violations).
   int best_progress = -1;
   std::vector<Violation> best_failure;
-
   for (int brk = -1; brk < static_cast<int>(n); ++brk) {
+    const BreakPattern pat = brk < 0 ? BreakPattern{} : BreakPattern::full(brk, r.break_length);
     std::vector<Violation> fail;
     int progress = 0;
     const std::string brk_id = brk >= 0 ? day_.orders[seq[static_cast<std::size_t>(brk)]].id : "";
 
     // driving (time-independent): C13, C15, C17
-    Minutes before = 0;
+    const Minutes drive_before = brk >= 0 ? before[static_cast<std::size_t>(brk)] : 0;
+    const Minutes drive_after = drive_total - drive_before;
     if (brk >= 0) {
-      for (int i = 0; i <= brk; ++i) before += leg[static_cast<std::size_t>(i)];
-    }
-    const Minutes after = drive_total - before;
-    if (brk >= 0) {
-      if (before > r.drive_before_break) {
-        fail.push_back({std::string{rule::drive_before_break}, drv.id, brk_id, double(before - r.drive_before_break)});
+      if (drive_before > r.drive_before_break) {
+        fail.push_back({std::string{rule::drive_before_break}, drv.id, brk_id, double(drive_before - r.drive_before_break)});
       }
-      if (after > r.drive_before_break) {
-        fail.push_back({std::string{rule::drive_after_break}, drv.id, brk_id, double(after - r.drive_before_break)});
+      if (drive_after > r.drive_before_break) {
+        fail.push_back({std::string{rule::drive_after_break}, drv.id, brk_id, double(drive_after - r.drive_before_break)});
       }
     } else if (drive_total > r.drive_before_break) {
       fail.push_back({std::string{rule::drive_without_break}, drv.id, "", double(drive_total - r.drive_before_break)});
@@ -251,22 +260,22 @@ RouteEvaluation RouteEvaluator::evaluate(std::size_t k, std::span<const std::siz
     std::optional<Timing> timing;
     if (fail.empty()) {
       progress = 1;
-      timing = solve(brk, Stage::weekly_service);  // everything
+      timing = solve(pat, Stage::weekly_service);  // everything
       if (!timing) {
         // Diagnose by adding constraint families one at a time.
-        if (!solve(brk, Stage::schedule)) {
+        if (!solve(pat, Stage::schedule)) {
           fail.push_back({std::string{rule::schedule}, drv.id, brk_id, 0});
-        } else if (brk >= 0 && !solve(brk, Stage::work_before)) {
+        } else if (brk >= 0 && !solve(pat, Stage::work_before)) {
           progress = 2;
           fail.push_back({std::string{rule::work_before_break}, drv.id, brk_id, 0});
-        } else if (brk >= 0 && !solve(brk, Stage::work_after)) {
+        } else if (brk >= 0 && !solve(pat, Stage::work_after)) {
           progress = 2;
           fail.push_back({std::string{rule::work_after_break}, drv.id, brk_id, 0});
-        } else if (!solve(brk, Stage::work_all)) {
+        } else if (!solve(pat, Stage::work_all)) {
           progress = 2;
           fail.push_back({std::string{brk >= 0 ? rule::work_after_break : rule::work_without_break},
                           drv.id, brk_id, 0});
-        } else if (!solve(brk, Stage::daily_service)) {
+        } else if (!solve(pat, Stage::daily_service)) {
           progress = 3;
           fail.push_back({std::string{rule::daily_service_max}, drv.id, brk_id, 0});
         } else {
@@ -277,11 +286,35 @@ RouteEvaluation RouteEvaluator::evaluate(std::size_t k, std::span<const std::siz
     }
 
     if (timing) {
-      const Minutes theta = timing->tE + R - S - (brk >= 0 ? BR : 0);
-      if (!best || theta < best->theta) best = Best{brk, *timing, theta};  // ties: first option
+      consider(pat, *timing);
     } else if (progress > best_progress) {
       best_progress = progress;
       best_failure = std::move(fail);
+    }
+  }
+
+  // V1-T8 options (docs/MODEL.md): a lone 30-min break when driving needs no break, then the
+  // 15 + 30 split. Only tried if they can still help: no legal option yet, or some waiting or
+  // break time in the best one (a pattern never beats the no-wait bound).
+  const bool drive_ok = drive_total <= r.daily_drive_max && dd.week_driving + drive_total <= r.weekly_drive_max;
+  Minutes work_lb = drive_total + P + R;
+  for (const auto i : seq) work_lb += orders_[i].s;
+  auto may_help = [&] { return !best || best->theta > work_lb; };
+  if (drive_ok && r.allow_short_break && drive_total <= r.drive_before_break && may_help()) {
+    for (std::size_t b = 0; b < n; ++b) {
+      const BreakPattern pat = BreakPattern::short_one(static_cast<int>(b), r.short_break_length);
+      if (const auto t = solve(pat, Stage::weekly_service)) consider(pat, *t);
+    }
+  }
+  if (drive_ok && r.allow_split_break && may_help()) {
+    for (std::size_t i = 0; i + 1 < n; ++i) {
+      for (std::size_t j = i + 1; j < n; ++j) {  // the 30-min part restarts the driving count
+        if (before[j] > r.drive_before_break) break;
+        if (drive_total - before[j] > r.drive_before_break) continue;
+        const BreakPattern pat = BreakPattern::split(static_cast<int>(i), static_cast<int>(j), r.split_break_first,
+                                                     r.split_break_second);
+        if (const auto t = solve(pat, Stage::weekly_service)) consider(pat, *t);
+      }
     }
   }
 
@@ -301,11 +334,16 @@ RouteEvaluation RouteEvaluator::evaluate(std::size_t k, std::span<const std::siz
   rt.departure = t.t0;
   rt.service_starts = t.starts;
   rt.return_time = t.tE;
-  if (best->brk >= 0) rt.break_after_order_id = day_.orders[seq[static_cast<std::size_t>(best->brk)]].id;
+  if (best->pat.count() >= 1) {
+    rt.breaks.push_back({day_.orders[seq[static_cast<std::size_t>(best->pat.i)]].id, best->pat.mi});
+  }
+  if (best->pat.count() == 2) {
+    rt.breaks.push_back({day_.orders[seq[static_cast<std::size_t>(best->pat.j)]].id, best->pat.mj});
+  }
   Minutes ready = t.t0;  // time the driver leaves the previous node
   for (std::size_t i = 0; i < n; ++i) {
     rt.arrivals.push_back(ready + leg[i]);
-    ready = t.starts[i] + orders_[seq[i]].s + (static_cast<int>(i) == best->brk ? BR : 0);
+    ready = t.starts[i] + orders_[seq[i]].s + best->pat.minutes_after(static_cast<int>(i));
   }
   return out;
 }

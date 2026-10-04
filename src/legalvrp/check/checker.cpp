@@ -40,10 +40,23 @@ void check_route(const DayInstance& day, const Driver& driver, const DriverWeekS
     report.add(rule::consistency, k, "", 0);  // arrivals / service_starts must match the sequence
     return;
   }
-  if (route.break_after_order_id &&
-      std::ranges::find(route.order_ids, *route.break_after_order_id) == route.order_ids.end()) {
-    report.add(rule::consistency, k, *route.break_after_order_id, 0);  // break node not on route
-    return;
+  // Breaks (V1-T8): each after an order of the route, in route order, at most one per order, and
+  // at least split_break_first (15) minutes long; break_at[i] = minutes after the i-th service.
+  std::vector<Minutes> break_at(n, 0);
+  {
+    std::size_t last = 0;
+    bool first = true;
+    for (const auto& b : route.breaks) {
+      const auto it = std::ranges::find(route.order_ids, b.after_order_id);
+      const auto pos = static_cast<std::size_t>(it - route.order_ids.begin());
+      if (it == route.order_ids.end() || (!first && pos <= last) || b.minutes < r.split_break_first) {
+        report.add(rule::consistency, k, b.after_order_id, b.minutes);  // break off route, out of order, too short
+        return;
+      }
+      break_at[pos] = b.minutes;
+      last = pos;
+      first = false;
+    }
   }
 
   // Resolve orders; unknown ids are reported by the coverage check.
@@ -78,9 +91,11 @@ void check_route(const DayInstance& day, const Driver& driver, const DriverWeekS
   Minutes leave = route.departure;     // when the driver leaves the current place
   Minutes drive = 0;
   double km = 0.0;
-  bool has_break = false;
-  Minutes drive_at_break = 0;
-  Minutes break_start = 0;
+  struct Taken {
+    std::string order_id;
+    Minutes start, minutes, drive;  // break start, length, driving done before it
+  };
+  std::vector<Taken> taken;
   for (std::size_t i = 0; i < n; ++i) {
     const Order& o = *orders[i];
     const Customer& c = day.customer(o.customer_id);
@@ -97,11 +112,9 @@ void check_route(const DayInstance& day, const Driver& driver, const DriverWeekS
     if (start > c.window_end) report.add(rule::time_window, k, o.id, start - c.window_end);
 
     leave = start + o.service_mu;
-    if (route.break_after_order_id == o.id) {
-      has_break = true;
-      drive_at_break = drive;      // the break follows service: no driving in between
-      break_start = leave;
-      leave += r.break_length;
+    if (break_at[i] > 0) {  // the break follows service: no driving in between
+      taken.push_back({o.id, leave, break_at[i], drive});
+      leave += break_at[i];
     }
     here = there;
   }
@@ -115,37 +128,61 @@ void check_route(const DayInstance& day, const Driver& driver, const DriverWeekS
   if (duty_end > driver.shift_end_max) report.add(rule::shift, k, "", duty_end - driver.shift_end_max);
   if (duty_end > r.latest_duty_end) report.add(rule::shift, k, "", duty_end - r.latest_duty_end);
 
-  // Driving.
-  if (has_break) {
-    if (drive_at_break > r.drive_before_break) {
-      report.add(rule::drive_before_break, k, *route.break_after_order_id,
-                 drive_at_break - r.drive_before_break);
+  // Driving (561/2006 art. 7): at most DB between qualifying breaks. A break qualifies if it lasts
+  // >= BR, or >= split_break_second after a part >= split_break_first since the last qualifying one.
+  {
+    Minutes since = 0;          // driving at the last qualifying break
+    bool part = false;          // a first part was taken since then
+    int qualifying = 0;
+    std::string at;             // order of the last qualifying break
+    for (const auto& t : taken) {
+      if (t.minutes >= r.break_length || (part && t.minutes >= r.split_break_second)) {
+        const Minutes period = t.drive - since;
+        if (period > r.drive_before_break) {
+          report.add(qualifying == 0 ? rule::drive_before_break : rule::drive_between_breaks, k, t.order_id,
+                     period - r.drive_before_break);
+        }
+        since = t.drive;
+        part = false;
+        at = t.order_id;
+        ++qualifying;
+      } else {
+        part = true;            // every counted break is >= split_break_first
+      }
     }
-    if (drive - drive_at_break > r.drive_before_break) {
-      report.add(rule::drive_after_break, k, *route.break_after_order_id,
-                 drive - drive_at_break - r.drive_before_break);
+    if (drive - since > r.drive_before_break) {
+      report.add(qualifying == 0 ? rule::drive_without_break : rule::drive_after_break, k, at,
+                 drive - since - r.drive_before_break);
     }
-  } else if (drive > r.drive_before_break) {
-    report.add(rule::drive_without_break, k, "", drive - r.drive_before_break);
   }
   if (drive > r.daily_drive_max) report.add(rule::daily_drive_max, k, "", drive - r.daily_drive_max);
 
-  // Work (everything on duty except the break, waiting included).
-  if (has_break) {
-    const Minutes before = break_start - duty_start;
-    const Minutes after = duty_end - (break_start + r.break_length);
-    if (before > r.work_before_break) {
-      report.add(rule::work_before_break, k, *route.break_after_order_id, before - r.work_before_break);
+  // Work (2002/15/EC art. 5; everything on duty except the breaks, waiting included): stretches
+  // between the duty start, the breaks and the duty end are <= WB.
+  Minutes breaks = 0;
+  for (std::size_t b = 0; b <= taken.size(); ++b) {
+    const Minutes from = b == 0 ? duty_start : taken[b - 1].start + taken[b - 1].minutes;
+    const Minutes to = b < taken.size() ? taken[b].start : duty_end;
+    if (to - from > r.work_before_break) {
+      const std::string_view key = taken.empty()          ? rule::work_without_break
+                                   : b == 0               ? rule::work_before_break
+                                   : b == taken.size()    ? rule::work_after_break
+                                                          : rule::work_between_breaks;
+      report.add(key, k, b < taken.size() ? taken[b].order_id : taken.empty() ? "" : taken.back().order_id,
+                 to - from - r.work_before_break);
     }
-    if (after > r.work_before_break) {
-      report.add(rule::work_after_break, k, *route.break_after_order_id, after - r.work_before_break);
-    }
-  } else if (duty_end - duty_start > r.work_before_break) {
-    report.add(rule::work_without_break, k, "", duty_end - duty_start - r.work_before_break);
+    if (b < taken.size()) breaks += taken[b].minutes;
   }
 
   // Service time and the week.
-  const Minutes service = duty_end - duty_start - (has_break ? r.break_length : 0);
+  const Minutes service = duty_end - duty_start - breaks;
+  // Total breaks (W2): >= short_break_length above WB of work, >= BR above short_break_work_max.
+  if (!taken.empty()) {
+    const Minutes needed = service > r.short_break_work_max ? r.break_length
+                           : service > r.work_before_break  ? r.short_break_length
+                                                            : 0;
+    if (breaks < needed) report.add(rule::break_too_short, k, taken.front().order_id, needed - breaks);
+  }
   if (service > r.daily_service_max) {
     report.add(rule::daily_service_max, k, "", service - r.daily_service_max);
   }

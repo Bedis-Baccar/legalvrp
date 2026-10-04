@@ -106,6 +106,14 @@ struct Rules {                          // §3, all integer minutes
   // Daytime duty window (D-020): no night work by construction.
   Minutes earliest_duty_start = 0;      // every shift_start >= this (05:00)
   Minutes latest_duty_end = 0;          // every shift_end_max <= this (19:00)
+  // Breaks beyond the single full break (V1-T8, docs/MODEL.md). The checker always applies the
+  // law; the switches say whether planners may use the shorter options (false = V0 rules).
+  Minutes short_break_length = 30;      // enough when the day's work is <= short_break_work_max
+  Minutes short_break_work_max = 540;   // 9 h (Dir. 2002/15/EC art. 5)
+  Minutes split_break_first = 15;       // 15, then later 30, replace 45 (Reg. 561/2006 art. 7);
+  Minutes split_break_second = 30;      // 15 is also the shortest counted break part
+  bool allow_short_break = true;
+  bool allow_split_break = true;
 };
 
 struct Contract {
@@ -168,10 +176,18 @@ struct WeekInstance {
   int attempt = 0;                         // generator attempt that produced this week (T5)
 };
 
+// One break of a duty (V1-T8, docs/MODEL.md): it starts right after the service of
+// `after_order_id` and lasts `minutes`.
+struct Break {
+  std::string after_order_id;
+  Minutes minutes = 0;
+  bool operator==(const Break&) const = default;
+};
+
 struct Route {
   std::string driver_id;
   std::vector<std::string> order_ids;               // visiting sequence
-  std::optional<std::string> break_after_order_id;  // the break follows this service
+  std::vector<Break> breaks;                        // in route order: none, 45, 30, or 15 then 30
   Minutes departure = 0;                            // t0 (leaves depot)
   std::vector<Minutes> arrivals;                    // one per order
   std::vector<Minutes> service_starts;              // one per order; may exceed arrival (waiting)

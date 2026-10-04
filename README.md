@@ -73,6 +73,7 @@ legalvrp-myopia   --config config/instance_myopia.yaml                   # rolli
 legalvrp-policies lookahead --config config/instance_myopia.yaml        # week policies vs myopic / clairvoyant
 legalvrp-robustness --config config/instance_small.yaml                # plans executed with true service times
 legalvrp-learn    --config config/instance_small.yaml                     # learn service times from history
+legalvrp-breaks   --config config/instance_small.yaml                     # V1 break rules vs V0
 legalvrp-run-week --instance data/instances/small/1 --solver alns --estimator results/estimators/instance_small.json
 ```
 
@@ -84,7 +85,7 @@ Real data can be used by writing `week.json` and `matrix.json` ([docs/DATA.md](d
 
 ```
 apps/            command-line tools (generate, check, run-week, bench, scaling, myopia, compare, policies,
-                 robustness, learn)
+                 robustness, learn, breaks)
 config/          rules, contracts, costs, solver parameters, instance generators (YAML)
 src/legalvrp/    one static library per module
   domain/          records, config loaders, compatibility, JSON, day builder
@@ -120,3 +121,5 @@ Executed with true (uncertain) service times, 40–49 % of the optimised duties 
 illegal, half of it from a biased estimate ([robustness](docs/ROBUSTNESS_V1.md));
 learning the times from history and planning with a pooled time reserve cuts that by 86–88 %
 for +15–28 % cost ([robust planning](docs/ROBUST_V1.md)).
+Breaks follow the law (30-min break for 6–9 h of work, 15 + 30 split) in the checker and every
+planner ([break rules](docs/BREAKS_V1.md)).

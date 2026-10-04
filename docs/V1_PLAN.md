@@ -106,4 +106,5 @@ instance ─► baseline ─►│ day solver = ALNS (any size)  ──► route
 | V1-T5 week policies | done | look-ahead (today + tomorrow) recovers 92 % of the myopia gap, never worse; reserve optional; fairness default 0.2 €/min (Gini 0.14 → 0.04 on `small`, +0.03 %) — `POLICIES_V1.md`, D-106 … D-108 |
 | V1-T6 uncertain service times | done | true durations in `truth.json` (lognormal by type); executed with them, 40–49 % of optimised duties become late or illegal (29–38 % for the baseline); half of it is estimation bias — `ROBUSTNESS_V1.md`, D-109 … D-111 |
 | V1-T7 learned estimator + robust planning | done | estimator learned from history (calibrated); μ̂ + ½σ̂ per stop + 15-min pooled reserve: −88 % / −86 % late or illegal duties for +28 % / +15 % cost (small / medium); per-stop buffers alone cost 2–3× more — `ROBUST_V1.md`, D-112 … D-114 |
-| V1-T8 … T10 | to do | next: legal relaxations (T8) |
+| V1-T8 legal relaxations | done | checker = the law (any break list), corpus 60 duties; 30-min break and 15 + 30 split in every planner (fast = STN on 100 000 cases, MILP = enumeration); exact day saving on 4/20 regime days (−8.4 %); MILP weeks −0.8 % on small — `BREAKS_V1.md`, D-115 … D-117 |
+| V1-T9, T10 | to do | next: column generation (T9) |

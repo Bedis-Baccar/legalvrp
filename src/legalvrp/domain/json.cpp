@@ -179,7 +179,10 @@ void to_json(json& j, const Rules& x) {
            {"daily_rest_min", x.daily_rest_min},         {"depot_prep", x.depot_prep},
            {"depot_close", x.depot_close},
            {"earliest_duty_start", x.earliest_duty_start},
-           {"latest_duty_end", x.latest_duty_end}};
+           {"latest_duty_end", x.latest_duty_end},
+           {"short_break_length", x.short_break_length}, {"short_break_work_max", x.short_break_work_max},
+           {"split_break_first", x.split_break_first},   {"split_break_second", x.split_break_second},
+           {"allow_short_break", x.allow_short_break},   {"allow_split_break", x.allow_split_break}};
 }
 void from_json(const json& j, Rules& x) {
   j.at("drive_before_break").get_to(x.drive_before_break);
@@ -193,6 +196,13 @@ void from_json(const json& j, Rules& x) {
   j.at("depot_close").get_to(x.depot_close);
   j.at("earliest_duty_start").get_to(x.earliest_duty_start);
   j.at("latest_duty_end").get_to(x.latest_duty_end);
+  // V1-T8 break options; absent in V0 files: the defaults (the law, both allowed).
+  if (j.contains("short_break_length")) j.at("short_break_length").get_to(x.short_break_length);
+  if (j.contains("short_break_work_max")) j.at("short_break_work_max").get_to(x.short_break_work_max);
+  if (j.contains("split_break_first")) j.at("split_break_first").get_to(x.split_break_first);
+  if (j.contains("split_break_second")) j.at("split_break_second").get_to(x.split_break_second);
+  if (j.contains("allow_short_break")) j.at("allow_short_break").get_to(x.allow_short_break);
+  if (j.contains("allow_split_break")) j.at("allow_split_break").get_to(x.allow_split_break);
 }
 
 void to_json(json& j, const Contract& x) {
@@ -254,7 +264,9 @@ void to_json(json& j, const Route& x) {
   j = json{{"driver_id", x.driver_id},   {"order_ids", x.order_ids},
            {"departure", x.departure},   {"arrivals", x.arrivals},
            {"service_starts", x.service_starts}, {"return_time", x.return_time}};
-  put_opt(j, "break_after_order_id", x.break_after_order_id);
+  json breaks = json::array();
+  for (const auto& b : x.breaks) breaks.push_back({{"after", b.after_order_id}, {"minutes", b.minutes}});
+  j["breaks"] = std::move(breaks);
 }
 void from_json(const json& j, Route& x) {
   j.at("driver_id").get_to(x.driver_id);
@@ -263,7 +275,12 @@ void from_json(const json& j, Route& x) {
   j.at("arrivals").get_to(x.arrivals);
   j.at("service_starts").get_to(x.service_starts);
   j.at("return_time").get_to(x.return_time);
-  get_opt(j, "break_after_order_id", x.break_after_order_id);
+  x.breaks.clear();
+  if (j.contains("breaks")) {
+    for (const auto& b : j.at("breaks")) x.breaks.push_back({b.at("after").get<std::string>(), b.at("minutes").get<Minutes>()});
+  } else if (j.contains("break_after_order_id")) {  // V0 plan files: one 45-min break
+    x.breaks.push_back({j.at("break_after_order_id").get<std::string>(), 45});
+  }
 }
 
 void to_json(json& j, const SolverStats& x) {

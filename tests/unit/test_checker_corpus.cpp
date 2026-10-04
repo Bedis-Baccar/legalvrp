@@ -86,15 +86,20 @@ std::pair<DayInstance, DayPlan> build(const json& duty, const json& defaults, co
   for (const auto& c : day.customers) r.order_ids.push_back(c.id);
   r.departure = duty.at("departure").get<Minutes>();
   r.service_starts = duty.at("starts").get<std::vector<Minutes>>();
-  if (duty.contains("break_after")) r.break_after_order_id = duty.at("break_after").get<std::string>();
+  if (duty.contains("break_after")) r.breaks.push_back({duty.at("break_after").get<std::string>(), cfg.rules.break_length});
+  if (duty.contains("breaks")) {  // V1-T8: [[order, minutes], ...]
+    for (const auto& b : duty.at("breaks")) r.breaks.push_back({b[0].get<std::string>(), b[1].get<Minutes>()});
+  }
 
   // Consistent arrivals / return unless given (harness convenience; the checker recomputes).
   Minutes leave = r.departure;
   std::vector<Minutes> auto_arrivals;
   for (std::size_t i = 0; i < r.order_ids.size(); ++i) {
     auto_arrivals.push_back(leave + legs[i]);
-    leave = r.service_starts[i] + day.orders[i].service_mu +
-            (r.break_after_order_id == r.order_ids[i] ? cfg.rules.break_length : 0);
+    leave = r.service_starts[i] + day.orders[i].service_mu;
+    for (const auto& b : r.breaks) {
+      if (b.after_order_id == r.order_ids[i]) leave += b.minutes;
+    }
   }
   r.arrivals = duty.contains("arrivals") ? duty.at("arrivals").get<std::vector<Minutes>>() : auto_arrivals;
   r.return_time = duty.contains("return")  ? duty.at("return").get<Minutes>()
@@ -135,4 +140,17 @@ TEST_CASE("duty corpus: every label is reproduced exactly", "[checker][corpus]")
     INFO("violations: " << detail);
     CHECK(got == want);
   }
+}
+
+TEST_CASE("duty corpus: at least 15 labelled duties for the V1-T8 break rules", "[checker][corpus]") {
+  const json corpus = load_corpus();
+  int v1 = 0, legal = 0;
+  for (const auto& d : corpus.at("duties")) {
+    if (d.at("name").get<std::string>().rfind("V1-T8", 0) != 0) continue;
+    ++v1;
+    legal += d.at("expect").empty() ? 1 : 0;
+  }
+  CHECK(v1 >= 15);
+  CHECK(legal >= 5);
+  CHECK(v1 - legal >= 10);
 }

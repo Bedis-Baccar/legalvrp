@@ -211,3 +211,28 @@ TEST_CASE("rules: duty window stays out of the night (D-020)", "[rules]") {
                   }),
                   "latest_duty_end");
 }
+
+// ---------------------------------------------------------------- V1-T8 break options
+
+TEST_CASE("rules: break options default to the law and are read from rules.yaml", "[rules][v1t8]") {
+  const Rules v0 = parse_rules(kRules);  // a V0 file: defaults
+  CHECK(v0.short_break_length == 30);
+  CHECK(v0.short_break_work_max == 540);
+  CHECK(v0.split_break_first == 15);
+  CHECK(v0.split_break_second == 30);
+  CHECK(v0.allow_short_break);
+  CHECK(v0.allow_split_break);
+  const Rules off = parse_rules(kRules + "allow_short_break: false\nallow_split_break: false\n");
+  CHECK_FALSE(off.allow_short_break);
+  CHECK_FALSE(off.allow_split_break);
+  const Config c = load_config();
+  CHECK(c.rules.allow_short_break);
+  CHECK(c.rules.allow_split_break);
+}
+
+TEST_CASE("rules: inconsistent break options are rejected", "[rules][v1t8]") {
+  check_names_key(expect_error([] { (void)parse_rules(kRules + "short_break_length: 45\n"); }), "short_break_length");
+  check_names_key(expect_error([] { (void)parse_rules(kRules + "split_break_first: 10\n"); }), "split_break_first");
+  check_names_key(expect_error([] { (void)parse_rules(kRules + "short_break_work_max: 300\n"); }),
+                  "short_break_work_max");
+}

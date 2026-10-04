@@ -16,9 +16,13 @@
 //   time_window     service start within [window_start, window_end]
 //   shift           departure >= shift_start + prep; return + close <= shift_end_max;
 //                   duty inside [earliest_duty_start, latest_duty_end] (D-020)
-//   drive_*         before / after the break <= 270, or <= 270 without break; daily <= 540
-//   work_*          fixed duty start S (D-018): break start - S <= 360,
-//                   (return + close) - break end <= 360, or (return + close) - S <= 360
+//   breaks          (V1-T8, the law, any list): after an order of the route, in route order, one per
+//                   order, >= 15 min (consistency); total >= 30 min above 6 h of work, >= 45 min
+//                   above 9 h (break_too_short)
+//   drive_*         <= 270 between qualifying breaks (>= 45, or >= 30 after a >= 15 part; Reg.
+//                   561/2006 art. 7), or <= 270 without one; daily <= 540
+//   work_*          fixed duty start S (D-018): every stretch between S, the breaks and
+//                   return + close is <= 360 (Dir. 2002/15/EC art. 5, Code des transports L3312-2)
 //   daily_service_max, weekly_service_max, weekly_drive_max   against the driver's state
 // It also recomputes, per driver, temps de service, driving, km and the §6.3 cost, so KPIs
 // and the next day's state never come from model variables (brief §11).

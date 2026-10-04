@@ -9,6 +9,8 @@
 //    <= WB (D-007), and every other constraint is an upper bound on a or on tE.
 // Path segments are represented by f(x) = max(x + d, r) on x <= L: the ready time after the
 // segment when ready to leave its start at x. Composition stays in that form.
+// Break patterns (V1-T8, BreakPattern) are tried in the same order as evaluate(), with the same
+// tie-breaking; the 15 + 30 split has the closed form given at its loop.
 #include <algorithm>
 #include <limits>
 #include <vector>
@@ -102,7 +104,15 @@ QuickEvaluation RouteEvaluator::quick(std::size_t k, std::span<const std::size_t
   const long long t_last = F - R;
   const long long cap = std::min<long long>(r.daily_service_max, c.weekly_service_max - dd.week_service);
   long long best_theta = std::numeric_limits<long long>::max();
-  int best_break = -2;
+  bool found = false;
+  BreakPattern best;
+  auto consider = [&](long long theta, const BreakPattern& pat) {
+    if (!found || theta < best_theta) {  // ties: the first option, as in evaluate()
+      best_theta = theta;
+      best = pat;
+      found = true;
+    }
+  };
 
   // No break: the whole duty is one work segment and one driving segment.
   if (drive_total <= r.drive_before_break) {
@@ -110,42 +120,87 @@ QuickEvaluation RouteEvaluator::quick(std::size_t k, std::span<const std::size_t
     if (feasible(full, x0)) {
       const long long tE = apply(full, x0);
       const long long theta = tE + R - S;
-      if (tE <= t_last && theta <= WB && theta <= cap) {
-        best_theta = theta;
-        best_break = -1;
-      }
+      if (tE <= t_last && theta <= WB && theta <= cap) consider(theta, BreakPattern{});
     }
   }
-  // Break after stop b.
+  // One break of `brk` minutes after stop b: the smallest legal break start (D-007).
+  auto one_break = [&](std::size_t b, long long brk, long long theta_cap, const BreakPattern& pat) {
+    const Fn& f = pre[b];
+    const Fn& g = post[b];
+    if (!feasible(f, x0) || g.L <= kNeg / 2) return;
+    if (g.d + R > WB) return;                                      // work after the break, at best
+    const OrderData& o = orders_[seq[b]];
+    const long long a = std::max(apply(f, x0), g.r + R - brk - WB);  // smallest legal break start
+    const long long a_max = std::min({static_cast<long long>(o.l) + o.s, S + WB, g.L - brk});
+    if (a > a_max) return;
+    const long long tE = std::max(a + brk + g.d, g.r);
+    const long long theta = tE + R - S - brk;
+    if (tE > t_last || theta > theta_cap) return;
+    consider(theta, pat);
+  };
+  // Full break (BR) after stop b.
   long long before = 0;
   for (std::size_t b = 0; b < n; ++b) {
     before += leg[b];
     if (before > r.drive_before_break) break;  // later breaks only drive more before
     if (drive_total - before > r.drive_before_break) continue;
-    const Fn& f = pre[b];
-    const Fn& g = post[b];
-    if (!feasible(f, x0) || g.L <= kNeg / 2) continue;
-    if (g.d + R > WB) continue;                                   // work after the break, at best
-    const OrderData& o = orders_[seq[b]];
-    const long long a = std::max(apply(f, x0), g.r + R - BR - WB);  // smallest legal break start
-    const long long a_max = std::min({static_cast<long long>(o.l) + o.s, S + WB, g.L - BR});
-    if (a > a_max) continue;
-    const long long tE = std::max(a + BR + g.d, g.r);
-    const long long theta = tE + R - S - BR;
-    if (tE > t_last || theta > cap) continue;
-    if (theta < best_theta) {
-      best_theta = theta;
-      best_break = static_cast<int>(b);
+    one_break(b, BR, cap, BreakPattern::full(static_cast<int>(b), r.break_length));
+  }
+
+  // V1-T8 patterns, tried in evaluate()'s order and only if they can still help.
+  long long work_lb = drive_total + P + R;
+  for (const auto i : seq) work_lb += orders_[i].s;
+  auto may_help = [&] { return !found || best_theta > work_lb; };
+  // A lone short break: only when the day's driving needs no break; work <= short_break_work_max.
+  if (r.allow_short_break && drive_total <= r.drive_before_break && may_help()) {
+    const long long cap_short = std::min<long long>(cap, r.short_break_work_max);
+    for (std::size_t b = 0; b < n; ++b) {
+      one_break(b, r.short_break_length, cap_short, BreakPattern::short_one(static_cast<int>(b), r.short_break_length));
     }
   }
-  if (best_break == -2) return out;
+  // Split: m1 after stop i, then m2 after stop j > i (restarts driving). With a1, a2 the break
+  // starts: a2 is minimal at max(A1 + m1 + M.d, M.r, g.r + R - m2 - WB) (M: the path i -> j); if the
+  // middle stretch a2 - a1 - m1 would exceed WB, a1 waits at i (a2 is unchanged since M.d <= WB).
+  if (r.allow_split_break && may_help()) {
+    const long long m1 = r.split_break_first, m2 = r.split_break_second;
+    for (std::size_t i = 0; i + 1 < n; ++i) {
+      const Fn& f = pre[i];
+      if (!feasible(f, x0)) break;  // later stops are not reachable either
+      const long long A1 = apply(f, x0);
+      const OrderData& oi = orders_[seq[i]];
+      const long long U1_base = std::min(static_cast<long long>(oi.l) + oi.s, S + WB);
+      Fn M{0, kNeg, kPos};
+      long long drive_j = 0;
+      for (std::size_t k2 = 0; k2 <= i; ++k2) drive_j += leg[k2];
+      for (std::size_t j = i + 1; j < n; ++j) {
+        M = compose(M, step(j));
+        drive_j += leg[j];
+        if (M.L <= kNeg / 2 || M.d > WB) break;      // the middle only gets longer
+        if (drive_j > r.drive_before_break) break;     // driving before the 30-min part
+        if (drive_total - drive_j > r.drive_before_break) continue;
+        const Fn& g = post[j];
+        if (g.L <= kNeg / 2 || g.d + R > WB) continue;
+        const long long a2 = std::max({A1 + m1 + M.d, M.r, g.r + R - m2 - WB});
+        const long long a1 = std::max(A1, a2 - m1 - WB);
+        if (a1 > std::min(U1_base, M.L - m1)) continue;
+        const OrderData& oj = orders_[seq[j]];
+        if (a2 > std::min(static_cast<long long>(oj.l) + oj.s, g.L - m2)) continue;
+        const long long tE = std::max(a2 + m2 + g.d, g.r);
+        const long long theta = tE + R - S - m1 - m2;
+        if (tE > t_last || theta > cap) continue;
+        consider(theta, BreakPattern::split(static_cast<int>(i), static_cast<int>(j), r.split_break_first,
+                                            r.split_break_second));
+      }
+    }
+  }
+  if (!found) return out;
 
   out.legal = true;
   out.service_minutes = static_cast<Minutes>(best_theta);
   out.driving_minutes = static_cast<Minutes>(drive_total);
   out.km = km;
   out.cost = cost_of(out.service_minutes, km, true);
-  out.break_after = best_break;
+  out.breaks = best;
   return out;
 }
 

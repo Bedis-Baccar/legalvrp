@@ -2,7 +2,7 @@
 # No literal of these values may appear in model code.
 drive_before_break: 270   # Reg. (EC) 561/2006 art. 7
 work_before_break: 360    # Dir. 2002/15/EC art. 5; C. transports L3312-2
-break_length: 45          # one unsplit break per duty in V0 (A6)
+break_length: 45          # the full break (V0: the only one, A6; V1-T8: shorter options below)
 daily_drive_max: 540      # Reg. 561/2006 art. 6 (10 h extension disabled in V0, A11)
 daily_service_max: 720    # C. transports D3312-51 (temps de service)
 weekly_drive_max: 3360    # Reg. 561/2006 art. 6
@@ -15,3 +15,11 @@ depot_close: 10           # company: post-trip work after return (R)
 # (< 50 h/month), so the night-work rules of Code des transports L3312-1 never apply.
 earliest_duty_start: 300       # 05:00
 latest_duty_end: 1140          # 19:00 (must stay <= 21:00, start of the night period)
+# Breaks beyond the single 45-min break (V1-T8, docs/MODEL.md, D-115). The checker always applies
+# the law; the switches say whether planners may use the shorter options.
+short_break_length: 30         # Dir. 2002/15/EC art. 5, L3312-2: 30 min when work is 6-9 h
+short_break_work_max: 540      # 9 h
+split_break_first: 15          # Reg. 561/2006 art. 7: 15 min, later 30 min, replace 45
+split_break_second: 30
+allow_short_break: true        # false: planners use the V0 break only (to measure the saving)
+allow_split_break: true

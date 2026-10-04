@@ -281,6 +281,8 @@
     }
   ],
   "rules": {
+    "allow_short_break": true,
+    "allow_split_break": true,
     "break_length": 45,
     "daily_drive_max": 540,
     "daily_rest_min": 660,
@@ -290,6 +292,10 @@
     "drive_before_break": 270,
     "earliest_duty_start": 300,
     "latest_duty_end": 1140,
+    "short_break_length": 30,
+    "short_break_work_max": 540,
+    "split_break_first": 15,
+    "split_break_second": 30,
     "weekly_drive_max": 3360,
     "work_before_break": 360
   },

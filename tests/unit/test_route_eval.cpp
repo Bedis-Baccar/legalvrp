@@ -10,6 +10,7 @@
 #include <optional>
 #include <vector>
 
+#include "legalvrp/check/checker.hpp"
 #include "legalvrp/data/generate.hpp"
 #include "legalvrp/domain/day.hpp"
 #include "legalvrp/domain/paths.hpp"
@@ -31,6 +32,8 @@ struct Fixture {
   explicit Fixture(Minutes shift_start = 360, Minutes shift_end = 1125) {
     const Config cfg = load_config();
     day.rules = cfg.rules;
+    day.rules.allow_short_break = false;  // V0 break rules unless a test turns V1-T8 patterns on
+    day.rules.allow_split_break = false;
     day.contracts = cfg.contracts;
     day.costs = cfg.costs;
     day.depot = Depot{"depot", 0, 0};
@@ -81,6 +84,13 @@ bool has_rule(const RouteEvaluation& ev, std::string_view rule) {
   return std::ranges::any_of(ev.violations, [&](const Violation& v) { return v.rule == rule; });
 }
 
+// "A:45", "A:15 B:30", "" (no break).
+std::string breaks_of(const Route& r) {
+  std::string s;
+  for (const auto& b : r.breaks) s += (s.empty() ? "" : " ") + b.after_order_id + ":" + std::to_string(b.minutes);
+  return s;
+}
+
 constexpr Minutes X = 999;  // unused legs
 
 }  // namespace
@@ -100,7 +110,7 @@ TEST_CASE("departure is delayed to absorb waiting; duty still starts at the shif
   CHECK(ev.route.service_starts == std::vector<Minutes>{480});
   CHECK(ev.route.return_time == 530);              // 480 + 20 + 30
   CHECK(ev.service_minutes == 180);                // (530 + 10) - 360
-  CHECK_FALSE(ev.route.break_after_order_id);      // tie with a break: "no break" wins
+  CHECK(ev.route.breaks.empty());      // tie with a break: "no break" wins
   CHECK(ev.driving_minutes == 60);
   CHECK(ev.cost == Catch::Approx(1.60 * 60 + 0.01 * 180));
 }
@@ -114,7 +124,7 @@ TEST_CASE("best break position: only after B splits 400 min of driving", "[route
   f.matrix({{0, 100, X, X}, {X, 0, 100, X}, {X, X, 0, 100}, {100, X, X, 0}});
   const auto ev = f.eval({0, 1, 2});
   REQUIRE(ev.legal);
-  CHECK(ev.route.break_after_order_id == "B");
+  CHECK(breaks_of(ev.route) == "B:45");
   CHECK(ev.route.departure == 380);
   CHECK(ev.route.service_starts == std::vector<Minutes>{480, 590, 745});  // break 600-645
   CHECK(ev.route.return_time == 855);
@@ -147,7 +157,7 @@ TEST_CASE("D-007: legal only by waiting before the break node (REVIEW_V0 F1)", "
   f.matrix({{0, 20, X, X}, {X, 0, 20, X}, {X, X, 0, 30}, {40, X, X, 0}});
   const auto ev = f.eval({0, 1, 2});
   REQUIRE(ev.legal);
-  CHECK(ev.route.break_after_order_id == "B");
+  CHECK(breaks_of(ev.route) == "B:45");
   CHECK(ev.route.departure == 380);
   CHECK(ev.route.arrivals == std::vector<Minutes>{400, 440, 550});
   CHECK(ev.route.service_starts == std::vector<Minutes>{400, 465, 800});
@@ -164,7 +174,7 @@ TEST_CASE("a break is needed for work even with little driving", "[route_eval]")
   f.matrix({{0, 30}, {30, 0}});
   const auto ev = f.eval({0});
   REQUIRE(ev.legal);
-  CHECK(ev.route.break_after_order_id == "A");
+  CHECK(breaks_of(ev.route) == "A:45");
   CHECK(ev.route.return_time == 785);  // 380 + 30 + 300 + 45 + 30
   CHECK(ev.service_minutes == 390);
 }
@@ -176,7 +186,7 @@ TEST_CASE("driving boundary: 270 needs no break, 271 does", "[route_eval]") {
     f.matrix({{0, 135}, {135, 0}});
     const auto ev = f.eval({0});
     REQUIRE(ev.legal);
-    CHECK_FALSE(ev.route.break_after_order_id);
+    CHECK(ev.route.breaks.empty());
     CHECK(ev.driving_minutes == 270);
   }
   {
@@ -185,7 +195,7 @@ TEST_CASE("driving boundary: 270 needs no break, 271 does", "[route_eval]") {
     f.matrix({{0, 136}, {135, 0}});
     const auto ev = f.eval({0});
     REQUIRE(ev.legal);
-    CHECK(ev.route.break_after_order_id == "A");  // 136 | 135
+    CHECK(breaks_of(ev.route) == "A:45");  // 136 | 135
     CHECK(ev.service_minutes == 311);             // (706 + 10) - 360 - 45
   }
 }
@@ -259,7 +269,9 @@ TEST_CASE("cost: overtime above the weekly threshold; idle driver", "[route_eval
 namespace {
 
 // Naive exact reference: every integer departure minute x every start time at the break node,
-// earliest-start everywhere else. Returns min theta, or nullopt if no legal schedule.
+// earliest-start everywhere else, for the options none / one 45-min break / (if the rules allow
+// it) one 30-min break. Returns min theta, or nullopt if no legal schedule. The 15 + 30 split is
+// not modelled here (see the "V1-T8" tests).
 std::optional<Minutes> brute_force_theta(const DayInstance& day, std::size_t k,
                                          const std::vector<std::size_t>& seq) {
   const Driver& drv = day.drivers[k];
@@ -292,10 +304,21 @@ std::optional<Minutes> brute_force_theta(const DayInstance& day, std::size_t k,
   if (total > r.daily_drive_max || st.driving_minutes_week + total > r.weekly_drive_max) return std::nullopt;
 
   std::optional<Minutes> best;
-  for (int b = -1; b < static_cast<int>(n); ++b) {
+  struct Option {
+    int b;
+    Minutes len;
+    bool lone_short;
+  };
+  std::vector<Option> options{{-1, 0, false}};
+  for (int b = 0; b < static_cast<int>(n); ++b) options.push_back({b, r.break_length, false});
+  if (r.allow_short_break) {
+    for (int b = 0; b < static_cast<int>(n); ++b) options.push_back({b, r.short_break_length, true});
+  }
+  for (const auto& [b, len, lone_short] : options) {
     Minutes before = 0;
     for (int i = 0; i <= b; ++i) before += leg[static_cast<std::size_t>(i)];
     if (b < 0 && total > r.drive_before_break) continue;
+    if (lone_short && total > r.drive_before_break) continue;  // a lone 30 min does not restart driving
     if (b >= 0 && (before > r.drive_before_break || total - before > r.drive_before_break)) continue;
 
     for (Minutes t0 = drv.shift_start + r.depot_prep; t0 <= drv.shift_end_max; ++t0) {
@@ -319,7 +342,7 @@ std::optional<Minutes> brute_force_theta(const DayInstance& day, std::size_t k,
         if (b >= 0) {
           const auto bb = static_cast<std::size_t>(b);
           U[bb] = tb;
-          rdy = tb + day.orders[seq[bb]].service_mu + r.break_length;
+          rdy = tb + day.orders[seq[bb]].service_mu + len;
         }
         bool ok2 = true;
         for (std::size_t i = upto; i < n && ok2; ++i) {
@@ -338,9 +361,9 @@ std::optional<Minutes> brute_force_theta(const DayInstance& day, std::size_t k,
           legal = theta <= r.work_before_break;
         } else {
           const Minutes a = U[static_cast<std::size_t>(b)] + day.orders[seq[static_cast<std::size_t>(b)]].service_mu;
-          legal = a - duty_start <= r.work_before_break &&
-                  duty_end - (a + r.break_length) <= r.work_before_break;
-          theta -= r.break_length;
+          legal = a - duty_start <= r.work_before_break && duty_end - (a + len) <= r.work_before_break;
+          theta -= len;
+          if (lone_short) legal = legal && theta <= r.short_break_work_max;  // W2
         }
         legal = legal && theta <= r.daily_service_max &&
                 st.service_minutes_week + theta <= c.weekly_service_max;
@@ -357,97 +380,121 @@ std::optional<Minutes> brute_force_theta(const DayInstance& day, std::size_t k,
 }  // namespace
 
 namespace {
-// Independent consistency check of a legal route the evaluator returned.
+// Independent check of a legal route the evaluator returned: the checker (written from the law,
+// any list of breaks) must accept it, with the same temps de service and driving.
 void check_route_is_legal(const DayInstance& day, std::size_t k, const std::vector<std::size_t>& seq,
                           const RouteEvaluation& ev) {
-  const Route& rt = ev.route;
-  const Rules& r = day.rules;
-  const Driver& drv = day.drivers[k];
-  const Matrix& m = day.matrix;
-  const std::size_t depot = m.index_of(day.depot.id);
-  REQUIRE(rt.service_starts.size() == seq.size());
-  CHECK(rt.departure >= drv.shift_start + r.depot_prep);
-  CHECK(rt.return_time + r.depot_close <= drv.shift_end_max);
-  Minutes ready = rt.departure;
-  std::size_t prev = depot;
-  Minutes drive = 0, drive_at_break = 0;
-  std::optional<Minutes> break_start;
-  for (std::size_t i = 0; i < seq.size(); ++i) {
-    const Order& o = day.orders[seq[i]];
-    const Customer& c = day.customer(o.customer_id);
-    const std::size_t node = m.index_of(c.id);
-    drive += m.time(prev, node);
-    CHECK(rt.arrivals[i] == ready + m.time(prev, node));
-    CHECK(rt.service_starts[i] >= rt.arrivals[i]);
-    CHECK(rt.service_starts[i] >= c.window_start);
-    CHECK(rt.service_starts[i] <= c.window_end);
-    ready = rt.service_starts[i] + o.service_mu;
-    if (rt.break_after_order_id == o.id) {
-      break_start = ready;
-      drive_at_break = drive;
-      ready += r.break_length;
-    }
-    prev = node;
+  DayPlan plan;
+  plan.routes = {ev.route};
+  for (std::size_t i = 0; i < day.orders.size(); ++i) {
+    if (std::ranges::find(seq, i) == seq.end()) plan.postponed_order_ids.push_back(day.orders[i].id);
   }
-  drive += m.time(prev, depot);
-  CHECK(rt.return_time == ready + m.time(prev, depot));
-  CHECK(drive == ev.driving_minutes);
-  const Minutes duty_start = drv.shift_start;  // fixed start (D-018)
-  const Minutes duty_end = rt.return_time + r.depot_close;
-  if (break_start) {
-    CHECK(drive_at_break <= r.drive_before_break);
-    CHECK(drive - drive_at_break <= r.drive_before_break);
-    CHECK(*break_start - duty_start <= r.work_before_break);
-    CHECK(duty_end - (*break_start + r.break_length) <= r.work_before_break);
-    CHECK(ev.service_minutes == duty_end - duty_start - r.break_length);
-  } else {
-    CHECK(drive <= r.drive_before_break);
-    CHECK(duty_end - duty_start <= r.work_before_break);
-    CHECK(ev.service_minutes == duty_end - duty_start);
-  }
+  const auto chk = check::check_day(day, plan);
+  std::string detail;
+  for (const auto& v : chk.violations) detail += v.rule + " ";
+  INFO("checker: " << detail << " breaks: " << breaks_of(ev.route));
+  REQUIRE(chk.ok());
+  CHECK(chk.drivers[k].service_minutes == ev.service_minutes);
+  CHECK(chk.drivers[k].driving_minutes == ev.driving_minutes);
 }
 }  // namespace
 
+// Modes: V0 rules; + the lone 30-min break (brute force models it too); + the 15 + 30 split
+// (not in the brute force: the evaluator may then only be better, and the checker must agree).
 TEST_CASE("evaluator matches exhaustive brute force on generated routes", "[route_eval][brute]") {
   const Config cfg = load_config();
   const auto icfg = data::load_instance_config(config_dir() / "instance_small.yaml");
-  int legal_count = 0;
-  int compared = 0;
-  int with_break = 0;
-  for (const std::uint64_t seed : {UINT64_C(4), UINT64_C(9)}) {
-  const auto week = data::generate_week(icfg, cfg, seed).week;
-  for (int d = 0; d < week.days; ++d) {
-    const DayInstance day = make_day_instance(week, d);
-    const RouteEvaluator ev(day);
-    std::uint64_t h = 12345 + seed * 100 + static_cast<std::uint64_t>(d);
-    for (int trial = 0; trial < 40; ++trial) {
-      // deterministic pseudo-random sequence of 1..4 distinct orders
-      std::vector<std::size_t> seq;
-      h = h * UINT64_C(6364136223846793005) + UINT64_C(1442695040888963407);
-      const std::size_t len = 1 + (h >> 33) % 4;
-      while (seq.size() < len) {
-        h = h * UINT64_C(6364136223846793005) + UINT64_C(1442695040888963407);
-        const std::size_t i = (h >> 33) % day.orders.size();
-        if (std::ranges::find(seq, i) == seq.end()) seq.push_back(i);
+  for (const int mode : {0, 1, 2}) {
+    int legal_count = 0, compared = 0, with_break = 0, better = 0;
+    for (const std::uint64_t seed : {UINT64_C(4), UINT64_C(9)}) {
+      const auto week = data::generate_week(icfg, cfg, seed).week;
+      for (int d = 0; d < week.days; ++d) {
+        DayInstance day = make_day_instance(week, d);
+        day.rules.allow_short_break = mode >= 1;
+        day.rules.allow_split_break = mode >= 2;
+        const RouteEvaluator ev(day);
+        std::uint64_t h = 12345 + seed * 100 + static_cast<std::uint64_t>(d);
+        for (int trial = 0; trial < 40; ++trial) {
+          // deterministic pseudo-random sequence of 1..4 distinct orders
+          std::vector<std::size_t> seq;
+          h = h * UINT64_C(6364136223846793005) + UINT64_C(1442695040888963407);
+          const std::size_t len = 1 + (h >> 33) % 4;
+          while (seq.size() < len) {
+            h = h * UINT64_C(6364136223846793005) + UINT64_C(1442695040888963407);
+            const std::size_t i = (h >> 33) % day.orders.size();
+            if (std::ranges::find(seq, i) == seq.end()) seq.push_back(i);
+          }
+          const std::size_t k = static_cast<std::size_t>(trial) % day.drivers.size();
+          const auto got = ev.evaluate(k, seq);
+          const auto ref = brute_force_theta(day, k, seq);
+          INFO("mode " << mode << " day " << d << " trial " << trial << " driver " << k);
+          if (mode < 2) {
+            REQUIRE(got.legal == ref.has_value());
+            if (ref) CHECK(got.service_minutes == *ref);
+          } else if (ref) {  // the split can only add options
+            REQUIRE(got.legal);
+            CHECK(got.service_minutes <= *ref);
+            better += got.service_minutes < *ref ? 1 : 0;
+          }
+          if (got.legal) {
+            check_route_is_legal(day, k, seq, got);
+            ++legal_count;
+            if (!got.route.breaks.empty()) ++with_break;
+          }
+          ++compared;
+        }
       }
-      const std::size_t k = static_cast<std::size_t>(trial) % day.drivers.size();
-      const auto got = ev.evaluate(k, seq);
-      const auto ref = brute_force_theta(day, k, seq);
-      INFO("day " << d << " trial " << trial << " driver " << k);
-      REQUIRE(got.legal == ref.has_value());
-      if (ref) {
-        CHECK(got.service_minutes == *ref);
-        check_route_is_legal(day, k, seq, got);
-        ++legal_count;
-        if (got.route.break_after_order_id) ++with_break;
-      }
-      ++compared;
     }
+    CHECK(compared == 400);
+    WARN("brute-force cross-check, mode " << mode << ": " << legal_count << " legal of " << compared << ", "
+         << with_break << " with a break, " << better << " better with the split");
+    CHECK(legal_count >= 50);   // must exercise legal routes, not only rejections
+    CHECK(with_break >= 5);     // and the break logic
   }
-  }
-  CHECK(compared == 400);
-  WARN("brute-force cross-check: " << legal_count << " legal of " << compared << ", "
-       << with_break << " with a break");
-  CHECK(legal_count >= 50);   // must exercise legal routes, not only rejections
-  CHECK(with_break >= 5);     // and the break logic
+}
+
+// ============================================================ V1-T8 break patterns (docs/MODEL.md)
+
+TEST_CASE("V1-T8: a 30-min break lets a 9-h duty end before the shift end", "[route_eval][v1t8]") {
+  // A 410-710 (300 min), B (120 min). With 45 min: B 785-905, back 935, duty end 945 > 935.
+  // With 30 min: B 770-890, back 920, end 930 <= 935; work 540 <= 9 h, driving 90 <= 270.
+  Fixture f(360, 935);
+  f.add("A", 360, 1100, 300);
+  f.add("B", 360, 1100, 120);
+  f.matrix({{0, 30, 30}, {30, 0, 30}, {30, 30, 0}});
+  CHECK_FALSE(f.eval({0, 1}).legal);  // V0 rules
+  f.day.rules.allow_short_break = true;
+  const auto ev = f.eval({0, 1});
+  REQUIRE(ev.legal);
+  CHECK(breaks_of(ev.route) == "A:30");
+  CHECK(ev.service_minutes == 540);
+  check_route_is_legal(f.day, 0, {0, 1}, ev);
+  const auto q = RouteEvaluator(f.day).quick(0, std::vector<std::size_t>{0, 1});
+  CHECK(q.legal);
+  CHECK(q.service_minutes == 540);
+  CHECK(q.breaks == heuristics::BreakPattern::short_one(0, 30));
+}
+
+TEST_CASE("V1-T8: the 15 + 30 split serves a tight window that a 45-min break misses", "[route_eval][v1t8]") {
+  // A 410-610; B window [650, 660]; C opens at 800. 45 after A: B at 685 > 660. 45 after B: work
+  // before the break 750 - 360 = 390 > 360. Split: 15 after A (B at 655), 30 after B; C 815-915,
+  // back 945, end 955; stretches 250 / 130 / 170; theta = 955 - 360 - 45 = 550.
+  Fixture f;
+  f.add("A", 360, 1100, 200);
+  f.add("B", 650, 660, 100);
+  f.add("C", 800, 1100, 100);
+  f.matrix({{0, 30, 30, 30}, {30, 0, 30, 30}, {30, 30, 0, 30}, {30, 30, 30, 0}});
+  CHECK_FALSE(f.eval({0, 1, 2}).legal);  // V0 rules
+  f.day.rules.allow_short_break = true;
+  CHECK_FALSE(f.eval({0, 1, 2}).legal);  // 580 min of work needs 45 min of breaks
+  f.day.rules.allow_split_break = true;
+  const auto ev = f.eval({0, 1, 2});
+  REQUIRE(ev.legal);
+  CHECK(breaks_of(ev.route) == "A:15 B:30");
+  CHECK(ev.service_minutes == 550);
+  check_route_is_legal(f.day, 0, {0, 1, 2}, ev);
+  const auto q = RouteEvaluator(f.day).quick(0, std::vector<std::size_t>{0, 1, 2});
+  CHECK(q.legal);
+  CHECK(q.service_minutes == 550);
+  CHECK(q.breaks == heuristics::BreakPattern::split(0, 1, 15, 30));
 }

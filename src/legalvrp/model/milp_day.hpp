@@ -8,6 +8,8 @@
 //              reduced windows and extended pruning (bigm.hpp); big-M from bounds; valid
 //              inequalities: X_ij + X_ji <= 1, visit <= used, capacity * used,
 //              drive <= DB (1 + brk), visit <= brk when serving i forces a break.
+// Break patterns (V1-T8): one full break (y), and when switched on a lone short break (y30) or
+// the 15 + 30 split (y15 then y30s), each with its own break start; see docs/MODEL.md.
 // Both keep C8-C9 as equalities on used arcs (two-sided), the break delay in C6-C7, and the
 // symmetry rule for identical drivers (§6.6). Variables and constraints carry the brief's code
 // names and the ids of orders and drivers.
@@ -79,6 +81,12 @@ class MilpModel {
   std::vector<std::vector<GRBVar>> Tk_, Dk_;               // reference: [k][i]
   std::vector<std::vector<GRBVar>> y_;                     // [k][i], valid iff compat
   std::vector<GRBVar> t0_, tE_, a_, b_, svc_, ext_;
+  // V1-T8 break patterns (docs/MODEL.md): a lone short break (y30, a30) and the 15 + 30 split
+  // (y15, a15; y30s, a30s, b30s). Created only when the rules switch them on.
+  bool short_on_ = false, split_on_ = false;
+  std::vector<std::vector<GRBVar>> y30_, y15_, y30s_;      // [k][i], valid iff compat
+  std::vector<GRBVar> a30_, a15_, a30s_, b30s_;
+  [[nodiscard]] GRBLinExpr break_delay(std::size_t k, std::size_t i) const;  // minutes of break after i
 };
 
 }  // namespace legalvrp::model

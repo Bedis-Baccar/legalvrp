@@ -63,7 +63,7 @@ DayInstance small_day() {
 // k1 serves A then B (legal); C as given by the caller.
 Route route_ab() {
   // dep 380 -> A 410..432 -> B 462..484 -> depot 514
-  return Route{"k1", {"A", "B"}, std::nullopt, 380, {410, 462}, {410, 462}, 514};
+  return Route{"k1", {"A", "B"}, {}, 380, {410, 462}, {410, 462}, 514};
 }
 
 }  // namespace
@@ -157,12 +157,12 @@ TEST_CASE("week: postponed order carried with escalated penalty, state accumulat
   const WeekInstance w = two_day_week(360, 1125);
   DayPlan mon;
   mon.day = 0;
-  mon.routes = {Route{"k1", {"A"}, std::nullopt, 380, {410}, {410}, 462}};
+  mon.routes = {Route{"k1", {"A"}, {}, 380, {410}, {410}, 462}};
   mon.postponed_order_ids = {"B"};
   DayPlan tue;
   tue.day = 1;
   // Tuesday: B (carried) and C; postpone C on the last day -> unserved, 1000 EUR.
-  tue.routes = {Route{"k1", {"B"}, std::nullopt, 380, {410}, {410}, 462}};
+  tue.routes = {Route{"k1", {"B"}, {}, 380, {410}, {410}, 462}};
   tue.postponed_order_ids = {"C"};
 
   const auto r = check::check_week(w, {mon, tue});
@@ -180,7 +180,7 @@ TEST_CASE("week: a carried order must be covered the next day", "[checker][week]
   const WeekInstance w = two_day_week(360, 1125);
   DayPlan mon;
   mon.day = 0;
-  mon.routes = {Route{"k1", {"A"}, std::nullopt, 380, {410}, {410}, 462}};
+  mon.routes = {Route{"k1", {"A"}, {}, 380, {410}, {410}, 462}};
   mon.postponed_order_ids = {"B"};
   DayPlan tue;
   tue.day = 1;
@@ -197,11 +197,11 @@ TEST_CASE("week: daily rest of 11 h between consecutive duties", "[checker][week
   const WeekInstance w = two_day_week(300, 1140);
   DayPlan mon;
   mon.day = 0;
-  mon.routes = {Route{"k1", {"A"}, std::string{"A"}, 1048, {1078}, {1078}, 1175}};
+  mon.routes = {Route{"k1", {"A"}, {Break{"A", 45}}, 1048, {1078}, {1078}, 1175}};
   mon.postponed_order_ids = {"B"};
   DayPlan tue;
   tue.day = 1;
-  tue.routes = {Route{"k1", {"B"}, std::nullopt, 320, {350}, {360}, 412}};
+  tue.routes = {Route{"k1", {"B"}, {}, 320, {350}, {360}, 412}};
   tue.postponed_order_ids = {"C"};
   const auto r = check::check_week(w, {mon, tue});
   CHECK(has(r.violations, rule::daily_rest_min));

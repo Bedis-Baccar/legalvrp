@@ -254,28 +254,33 @@ TEST_CASE("week round-trips through files unchanged", "[io]") {
   CHECK(read_text_file(a.path / "week.json").find('\r') == std::string::npos);  // LF only
 }
 
-TEST_CASE("plans round-trip, optional fields included", "[io]") {
+TEST_CASE("plans round-trip, breaks included; V0 plan files still read", "[io]") {
   DayPlan p;
   p.day = 2;
   Route r;
   r.driver_id = "k1";
   r.order_ids = {"d2-o01", "d2-o02"};
-  r.break_after_order_id = "d2-o01";
+  r.breaks = {Break{"d2-o01", 15}, Break{"d2-o02", 30}};
   r.departure = 400;
-  r.arrivals = {430, 520};
-  r.service_starts = {440, 520};
-  r.return_time = 600;
-  p.routes = {r, Route{"k2", {}, std::nullopt, 380, {}, {}, 380}};
+  r.arrivals = {430, 535};
+  r.service_starts = {440, 535};
+  r.return_time = 630;
+  p.routes = {r, Route{"k2", {}, {}, 380, {}, {}, 380}};
   p.postponed_order_ids = {"d2-o03"};
   p.objective = 123.45;
   p.solver_stats.status = "OPTIMAL";
 
   const json j = p;
-  CHECK_FALSE(j["routes"][1].contains("break_after_order_id"));
+  CHECK(j["routes"][1]["breaks"].empty());
   const auto back = j.get<DayPlan>();
   CHECK(json(back) == j);
-  CHECK(back.routes[0].break_after_order_id == "d2-o01");
-  CHECK_FALSE(back.routes[1].break_after_order_id.has_value());
+  CHECK(back.routes[0].breaks == r.breaks);
+  CHECK(back.routes[1].breaks.empty());
+
+  json v0 = j;  // a V0 plan file: one 45-min break as break_after_order_id
+  v0["routes"][0].erase("breaks");
+  v0["routes"][0]["break_after_order_id"] = "d2-o01";
+  CHECK(v0.get<DayPlan>().routes[0].breaks == std::vector<Break>{Break{"d2-o01", 45}});
 }
 
 TEST_CASE("reading a matrix with non-integer minutes fails", "[io]") {
@@ -423,6 +428,6 @@ TEST_CASE("large family: byte-identical output, golden hash checked on every pla
   const std::string ma = to_canonical_text(nlohmann::json(a->generated.week.matrix));
   CHECK(wa == to_canonical_text(nlohmann::json(b->generated.week)));
   // Golden values computed on Windows/MSVC; CI recomputes them on Linux/GCC.
-  CHECK(fnv1a(wa) == UINT64_C(0x16c6aa75ecfcd5b5));
+  CHECK(fnv1a(wa) == UINT64_C(0x4c3dfbf4fc7c6c22));
   CHECK(fnv1a(ma) == UINT64_C(0xc1a39e033ac8937b));
 }

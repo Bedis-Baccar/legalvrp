@@ -34,7 +34,9 @@ RealisedDay realise_day(const DayInstance& day, const DayPlan& plan,
       rt.service_starts[i] = start;
       duty.max_delay = std::max(duty.max_delay, start - planned.service_starts[i]);
       leave = start + o.service_mu;
-      if (rt.break_after_order_id == o.id) leave += day.rules.break_length;
+      for (const auto& b : rt.breaks) {
+        if (b.after_order_id == o.id) leave += b.minutes;  // the planned break, as planned
+      }
       here = there;
     }
     rt.return_time = leave + m.time(here, depot);

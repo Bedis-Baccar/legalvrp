@@ -39,7 +39,7 @@ if(LEGALVRP_WITH_GUROBI)
 endif()
 
 legalvrp_test(test_route_eval unit unit/test_route_eval.cpp)
-target_link_libraries(test_route_eval PRIVATE legalvrp::heuristics legalvrp::data)
+target_link_libraries(test_route_eval PRIVATE legalvrp::heuristics legalvrp::data legalvrp::check)
 legalvrp_test(test_day unit unit/test_day.cpp)
 legalvrp_test(test_checker_corpus unit unit/test_checker_corpus.cpp)
 target_link_libraries(test_checker_corpus PRIVATE legalvrp::check)

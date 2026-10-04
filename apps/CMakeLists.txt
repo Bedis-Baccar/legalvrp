@@ -15,6 +15,7 @@ legalvrp_app(legalvrp-check    check.cpp    legalvrp::check legalvrp::data)  # d
 legalvrp_app(legalvrp-run-week run_week.cpp legalvrp::week legalvrp::kpi legalvrp::alns legalvrp::estimate)
 legalvrp_app(legalvrp-robustness robustness.cpp legalvrp::week legalvrp::kpi legalvrp::alns legalvrp::sim legalvrp::estimate)  # V1-T6/T7
 legalvrp_app(legalvrp-learn learn.cpp legalvrp::data legalvrp::estimate)  # V1-T7
+legalvrp_app(legalvrp-breaks breaks.cpp legalvrp::week legalvrp::kpi legalvrp::alns)  # V1-T8
 
 if(LEGALVRP_WITH_GUROBI)
   legalvrp_app(legalvrp-scaling scaling.cpp legalvrp::week legalvrp::model legalvrp::data)

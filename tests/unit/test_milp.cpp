@@ -180,7 +180,7 @@ TEST_CASE("driving-heavy regime: MILP = enumeration on 10 random days", "[milp][
   for (std::uint64_t seed = 1; seed <= 10; ++seed) {
     const DayInstance day = regime_day(2000 + seed, false);
     compare_with_enumeration(day, "driving-heavy seed " + std::to_string(seed));
-    for (const auto& r : heuristics::solve_by_enumeration(day).plan.routes) breaks += r.break_after_order_id ? 1 : 0;
+    for (const auto& r : heuristics::solve_by_enumeration(day).plan.routes) breaks += r.breaks.empty() ? 0 : 1;
   }
   CHECK(breaks > 0);  // the regime must exercise the break logic
 }
@@ -235,4 +235,67 @@ TEST_CASE("small day end to end: checker OK, MILP never worse than the baseline"
   CHECK(r.milp.start_accepted);
   CHECK(r.source == week::PlanSource::milp);
   CHECK(r.plan.objective <= r.baseline.objective + 1e-6);
+}
+
+// ============================================================ V1-T8 break patterns (docs/MODEL.md)
+
+TEST_CASE("V0 break rules: MILP = enumeration on the work-heavy regime", "[milp][brute][v1t8]") {
+  for (std::uint64_t seed = 1; seed <= 5; ++seed) {
+    DayInstance day = regime_day(1000 + seed, true);
+    day.rules.allow_short_break = false;
+    day.rules.allow_split_break = false;
+    compare_with_enumeration(day, "V0 work-heavy seed " + std::to_string(seed));
+  }
+}
+
+TEST_CASE("V1-T8: the 15 + 30 split lets one driver serve a tight window (MILP = enumeration)", "[milp][v1t8]") {
+  // A 410-610; B window [650, 660]; C opens 800 (route_eval V1-T8 case). V0 rules: no legal route
+  // serves the three, one order is postponed; with the split: all served, breaks A:15 B:30.
+  DayInstance d = base_day();
+  d.trucks = {Truck{"t1", 18, false}};
+  d.drivers = {Driver{"k1", "full_time", "t1", 360, 1125, {0}}};
+  d.states = {DriverWeekState{"k1", 0, 0, std::nullopt}};
+  add_order(d, "A", 360, 1100, 200, 2, false, 1000);
+  add_order(d, "B", 650, 660, 100, 2, false, 1000);
+  add_order(d, "C", 800, 1100, 100, 2, false, 1000);
+  set_matrix(d, {{0, 30, 30, 30}, {30, 0, 30, 30}, {30, 30, 0, 30}, {30, 30, 30, 0}});
+  DayInstance v0 = d;
+  v0.rules.allow_short_break = false;
+  v0.rules.allow_split_break = false;
+  const double cost_v0 = compare_with_enumeration(v0, "split case, V0 rules");
+  const double cost_v1 = compare_with_enumeration(d, "split case, V1 rules");
+  CHECK(cost_v1 < cost_v0 - 500);  // a 1000-EUR postponement avoided
+  for (const auto f : kBoth) {
+    const auto r = model::solve_day_milp(env(), d, exact(f));
+    REQUIRE(r.plan);
+    CHECK(r.plan->postponed_order_ids.empty());
+    REQUIRE(r.plan->routes.size() == 1);
+    REQUIRE(r.plan->routes[0].breaks.size() == 2);
+    CHECK(r.plan->routes[0].breaks[0] == Break{"A", 15});
+    CHECK(r.plan->routes[0].breaks[1] == Break{"B", 30});
+  }
+}
+
+TEST_CASE("V1-T8: a 30-min break lets a 9-h duty end before the shift end (MILP = enumeration)", "[milp][v1t8]") {
+  DayInstance d = base_day();
+  d.trucks = {Truck{"t1", 18, false}};
+  d.drivers = {Driver{"k1", "full_time", "t1", 360, 935, {0}}};
+  d.states = {DriverWeekState{"k1", 0, 0, std::nullopt}};
+  add_order(d, "A", 360, 1100, 300, 2, false, 1000);
+  add_order(d, "B", 360, 1100, 120, 2, false, 1000);
+  set_matrix(d, {{0, 30, 30}, {30, 0, 30}, {30, 30, 0}});
+  DayInstance v0 = d;
+  v0.rules.allow_short_break = false;
+  v0.rules.allow_split_break = false;
+  const double cost_v0 = compare_with_enumeration(v0, "short case, V0 rules");
+  const double cost_v1 = compare_with_enumeration(d, "short case, V1 rules");
+  CHECK(cost_v1 < cost_v0 - 500);
+  for (const auto f : kBoth) {
+    const auto r = model::solve_day_milp(env(), d, exact(f));
+    REQUIRE(r.plan);
+    CHECK(r.plan->postponed_order_ids.empty());
+    REQUIRE(r.plan->routes.size() == 1);
+    REQUIRE(r.plan->routes[0].breaks.size() == 1);
+    CHECK(r.plan->routes[0].breaks[0].minutes == 30);
+  }
 }

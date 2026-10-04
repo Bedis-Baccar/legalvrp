@@ -83,14 +83,33 @@ void MilpModel::build() {
       }
     }
   }
+  short_on_ = r.allow_short_break;
+  split_on_ = r.allow_split_break;
+  const double BS = r.short_break_length, WS = r.short_break_work_max;
+  const double B1 = r.split_break_first, B2 = r.split_break_second;
   y_.assign(K, std::vector<GRBVar>(n));
+  if (short_on_) y30_.assign(K, std::vector<GRBVar>(n));
+  if (split_on_) {
+    y15_.assign(K, std::vector<GRBVar>(n));
+    y30s_.assign(K, std::vector<GRBVar>(n));
+  }
   for (std::size_t k = 0; k < K; ++k) {
     const Driver& drv = day_.drivers[k];
     const double S = drv.shift_start, F = drv.shift_end_max;
     for (std::size_t i = 0; i < n; ++i) {
       if (!p.compat[k][i]) continue;
-      y_[k][i] = model_.addVar(0, 1, 0, GRB_BINARY, "y[" + oid(ix(i)) + "," + kid(k) + "]");
+      const std::string tag = "[" + oid(ix(i)) + "," + kid(k) + "]";
+      y_[k][i] = model_.addVar(0, 1, 0, GRB_BINARY, "y" + tag);
       ++binaries_;
+      if (short_on_) {
+        y30_[k][i] = model_.addVar(0, 1, 0, GRB_BINARY, "y30" + tag);
+        ++binaries_;
+      }
+      if (split_on_) {
+        y15_[k][i] = model_.addVar(0, 1, 0, GRB_BINARY, "y15" + tag);
+        y30s_[k][i] = model_.addVar(0, 1, 0, GRB_BINARY, "y30s" + tag);
+        binaries_ += 2;
+      }
     }
     t0_.push_back(model_.addVar(S + P, F - R, 0, GRB_CONTINUOUS, "t0[" + kid(k) + "]"));
     tE_.push_back(model_.addVar(S + P, F - R, 0, GRB_CONTINUOUS, "tE[" + kid(k) + "]"));
@@ -98,11 +117,18 @@ void MilpModel::build() {
     b_.push_back(model_.addVar(0, strong ? DB : DD, 0, GRB_CONTINUOUS, "b[" + kid(k) + "]"));
     svc_.push_back(model_.addVar(0, DS, 0, GRB_CONTINUOUS, "svc[" + kid(k) + "]"));
     if (!weekly) ext_.push_back(model_.addVar(0, GRB_INFINITY, 0, GRB_CONTINUOUS, "ext[" + kid(k) + "]"));
+    if (short_on_) a30_.push_back(model_.addVar(S, F, 0, GRB_CONTINUOUS, "a30[" + kid(k) + "]"));
+    if (split_on_) {
+      a15_.push_back(model_.addVar(S, F, 0, GRB_CONTINUOUS, "a15[" + kid(k) + "]"));
+      a30s_.push_back(model_.addVar(S, F, 0, GRB_CONTINUOUS, "a30s[" + kid(k) + "]"));
+      b30s_.push_back(model_.addVar(0, strong ? DB : DD, 0, GRB_CONTINUOUS, "b30s[" + kid(k) + "]"));
+    }
   }
 
   // ---------------------------------------------------------------- expressions
   std::vector<std::vector<GRBLinExpr>> visit(K, std::vector<GRBLinExpr>(n)), out(K, std::vector<GRBLinExpr>(n));
   std::vector<GRBLinExpr> leave(K), drive(K), brk(K), used(K);
+  std::vector<GRBLinExpr> brk30(K), brk15(K), brk30s(K), anybrk(K);  // V1-T8 pattern indicators
   std::map<std::pair<int, int>, GRBLinExpr> X;  // aggregated arc flow (strong)
   GRBLinExpr objective = 0;
   for (std::size_t k = 0; k < K; ++k) {
@@ -118,8 +144,15 @@ void MilpModel::build() {
     }
     used[k] = 1.0 - x_[k].at({p.depot_out, p.depot_in});
     for (std::size_t i = 0; i < n; ++i) {
-      if (p.compat[k][i]) brk[k] += y_[k][i];
+      if (!p.compat[k][i]) continue;
+      brk[k] += y_[k][i];
+      if (short_on_) brk30[k] += y30_[k][i];
+      if (split_on_) {
+        brk15[k] += y15_[k][i];
+        brk30s[k] += y30s_[k][i];
+      }
     }
+    anybrk[k] = brk[k] + brk30[k] + brk15[k];
     objective += con.cost_per_min_regular * svc_[k] + con.fixed_cost_if_used * used[k];
     if (!weekly) objective += con.cost_per_min_extra * ext_[k];
   }
@@ -172,13 +205,13 @@ void MilpModel::build() {
       } else if (a.from != p.depot_out && a.to == p.depot_in) {  // C7
         const auto i = static_cast<std::size_t>(a.from);
         const double M = big_m(p.l[i] + p.s[i] + BR + tau - (S + P));
-        model_.addConstr(tE_[k] >= T(a.from, ix(k)) + dbl(p.s[i]) + BR * y_[k][i] + tau - M * (1 - v),
+        model_.addConstr(tE_[k] >= T(a.from, ix(k)) + dbl(p.s[i]) + break_delay(k, i) + tau - M * (1 - v),
                          "time_ret" + tag);
       } else if (a.from != p.depot_out && !strong) {  // C6, C9 per driver (reference)
         const auto i = static_cast<std::size_t>(a.from);
         const auto j = static_cast<std::size_t>(a.to);
         const double M = big_m(p.l[i] + p.s[i] + BR + tau - p.e[j]);
-        model_.addConstr(T(a.to, ix(k)) >= T(a.from, ix(k)) + dbl(p.s[i]) + BR * y_[k][i] + tau - M * (1 - v),
+        model_.addConstr(T(a.to, ix(k)) >= T(a.from, ix(k)) + dbl(p.s[i]) + break_delay(k, i) + tau - M * (1 - v),
                          "time_arc" + tag);
         model_.addConstr(D(a.to, ix(k)) >= D(a.from, ix(k)) + tau - (DD + tau) * (1 - v), "drv_arc_lo" + tag);
         model_.addConstr(D(a.to, ix(k)) <= D(a.from, ix(k)) + tau + DD * (1 - v), "drv_arc_hi" + tag);
@@ -199,12 +232,12 @@ void MilpModel::build() {
         continue;
       }
       const auto i = static_cast<std::size_t>(from);
-      GRBLinExpr Yi = 0;
+      GRBLinExpr Yi = 0;  // minutes of break after i, whichever driver serves it
       for (std::size_t k = 0; k < K; ++k) {
-        if (p.compat[k][i]) Yi += y_[k][i];
+        if (p.compat[k][i]) Yi += break_delay(k, i);
       }
       const double M = big_m(p.l[i] + p.s[i] + BR + tau - p.e[j]);
-      model_.addConstr(Tn_[j] >= Tn_[i] + dbl(p.s[i]) + BR * Yi + tau - M * (1 - Xij), "time_arc" + tag);
+      model_.addConstr(Tn_[j] >= Tn_[i] + dbl(p.s[i]) + Yi + tau - M * (1 - Xij), "time_arc" + tag);
       model_.addConstr(Dn_[j] >= Dn_[i] + tau - big_m(p.D_ub[i] + tau - p.D_lb[j]) * (1 - Xij), "drv_arc_lo" + tag);
       model_.addConstr(Dn_[j] <= Dn_[i] + tau + big_m(p.D_ub[j] - p.D_lb[i] - tau) * (1 - Xij), "drv_arc_hi" + tag);
       if (from < to && X.contains({to, from})) {
@@ -225,47 +258,98 @@ void MilpModel::build() {
       if (!p.compat[k][i]) continue;
       const std::string tag = "[" + oid(ix(i)) + "," + kid(k) + "]";
       const GRBVar& y = y_[k][i];
-      model_.addConstr(y <= visit[k][i], "brk_site" + tag);                                  // C10
+      GRBLinExpr at_i = y;  // breaks after i: at most one, only if i is visited (C10)
+      if (short_on_) at_i += y30_[k][i];
+      if (split_on_) at_i += y15_[k][i] + y30s_[k][i];
+      model_.addConstr(at_i <= visit[k][i], "brk_site" + tag);                               // C10
       const double s = p.s[i];
       const double Ma_lo = strong ? big_m(p.l[i] + s - S) : std::max(F, p.l[i] + s) - std::min(S, p.e[i] + s);
       const double Ma_hi = strong ? big_m(F - p.e[i] - s) : Ma_lo;
-      model_.addConstr(a_[k] >= T(ix(i), ix(k)) + s - Ma_lo * (1 - y), "brk_time_lo" + tag);  // C11
-      model_.addConstr(a_[k] <= T(ix(i), ix(k)) + s + Ma_hi * (1 - y), "brk_time_hi" + tag);
+      // C11: a break start equals T_i + s_i when its break follows i.
+      auto tie_start = [&](const GRBVar& a, const GRBVar& yy, const std::string& name) {
+        model_.addConstr(a >= T(ix(i), ix(k)) + s - Ma_lo * (1 - yy), name + "_lo" + tag);
+        model_.addConstr(a <= T(ix(i), ix(k)) + s + Ma_hi * (1 - yy), name + "_hi" + tag);
+      };
+      tie_start(a_[k], y, "brk_time");
       const double Mb_lo = strong ? big_m(p.D_ub[i]) : DD;
       const double Mb_hi = strong ? big_m(b_ub - p.D_lb[i]) : DD;
       model_.addConstr(b_[k] >= D(ix(i), ix(k)) - Mb_lo * (1 - y), "brk_drive_lo" + tag);    // C12
       model_.addConstr(b_[k] <= D(ix(i), ix(k)) + Mb_hi * (1 - y), "brk_drive_hi" + tag);
+      if (short_on_) tie_start(a30_[k], y30_[k][i], "brk30_time");
+      if (split_on_) {
+        tie_start(a15_[k], y15_[k][i], "brk15_time");
+        tie_start(a30s_[k], y30s_[k][i], "brk30s_time");
+        const GRBVar& ys = y30s_[k][i];  // the split's second part restarts the driving count
+        model_.addConstr(b30s_[k] >= D(ix(i), ix(k)) - Mb_lo * (1 - ys), "brk30s_drive_lo" + tag);
+        model_.addConstr(b30s_[k] <= D(ix(i), ix(k)) + Mb_hi * (1 - ys), "brk30s_drive_hi" + tag);
+      }
       if (strong) {
         model_.addConstr(visit[k][i] <= used[k], "visit_used" + tag);
-        if (p.force_break[k][i]) model_.addConstr(visit[k][i] <= brk[k], "force_break" + tag);
+        if (p.force_break[k][i]) model_.addConstr(visit[k][i] <= anybrk[k], "force_break" + tag);
       }
     }
-    model_.addConstr(brk[k] <= 1, "brk_one" + K_);
+    model_.addConstr(anybrk[k] <= 1, "brk_one" + K_);  // one pattern per duty
+    if (split_on_) model_.addConstr(brk30s[k] == brk15[k], "split_pair" + K_);
     model_.addConstr(b_[k] <= b_ub * brk[k], "brk_drive_off" + K_);
-    if (!strong) model_.addConstr(b_[k] <= DB, "drive_seg_before" + K_);                     // C13
-    model_.addConstr(drive[k] - b_[k] <= DB, "drive_seg" + K_);
+    GRBLinExpr b_q = b_[k];  // driving at the qualifying break, if any
+    if (split_on_) {
+      model_.addConstr(b30s_[k] <= b_ub * brk15[k], "brk30s_drive_off" + K_);
+      b_q += b30s_[k];
+    }
+    if (!strong) {                                                                           // C13
+      model_.addConstr(b_[k] <= DB, "drive_seg_before" + K_);
+      if (split_on_) model_.addConstr(b30s_[k] <= DB, "drive_seg_before30s" + K_);
+    }
+    model_.addConstr(drive[k] - b_q <= DB, "drive_seg" + K_);
+    // Break minutes of the pattern; work stretches of the pattern.
+    GRBLinExpr break_min = BR * brk[k];
+    GRBLinExpr stretches = brk[k];
+    if (short_on_) {
+      break_min += BS * brk30[k];
+      stretches += brk30[k];
+    }
+    if (split_on_) {
+      break_min += (B1 + B2) * brk15[k];
+      stretches += 2 * brk15[k];
+    }
     if (strong) {
-      model_.addConstr(drive[k] <= DB + DB * brk[k], "drive_break" + K_);
+      GRBLinExpr qualifying = brk[k];
+      if (split_on_) qualifying += brk15[k];
+      model_.addConstr(drive[k] <= DB + DB * qualifying, "drive_break" + K_);
       // Duty knapsacks (D-034): work = prep + driving + service + waiting + close, and each
-      // work segment is <= WB, so driving + service + P + R <= WB (used + brk); the duty fits
-      // in the shift; temps de service is at least the work done.
+      // work stretch is <= WB, so driving + service + P + R <= WB (used + stretches); the duty
+      // fits in the shift with its breaks; temps de service is at least the work done.
       GRBLinExpr service = 0;
       for (std::size_t i = 0; i < n; ++i) {
         if (p.compat[k][i]) service += dbl(p.s[i]) * visit[k][i];
       }
-      model_.addConstr(drive[k] + service + (P + R) * used[k] <= WB * (used[k] + brk[k]), "work_knap" + K_);
-      model_.addConstr(drive[k] + service + BR * brk[k] + (P + R) * used[k] <= (F - S) * used[k],
-                       "shift_knap" + K_);
+      model_.addConstr(drive[k] + service + (P + R) * used[k] <= WB * (used[k] + stretches), "work_knap" + K_);
+      model_.addConstr(drive[k] + service + break_min + (P + R) * used[k] <= (F - S) * used[k], "shift_knap" + K_);
       model_.addConstr(svc_[k] >= drive[k] + service + (P + R) * used[k], "svc_lb" + K_);
     }
-    // C14 work segments, fixed start (D-018)
+    // C14 work stretches, fixed start (D-018)
     const double Mw1 = strong ? big_m(F - S - WB) : F - S;
     const double Mw2 = strong ? big_m(F - S - BR - WB) : F - S;
     model_.addConstr(a_[k] - S <= WB + Mw1 * (1 - brk[k]), "work_before" + K_);
     model_.addConstr(tE_[k] + R - (a_[k] + BR) <= WB + Mw2 * (1 - brk[k]), "work_after" + K_);
-    model_.addConstr(tE_[k] + R - S <= WB + Mw1 * brk[k], "work_nobreak" + K_);
+    model_.addConstr(tE_[k] + R - S <= WB + Mw1 * anybrk[k], "work_nobreak" + K_);
+    if (short_on_) {
+      const double Mw2s = strong ? big_m(F - S - BS - WB) : F - S;
+      model_.addConstr(a30_[k] - S <= WB + Mw1 * (1 - brk30[k]), "work_before30" + K_);
+      model_.addConstr(tE_[k] + R - (a30_[k] + BS) <= WB + Mw2s * (1 - brk30[k]), "work_after30" + K_);
+      // W2: a lone short break covers at most short_break_work_max of work.
+      model_.addConstr(svc_[k] <= WS + (DS - WS) * (1 - brk30[k]), "work_short" + K_);
+    }
+    if (split_on_) {
+      const double Mmid = strong ? big_m(F - S - B1 - WB) : F - S;
+      const double Mw2s = strong ? big_m(F - S - B2 - WB) : F - S;
+      model_.addConstr(a15_[k] - S <= WB + Mw1 * (1 - brk15[k]), "work_before15" + K_);
+      model_.addConstr(a30s_[k] - (a15_[k] + B1) <= WB + Mmid * (1 - brk15[k]), "work_between" + K_);
+      model_.addConstr(tE_[k] + R - (a30s_[k] + B2) <= WB + Mw2s * (1 - brk15[k]), "work_after30s" + K_);
+      model_.addConstr(a30s_[k] - a15_[k] >= B1 - (F - S + B1) * (1 - brk15[k]), "split_order" + K_);
+    }
     model_.addConstr(drive[k] <= DD, "drive_day" + K_);                                      // C15
-    model_.addConstr(svc_[k] >= tE_[k] + R - S - BR * brk[k] - (F - S) * (1 - used[k]), "svc_def" + K_);  // C16
+    model_.addConstr(svc_[k] >= tE_[k] + R - S - break_min - (F - S) * (1 - used[k]), "svc_def" + K_);  // C16
     if (!weekly) {  // weekly parts: caps and overtime on weekly totals (clairvoyant model)
       model_.addConstr(svc_[k] <= con.weekly_service_max - st.service_minutes_week, "week_svc" + K_);  // C17
       model_.addConstr(drive[k] <= WD - st.driving_minutes_week, "week_drv" + K_);
@@ -311,6 +395,20 @@ std::unique_ptr<ConnectivityCuts> MilpModel::make_connectivity_cuts(bool per_dri
     }
   }
   return std::make_unique<ConnectivityCuts>(prep_.n, prep_.K, std::move(arcs), per_driver);
+}
+
+}  // namespace legalvrp::model
+
+namespace legalvrp::model {
+
+GRBLinExpr MilpModel::break_delay(std::size_t k, std::size_t i) const {
+  const Rules& r = day_.rules;
+  GRBLinExpr e = static_cast<double>(r.break_length) * y_[k][i];
+  if (short_on_) e += static_cast<double>(r.short_break_length) * y30_[k][i];
+  if (split_on_) {
+    e += static_cast<double>(r.split_break_first) * y15_[k][i] + static_cast<double>(r.split_break_second) * y30s_[k][i];
+  }
+  return e;
 }
 
 }  // namespace legalvrp::model

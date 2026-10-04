@@ -1,19 +1,20 @@
 #pragma once
 // legalvrp::heuristics — exact single-route evaluator (§7, D-007, D-016).
 //
-// Given a driver and a visiting sequence, returns the cheapest legal schedule over every
-// break position ("no break", after order 1, ..., after order m), or the violated rules.
+// Given a driver and a visiting sequence, returns the cheapest legal schedule over every break
+// pattern and position (BreakPattern: none, one 45-min break, and with the V1-T8 switches a
+// lone 30-min break or the 15 + 30 split), or the violated rules of the V0 options.
 //
-// Method. For a fixed sequence and break position, every timing rule is a difference
+// Method. For a fixed sequence and break pattern, every timing rule is a difference
 // constraint x_v - x_u <= c over the times {t0, T_1..T_m, tE}: travel and service, windows,
-// shift, the three 6 h work segments, daily and weekly service caps. This is a simple
+// shift, the 6 h work stretches, daily and weekly service caps. This is a simple
 // temporal network: Bellman-Ford decides feasibility, gives the earliest return, hence the
 // minimum temps de service, and an integer schedule achieving it (waiting placed where needed,
-// including before the break node, D-007). Driving limits do not depend on times and are
+// including before a break node, D-007). Driving limits do not depend on times and are
 // checked directly. Cost is non-decreasing in temps de service, so min theta = min cost.
 //
 // Semantics are those of docs/MODEL.md: fixed duty start (D-018), duty = [S_k, tE + R];
-// break of BR right after service at the break node; theta = tE + R - S_k - BR * [break];
+// each break right after service at its node; theta = tE + R - S_k - (break minutes);
 // theta <= daily_service_max. Minimum theta = earliest return. Among schedules with
 // the earliest return, the driver leaves the depot as late as possible (less waiting at
 // customers) and serves as early as possible after that.
@@ -27,6 +28,22 @@
 #include "legalvrp/domain/violation.hpp"
 
 namespace legalvrp::heuristics {
+
+// A break pattern of the planners (docs/MODEL.md, V1-T8): none, one full break (BR), one short
+// break (30 min: only when the day's driving needs no break and work stays <= 9 h), or the
+// 15 + 30 split. Positions are indices into the visiting sequence.
+struct BreakPattern {
+  int i = -1, j = -1;      // first and second break position, -1 = none
+  Minutes mi = 0, mj = 0;  // their minutes
+  bool short_break = false;
+  [[nodiscard]] static BreakPattern full(int b, Minutes m) { return {b, -1, m, 0, false}; }
+  [[nodiscard]] static BreakPattern short_one(int b, Minutes m) { return {b, -1, m, 0, true}; }
+  [[nodiscard]] static BreakPattern split(int a, int b, Minutes m1, Minutes m2) { return {a, b, m1, m2, false}; }
+  [[nodiscard]] int count() const noexcept { return i < 0 ? 0 : j < 0 ? 1 : 2; }
+  [[nodiscard]] Minutes total() const noexcept { return mi + mj; }
+  [[nodiscard]] Minutes minutes_after(int pos) const noexcept { return (pos == i ? mi : 0) + (pos == j ? mj : 0); }
+  bool operator==(const BreakPattern&) const = default;
+};
 
 struct RouteEvaluation {
   bool legal = false;
@@ -44,7 +61,7 @@ struct QuickEvaluation {
   Minutes service_minutes = 0;
   Minutes driving_minutes = 0;
   double km = 0.0;
-  int break_after = -1;  // position in the sequence, -1 = no break
+  BreakPattern breaks;   // of the cheapest legal option
 };
 
 class RouteEvaluator {

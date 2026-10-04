@@ -17,6 +17,85 @@ are the Gurobi variable and constraint names.
 - **Daytime duties, no night work (D-020).** Every shift lies in [05:00, 19:00] (`earliest_duty_start`, `latest_duty_end` in `config/rules.yaml`; $F_k = \min(S_k + 765, 19{:}00)$). Code des transports L3312-1 caps daily work at 10 h if a duty includes work between 00:00 and 05:00 or the driver is a night worker (≥ 50 h a month in the 21:00–06:00 night period). Neither can happen inside this window (≤ 1 h/day in the night period, ≈ 22 h/month), so the model needs no night constraint.
 - **One trip per duty.** A route leaves the depot once and returns once; no reloading. This was implicit in A1; now explicit.
 
+**Amendment V1-T8 (2026-10-04): breaks as the law states them (D-115 … D-117)**
+
+V0 used one simplification of the break rules: a single break of $BR = 45$ min, or none. The law
+is more permissive, and V1 follows it.
+
+*Working time* (Directive 2002/15/EC art. 5; Code des transports L3312-2):
+
+- **W1.** No more than $WB = 360$ consecutive minutes of work without a break.
+- **W2.** Breaks total at least 30 min when the day's work is between 6 and 9 h, and at least
+  45 min above 9 h.
+- **W3.** Breaks may be split into parts of at least 15 min.
+
+*Driving* (Regulation 561/2006 art. 7):
+
+- **D1.** After at most $DB = 270$ min of driving, a break of 45 min, or a break of at least
+  15 min followed later by one of at least 30 min. Such a break restarts the driving count.
+
+Representation: a route carries an ordered list of breaks (order after whose service the break
+starts, minutes). Work = duty minus breaks = $\theta$ (waiting is work, as before).
+
+**Checker (the law, any list of breaks):**
+
+- every break follows the service of an order of the route, in route order, at most one per
+  order, and lasts ≥ 15 min (else `consistency`);
+- work stretches between $S_k$, the breaks and $t^E + R$ are each ≤ $WB$ (`work_before_break`,
+  `work_between_breaks`, `work_after_break`, or `work_without_break`);
+- if there is a break: total breaks ≥ 45 when $\theta > 540$, ≥ 30 when $\theta > 360$
+  (`break_too_short`);
+- driving between qualifying breaks ≤ $DB$, where a qualifying break is ≥ 45 min, or ≥ 30 min after
+  an earlier ≥ 15-min part since the last qualifying break (`drive_before_break`,
+  `drive_between_breaks`, `drive_after_break`, or `drive_without_break`);
+- $\theta = t^E + R - S_k - \sum$ breaks. The other rules are unchanged.
+
+With one 45-min break this reduces exactly to the V0 checks, so every V0 label still holds.
+
+**Planners** (evaluators, ALNS, enumeration, MILP) choose, per route, among four patterns.
+`allow_short_break` and `allow_split_break` in `rules.yaml` switch the new ones off, to
+reproduce V0:
+
+| pattern | breaks | conditions beyond W1 |
+|---|---|---|
+| none | — | $\text{drive} \le DB$ |
+| full | 45 after $b$ | drive before / after $b$ ≤ $DB$ |
+| short | 30 after $b$ | $\theta \le 540$ and $\text{drive} \le DB$ (a lone 30 min does not restart driving) |
+| split | 15 after $i$, 30 after $j$, $i$ before $j$ | drive up to $j$ ≤ $DB$, after $j$ ≤ $DB$ |
+
+The split only pays when the 15-min part falls in waiting time: waiting is paid work, a
+break is not. The short break shortens the duty by 15 min. Neither changes $\theta$ by itself;
+they make tight duties feasible or free time for one more order.
+
+**MILP (both formulations).** The break binary $y_{ik}$ (full, 45) is joined by
+$y^{30}_{ik}$ (short), $y^{15}_{ik}$ and $y^{30s}_{ik}$ (split), each with a break start
+$a^{\kappa}_k$ tied to $T_{ik}+s_i$ as in C11. The split's second part also gets a driving
+level $b^{30s}_k$ tied to $D_{ik}$ as in C12. With
+$\text{brk}^{\kappa}_k = \sum_i y^{\kappa}_{ik}$:
+
+- **one pattern:** $\text{brk}_k + \text{brk}^{30}_k + \text{brk}^{15}_k \le 1$, and
+  $\text{brk}^{30s}_k = \text{brk}^{15}_k$;
+- **at most one break per order:** $y + y^{30} + y^{15} + y^{30s} \le \text{visit}$;
+- **break delay** in C6–C7: $45y + 30y^{30} + 15y^{15} + 30y^{30s}$; the big-M values still
+  use 45, the longest break at one node;
+- **driving (C13):** $b, b^{30s} \le DB$; $\ \text{drive} - b - b^{30s} \le DB$.
+  This is $\text{drive} \le DB$ for the none and short patterns;
+- **work (C14):**
+  - full: as V0;
+  - short: $a^{30} - S \le WB$ and $t^E + R - a^{30} - 30 \le WB$;
+  - split: $a^{15} - S \le WB$, $\ a^{30s} - a^{15} - 15 \le WB$, $\ t^E + R - a^{30s} - 30 \le WB$,
+    and order $a^{30s} \ge a^{15} + 15$;
+  - none: $t^E + R - S \le WB$ when no pattern is used;
+- **service (C16):** $\theta \ge t^E + R - S - 45\,\text{brk} - 30\,\text{brk}^{30} - 45\,\text{brk}^{15}$;
+- **W2 for the short break:** $\theta \le 540 + (DS - 540)(1 - \text{brk}^{30})$;
+- **strong knapsacks:**
+  - work $\le WB(\text{used} + \text{brk} + \text{brk}^{30} + 2\,\text{brk}^{15})$;
+  - drive $\le DB(1 + \text{brk} + \text{brk}^{15})$;
+  - the shift knapsack counts the break minutes of the pattern;
+  - a forced break is any pattern.
+
+With both switches off, none of these variables exists and the V0 model is unchanged.
+
 ---
 
 ## The daily MILP (brief §6)

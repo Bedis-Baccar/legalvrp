@@ -37,6 +37,13 @@ bool MilpModel::set_start(const DayPlan& plan) {
       prev = i;
     }
     if (!x_[k].contains({prev, rt.order_ids.empty() ? p.depot_in : p.depot_in})) return false;
+    // Break pattern (V1-T8): none, one full break, a lone short break, or the 15 + 30 split.
+    const auto& br = rt.breaks;
+    const bool ok = br.empty() || (br.size() == 1 && br[0].minutes == r.break_length) ||
+                    (br.size() == 1 && short_on_ && br[0].minutes == r.short_break_length) ||
+                    (br.size() == 2 && split_on_ && br[0].minutes == r.split_break_first &&
+                     br[1].minutes == r.split_break_second);
+    if (!ok) return false;
   }
 
   // Defaults: nothing used, everything postponed, idle drivers.
@@ -49,6 +56,11 @@ bool MilpModel::set_start(const DayPlan& plan) {
     for (std::size_t i = 0; i < n; ++i) {
       if (!p.compat[k][i]) continue;
       y_[k][i].set(GRB_DoubleAttr_Start, 0.0);
+      if (short_on_) y30_[k][i].set(GRB_DoubleAttr_Start, 0.0);
+      if (split_on_) {
+        y15_[k][i].set(GRB_DoubleAttr_Start, 0.0);
+        y30s_[k][i].set(GRB_DoubleAttr_Start, 0.0);
+      }
       if (!strong) {
         Tk_[k][i].set(GRB_DoubleAttr_Start, p.e[i]);
         Dk_[k][i].set(GRB_DoubleAttr_Start, 0.0);
@@ -68,6 +80,12 @@ bool MilpModel::set_start(const DayPlan& plan) {
     const Contract& con = day_.contract(drv.contract_class);
     const double S = drv.shift_start;
     const Route* rt = route_of[k] >= 0 ? &plan.routes[static_cast<std::size_t>(route_of[k])] : nullptr;
+    if (short_on_) a30_[k].set(GRB_DoubleAttr_Start, S);
+    if (split_on_) {
+      a15_[k].set(GRB_DoubleAttr_Start, S);
+      a30s_[k].set(GRB_DoubleAttr_Start, S);
+      b30s_[k].set(GRB_DoubleAttr_Start, 0.0);
+    }
     if (rt == nullptr || rt->order_ids.empty()) {  // idle
       x_[k].at({p.depot_out, p.depot_in}).set(GRB_DoubleAttr_Start, 1.0);
       t0_[k].set(GRB_DoubleAttr_Start, S + r.depot_prep);
@@ -80,7 +98,7 @@ bool MilpModel::set_start(const DayPlan& plan) {
     }
     int prev = p.depot_out;
     Minutes driven = 0;
-    bool has_break = false;
+    Minutes break_minutes = 0;
     double a = S, b = 0.0;
     for (std::size_t pos = 0; pos < rt->order_ids.size(); ++pos) {
       const int i = order_index(rt->order_ids[pos]);
@@ -90,16 +108,33 @@ bool MilpModel::set_start(const DayPlan& plan) {
       if (!weekly) u_[ui].set(GRB_DoubleAttr_Start, 0.0);
       T(i, static_cast<int>(k)).set(GRB_DoubleAttr_Start, rt->service_starts[pos]);
       D(i, static_cast<int>(k)).set(GRB_DoubleAttr_Start, driven);
-      if (rt->break_after_order_id == rt->order_ids[pos]) {
-        y_[k][ui].set(GRB_DoubleAttr_Start, 1.0);
-        has_break = true;
-        a = rt->service_starts[pos] + p.s[ui];
-        b = driven;
+      for (std::size_t bi = 0; bi < rt->breaks.size(); ++bi) {
+        const Break& bk = rt->breaks[bi];
+        if (bk.after_order_id != rt->order_ids[pos]) continue;
+        const double at = rt->service_starts[pos] + p.s[ui];
+        break_minutes += bk.minutes;
+        if (rt->breaks.size() == 2) {  // the split: 15 then 30
+          if (bi == 0) {
+            y15_[k][ui].set(GRB_DoubleAttr_Start, 1.0);
+            a15_[k].set(GRB_DoubleAttr_Start, at);
+          } else {
+            y30s_[k][ui].set(GRB_DoubleAttr_Start, 1.0);
+            a30s_[k].set(GRB_DoubleAttr_Start, at);
+            b30s_[k].set(GRB_DoubleAttr_Start, driven);
+          }
+        } else if (bk.minutes == r.break_length) {
+          y_[k][ui].set(GRB_DoubleAttr_Start, 1.0);
+          a = at;
+          b = driven;
+        } else {  // a lone short break
+          y30_[k][ui].set(GRB_DoubleAttr_Start, 1.0);
+          a30_[k].set(GRB_DoubleAttr_Start, at);
+        }
       }
       prev = i;
     }
     x_[k].at({prev, p.depot_in}).set(GRB_DoubleAttr_Start, 1.0);
-    const double theta = rt->return_time + r.depot_close - S - (has_break ? r.break_length : 0);
+    const double theta = rt->return_time + r.depot_close - S - break_minutes;
     t0_[k].set(GRB_DoubleAttr_Start, rt->departure);
     tE_[k].set(GRB_DoubleAttr_Start, rt->return_time);
     a_[k].set(GRB_DoubleAttr_Start, a);
@@ -146,9 +181,14 @@ DayPlan MilpModel::extract() const {
       rt.arrivals.push_back(arrival);
       rt.service_starts.push_back(start);
       leave = start + p.s[ui];
-      if (y_[k][ui].get(GRB_DoubleAttr_X) > 0.5) {
-        rt.break_after_order_id = day_.orders[ui].id;
-        leave += r.break_length;
+      Minutes brk = 0;  // the break after this order, if any (V1-T8 patterns)
+      if (y_[k][ui].get(GRB_DoubleAttr_X) > 0.5) brk = r.break_length;
+      if (short_on_ && y30_[k][ui].get(GRB_DoubleAttr_X) > 0.5) brk = r.short_break_length;
+      if (split_on_ && y15_[k][ui].get(GRB_DoubleAttr_X) > 0.5) brk = r.split_break_first;
+      if (split_on_ && y30s_[k][ui].get(GRB_DoubleAttr_X) > 0.5) brk = r.split_break_second;
+      if (brk > 0) {
+        rt.breaks.push_back({day_.orders[ui].id, brk});
+        leave += brk;
       }
       prev = i;
     }

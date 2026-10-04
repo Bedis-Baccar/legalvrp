@@ -44,6 +44,13 @@ Rules parse_rules(std::string_view yaml, std::string_view source_view) {
   // the night-work rules (L3312-1) then cannot apply (D-020).
   r.earliest_duty_start = s.minutes("earliest_duty_start", 300, kDay);
   r.latest_duty_end = s.minutes("latest_duty_end", 0, 21 * 60);
+  // Breaks (V1-T8): optional keys, defaults = the law (models.hpp).
+  if (s.has("short_break_length")) r.short_break_length = s.minutes("short_break_length", 1, kDay);
+  if (s.has("short_break_work_max")) r.short_break_work_max = s.minutes("short_break_work_max", 1, kDay);
+  if (s.has("split_break_first")) r.split_break_first = s.minutes("split_break_first", 1, kDay);
+  if (s.has("split_break_second")) r.split_break_second = s.minutes("split_break_second", 1, kDay);
+  if (s.has("allow_short_break")) r.allow_short_break = s.boolean("allow_short_break");
+  if (s.has("allow_split_break")) r.allow_split_break = s.boolean("allow_split_break");
   s.reject_unknown();
 
   // Cross-key consistency.
@@ -65,6 +72,16 @@ Rules parse_rules(std::string_view yaml, std::string_view source_view) {
   if (r.earliest_duty_start >= r.latest_duty_end) {
     s.fail("latest_duty_end", "must be after earliest_duty_start (" +
                                   std::to_string(r.earliest_duty_start) + ")");
+  }
+  // Break options are shorter than the full break, and the split adds up to it.
+  if (r.short_break_length >= r.break_length) {
+    s.fail("short_break_length", must_be_le("break_length - 1", r.break_length - 1, r.short_break_length));
+  }
+  if (r.split_break_first > r.split_break_second || r.split_break_first + r.split_break_second < r.break_length) {
+    s.fail("split_break_first", "split parts must satisfy first <= second and first + second >= break_length");
+  }
+  if (r.short_break_work_max < r.work_before_break || r.short_break_work_max > r.daily_service_max) {
+    s.fail("short_break_work_max", "must lie in [work_before_break, daily_service_max]");
   }
   return r;
 }

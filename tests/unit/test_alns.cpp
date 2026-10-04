@@ -197,3 +197,28 @@ TEST_CASE("ALNS fairness (V1-T5): cost includes w x spread; a large weight narro
   CHECK(on.cost == Catch::Approx(on.plan.objective + 2.0 * spread(on.plan)).epsilon(1e-9));
   CHECK(spread(on.plan) <= spread(off.plan));
 }
+
+TEST_CASE("V1-T8: exact daily optimum under V1 break rules is never above V0 (20 regime days)", "[alns][exact][v1t8]") {
+  int improved = 0;
+  double saving = 0.0;
+  for (const bool work : {true, false}) {
+    for (std::uint64_t seed = 1; seed <= 10; ++seed) {
+      DayInstance v1 = regime_day((work ? 1000 : 2000) + seed, work);
+      DayInstance v0 = v1;
+      v0.rules.allow_short_break = false;
+      v0.rules.allow_split_break = false;
+      const double c0 = heuristics::solve_by_enumeration(v0).objective;
+      const double c1 = heuristics::solve_by_enumeration(v1).objective;
+      INFO((work ? "work-heavy" : "driving-heavy") << " seed " << seed);
+      CHECK(c1 <= c0 + 1e-6);  // V1 only adds legal options
+      if (c1 < c0 - 1e-6) {
+        ++improved;
+        saving += (c0 - c1) / c0;
+      }
+      const auto r = alns::solve(v1, fixed(300));  // ALNS finds the V1 optimum too
+      CHECK(r.cost <= c1 * 1.01 + 1e-6);
+    }
+  }
+  WARN("V1 break rules: exact optimum lower on " << improved << "/20 regime days, mean saving on those "
+       << (improved > 0 ? 100.0 * saving / improved : 0.0) << " %");
+}

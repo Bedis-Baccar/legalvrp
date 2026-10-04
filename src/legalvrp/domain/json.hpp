@@ -2,7 +2,7 @@
 // legalvrp::domain — JSON (de)serialisation of the domain records (nlohmann::json, ADL).
 //
 // Reading is strict: missing keys throw nlohmann::json::out_of_range naming the key.
-// Optional fields (lat/lon, postponed_from, break_after_order_id, last_duty_end) are
+// Optional fields (lat/lon, postponed_from, last_duty_end) are
 // omitted when empty. WeekInstance excludes the matrix (stored in matrix.json).
 
 #include <nlohmann/json.hpp>

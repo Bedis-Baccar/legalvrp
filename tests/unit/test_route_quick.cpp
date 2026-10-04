@@ -1,5 +1,5 @@
 // V1-T1 acceptance: the fast evaluator (RouteEvaluator::quick) gives the same legality,
-// temps de service, driving, km, cost and break position as the exact STN evaluator on 100 000
+// temps de service, driving, km, cost and break pattern (V1-T8 included) as the exact STN evaluator on 100 000
 // random routes and moves, and is much faster.
 #include <catch2/catch_test_macros.hpp>
 
@@ -91,20 +91,36 @@ TEST_CASE("fast evaluator = STN evaluator on 100 000 routes and moves", "[route_
     cases.push_back(std::move(c));
   }
 
-  int legal = 0, with_break = 0, mismatches = 0;
+  int legal = 0, with_break = 0, short_break = 0, split = 0, mismatches = 0;
   for (const auto& c : cases) {
     const auto full = evals[c.day].evaluate(c.driver, c.seq);
     const auto fast = evals[c.day].quick(c.driver, c.seq);
     bool same = full.legal == fast.legal;
     if (same && full.legal) {
-      int full_break = -1;
-      for (std::size_t i = 0; i < c.seq.size(); ++i) {
-        if (full.route.break_after_order_id == days[c.day].orders[c.seq[i]].id) full_break = static_cast<int>(i);
+      // The STN route's breaks as a pattern (positions in the sequence, minutes).
+      heuristics::BreakPattern pat;
+      const Rules& r = days[c.day].rules;
+      for (std::size_t bi = 0; bi < full.route.breaks.size(); ++bi) {
+        const auto& b = full.route.breaks[bi];
+        int pos = -1;
+        for (std::size_t i = 0; i < c.seq.size(); ++i) {
+          if (b.after_order_id == days[c.day].orders[c.seq[i]].id) pos = static_cast<int>(i);
+        }
+        if (bi == 0) {
+          pat.i = pos;
+          pat.mi = b.minutes;
+        } else {
+          pat.j = pos;
+          pat.mj = b.minutes;
+        }
       }
+      pat.short_break = full.route.breaks.size() == 1 && pat.mi == r.short_break_length;
       same = full.service_minutes == fast.service_minutes && full.driving_minutes == fast.driving_minutes &&
-             full.km == fast.km && full.cost == fast.cost && full_break == fast.break_after;
+             full.km == fast.km && full.cost == fast.cost && pat == fast.breaks;
       ++legal;
-      with_break += fast.break_after >= 0 ? 1 : 0;
+      with_break += fast.breaks.count() > 0 ? 1 : 0;
+      short_break += fast.breaks.short_break ? 1 : 0;
+      split += fast.breaks.count() == 2 ? 1 : 0;
     }
     if (!same && mismatches++ < 5) {
       UNSCOPED_INFO("mismatch: day " << c.day << " driver " << c.driver << " len " << c.seq.size() << " full legal "
@@ -112,10 +128,13 @@ TEST_CASE("fast evaluator = STN evaluator on 100 000 routes and moves", "[route_
                                      << fast.legal << " theta " << fast.service_minutes);
     }
   }
-  WARN("cases " << cases.size() << ", legal " << legal << ", with a break " << with_break);
+  WARN("cases " << cases.size() << ", legal " << legal << ", with a break " << with_break << " (short "
+                << short_break << ", split " << split << ")");
   CHECK(mismatches == 0);
   CHECK(legal > 20000);
   CHECK(with_break > 2000);
+  CHECK(short_break > 100);  // V1-T8 patterns exercised
+  CHECK(split > 100);
 
   // Speed on the same cases.
   using clock = std::chrono::steady_clock;
