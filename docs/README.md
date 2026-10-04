@@ -18,4 +18,5 @@
 | [ROBUSTNESS_V1.md](ROBUSTNESS_V1.md) | V1: plans executed with true (uncertain) service times: share of late or illegal duties per solver, bias vs noise, with [data](robustness/) |
 | [ROBUST_V1.md](ROBUST_V1.md) | V1: service times learned from history, per-stop buffers vs a pooled time reserve, cost-vs-risk curves, with [data](robust/) |
 | [BREAKS_V1.md](BREAKS_V1.md) | V1: break rules as the law states them (30-min break, 15 + 30 split): checker, planners, verification, measured saving, with [data](breaks/) |
+| [CG_V1.md](CG_V1.md) | V1: column generation lower bounds (exactly priced relaxation, dynamic ng) certifying ALNS on the V1-T4 instances, with [data](cg/) |
 | [validation/](validation/) | Model validation document (LaTeX + PDF) |

@@ -107,4 +107,5 @@ instance ─► baseline ─►│ day solver = ALNS (any size)  ──► route
 | V1-T6 uncertain service times | done | true durations in `truth.json` (lognormal by type); executed with them, 40–49 % of optimised duties become late or illegal (29–38 % for the baseline); half of it is estimation bias — `ROBUSTNESS_V1.md`, D-109 … D-111 |
 | V1-T7 learned estimator + robust planning | done | estimator learned from history (calibrated); μ̂ + ½σ̂ per stop + 15-min pooled reserve: −88 % / −86 % late or illegal duties for +28 % / +15 % cost (small / medium); per-stop buffers alone cost 2–3× more — `ROBUST_V1.md`, D-112 … D-114 |
 | V1-T8 legal relaxations | done | checker = the law (any break list), corpus 60 duties; 30-min break and 15 + 30 split in every planner (fast = STN on 100 000 cases, MILP = enumeration); exact day saving on 4/20 regime days (−8.4 %); MILP weeks −0.8 % on small — `BREAKS_V1.md`, D-115 … D-117 |
-| V1-T9, T10 | to do | next: column generation (T9) |
+| V1-T9 column generation bounds | done | valid Lagrangian bound from an exactly priced relaxation (dynamic ng); ALNS certified within a median 7–9 % at 40–100 orders (MILP-300 s: 24–38 %); MIP over the columns improves ALNS on 15/60 — `CG_V1.md`, D-118, D-119 |
+| V1-T10 release | to do | next |

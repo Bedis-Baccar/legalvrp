@@ -23,4 +23,5 @@ if(LEGALVRP_WITH_GUROBI)
   legalvrp_app(legalvrp-myopia  myopia.cpp   legalvrp::week legalvrp::model legalvrp::kpi)  # T11
   legalvrp_app(legalvrp-compare compare.cpp  legalvrp::week legalvrp::model legalvrp::pool legalvrp::alns)  # V1-T4
   legalvrp_app(legalvrp-policies policies.cpp legalvrp::week legalvrp::model legalvrp::kpi legalvrp::alns)  # V1-T5
+  legalvrp_app(legalvrp-cg      cg.cpp       legalvrp::cg legalvrp::week legalvrp::check legalvrp::alns legalvrp::data)  # V1-T9
 endif()

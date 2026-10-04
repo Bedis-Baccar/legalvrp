@@ -88,3 +88,9 @@ if(LEGALVRP_WITH_GUROBI)
     SOURCES ${L}/pool/pool.cpp
     DEPS legalvrp::domain legalvrp::alns legalvrp::heuristics Gurobi::Gurobi)
 endif()
+
+if(LEGALVRP_WITH_GUROBI)
+  legalvrp_module(cg                    # V1-T9: column generation lower bounds
+    SOURCES ${L}/cg/pricing.cpp ${L}/cg/colgen.cpp
+    DEPS legalvrp::domain legalvrp::heuristics legalvrp::alns Gurobi::Gurobi)
+endif()
