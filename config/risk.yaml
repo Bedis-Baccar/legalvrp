@@ -1,3 +1,11 @@
-# ML readiness without ML (§9). Ignored by the model in V0.
+# Robust planning with a learned service-time estimator (V1-T7, D-112 .. D-114).
+# Off by default: plans use the planning rule service_mu = 10 + 6 x pallets (V0).
+# `legalvrp-run-week --estimator <file from legalvrp-learn>` turns it on for a run, with:
+#   z                planned minutes per stop = learned mu + z * learned sigma
+#   reserve_minutes  pooled time reserve kept free before every legal limit (work blocks, daily
+#                    service, end of shift, weekly cap) and before every customer's window end
+# Defaults chosen on the cost-vs-risk curve (docs/ROBUST_V1.md): -86 % / -88 % late or illegal
+# duties for +15 % / +28 % planned cost (medium / small).
 enabled: false
-z: 0.0
+z: 0.5
+reserve_minutes: 15

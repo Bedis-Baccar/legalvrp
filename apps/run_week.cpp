@@ -1,6 +1,7 @@
 // Rolling Monday-Friday week — task T8 (PROJECT_BRIEF.md §8 algorithm, §11 outputs).
 //   legalvrp-run-week --instance data/instances/small/1 [--solver milp|baseline]
 //                     [--profile small] [--time-limit S] [--fairness W] [--run NAME]
+//                     [--estimator FILE [--z Z] [--reserve MIN]]   (V1-T7 robust planning)
 // Writes results/<run>/day<d>/{plan.json, stats.json, violations.json, gurobi.log} and
 // results/<run>/{week_kpis.json, week_report.md}. Exit code 0 only if the week-mode checker
 // reports zero violations.
@@ -15,6 +16,8 @@
 #include "legalvrp/data/io.hpp"
 #include "legalvrp/domain/json.hpp"
 #include "legalvrp/domain/paths.hpp"
+#include "legalvrp/domain/rules.hpp"
+#include "legalvrp/estimate/learned.hpp"
 #include "legalvrp/heuristics/territory.hpp"
 #include "legalvrp/kpi/kpis.hpp"
 #include "legalvrp/kpi/report.hpp"
@@ -34,17 +37,36 @@ int main(int argc, char** argv) {
   std::string solver_name = "milp", profile, run;
   double time_limit = -1;
   double fairness = 0.2;
+  fs::path estimator_file;
+  double z = -1;
+  Minutes reserve = -1;
   app.add_option("--instance", instance, "data/instances/<name>/<seed>")->required()->check(CLI::ExistingDirectory);
   app.add_option("--solver", solver_name, "milp (default), alns or baseline")
       ->check(CLI::IsMember({"milp", "alns", "baseline"}));
   app.add_option("--profile", profile, "solver.yaml profile (default: the instance name)");
   app.add_option("--time-limit", time_limit, "override TimeLimit per day (s)");
   app.add_option("--fairness", fairness, "ALNS: EUR per minute of spread of full-time weekly hours (D-108)");
+  app.add_option("--estimator", estimator_file,
+                 "learned estimator (legalvrp-learn): plan with mu + z sigma and a time reserve (risk.yaml)")
+      ->check(CLI::ExistingFile);
+  app.add_option("--z", z, "override risk.yaml z (with --estimator)");
+  app.add_option("--reserve", reserve, "override risk.yaml reserve_minutes (with --estimator)");
   app.add_option("--run", run, "run name (default <name>_<seed>_<solver>)");
   CLI11_PARSE(app, argc, argv);
 
   try {
-    const WeekInstance week = data::read_week(instance);
+    WeekInstance week = data::read_week(instance);
+    if (!estimator_file.empty()) {  // V1-T7 robust planning (D-112, D-113)
+      const RiskConfig risk = load_risk(config_dir() / "risk.yaml");
+      const double zz = z >= 0 ? z : risk.z;
+      const Minutes rr = reserve >= 0 ? reserve : risk.reserve_minutes;
+      const estimate::LearnedEstimator est(
+          estimate::model_from_json(nlohmann::json::parse(data::read_text_file(estimator_file))));
+      estimate::apply(week, est, zz);
+      estimate::reserve_time(week, rr);
+      std::cout << "robust planning: learned estimator " << estimator_file.filename().string() << ", z = " << zz
+                << ", time reserve " << rr << " min (plans and checks below are on the planning instance)\n";
+    }
     if (run.empty()) run = week.name + "_" + std::to_string(week.seed) + "_" + solver_name;
     const fs::path out = results_dir() / run;
     auto day_dir = [&](int d) { return out / ("day" + std::to_string(d)); };

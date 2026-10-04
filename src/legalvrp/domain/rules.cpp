@@ -112,6 +112,22 @@ Costs parse_costs(std::string_view yaml, std::string_view source_view) {
   return c;
 }
 
+RiskConfig parse_risk(std::string_view yaml, std::string_view source_view) {
+  const std::string source{source_view};
+  YamlSection s(detail::parse_yaml(std::string{yaml}, source), source, "");
+  RiskConfig r;
+  r.enabled = s.boolean("enabled");
+  r.z = s.real("z", 0.0, 5.0);
+  r.reserve_minutes = s.minutes("reserve_minutes", 0, 240);
+  s.reject_unknown();
+  return r;
+}
+
+RiskConfig load_risk(const std::filesystem::path& file) {
+  const auto src = file.filename().string();
+  return parse_risk(detail::read_text_file(file, src), src);
+}
+
 Rules load_rules(const std::filesystem::path& file) {
   const auto src = file.filename().string();
   return parse_rules(detail::read_text_file(file, src), src);

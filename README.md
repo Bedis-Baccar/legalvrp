@@ -72,6 +72,8 @@ legalvrp-scaling  --config config/instance_scale.yaml                    # runti
 legalvrp-myopia   --config config/instance_myopia.yaml                   # rolling vs clairvoyant week
 legalvrp-policies lookahead --config config/instance_myopia.yaml        # week policies vs myopic / clairvoyant
 legalvrp-robustness --config config/instance_small.yaml                # plans executed with true service times
+legalvrp-learn    --config config/instance_small.yaml                     # learn service times from history
+legalvrp-run-week --instance data/instances/small/1 --solver alns --estimator results/estimators/instance_small.json
 ```
 
 Executables are in `build/<preset>/apps/`. Each run writes, per day, `plan.json`, `stats.json`,
@@ -82,12 +84,12 @@ Real data can be used by writing `week.json` and `matrix.json` ([docs/DATA.md](d
 
 ```
 apps/            command-line tools (generate, check, run-week, bench, scaling, myopia, compare, policies,
-                 robustness)
+                 robustness, learn)
 config/          rules, contracts, costs, solver parameters, instance generators (YAML)
 src/legalvrp/    one static library per module
   domain/          records, config loaders, compatibility, JSON, day builder
   data/            portable RNG, synthetic generator (with true service times), instance files
-  estimate/        service-time estimator interface (deterministic in V0)
+  estimate/        service-time estimators (V0 rule, learned from history) and robust-planning buffers
   heuristics/      exact route evaluator, k-means, Hungarian, territory baseline, enumeration
   check/           independent legality checker (depends on domain only)
   model/           preprocessing, MILP, connectivity cuts, solve wrapper, clairvoyant week and windows
@@ -115,4 +117,6 @@ day from 25 orders, ~1 % from the best known in 30 s at 60–100 orders; [benchm
 and week policies: planning today + tomorrow recovers 92 % of the cost of day-by-day myopia;
 a fairness weight balances full-time hours at no measurable cost ([policies](docs/POLICIES_V1.md)).
 Executed with true (uncertain) service times, 40–49 % of the optimised duties become late or
-illegal, half of it from a biased estimate ([robustness](docs/ROBUSTNESS_V1.md)).
+illegal, half of it from a biased estimate ([robustness](docs/ROBUSTNESS_V1.md));
+learning the times from history and planning with a pooled time reserve cuts that by 86–88 %
+for +15–28 % cost ([robust planning](docs/ROBUST_V1.md)).

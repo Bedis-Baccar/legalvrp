@@ -340,11 +340,11 @@ TEST_CASE("generator rejects configs inconsistent with rules or contracts", "[in
 TEST_CASE("DeterministicEstimator returns service_mu with sigma 0", "[estimate]") {
   const auto w = generate_week(instance_cfg("tiny"), config(), 1).week;
   const estimate::DeterministicEstimator est;
-  const auto e = est.estimate(w.orders, w.drivers);
+  const auto e = est.estimate(w.orders, w.customers);
   REQUIRE(e.size() == w.orders.size());
   for (std::size_t i = 0; i < e.size(); ++i) {
-    CHECK(e[i].mu == w.orders[i].service_mu);
-    CHECK(e[i].sigma == 0);
+    CHECK(e[i].mu == Catch::Approx(w.orders[i].service_mu));
+    CHECK(e[i].sigma == 0.0);
   }
 }
 

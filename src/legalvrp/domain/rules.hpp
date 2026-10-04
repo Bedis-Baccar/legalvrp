@@ -37,6 +37,17 @@ class ConfigError : public std::runtime_error {
 [[nodiscard]] Contracts load_contracts(const std::filesystem::path& file);
 [[nodiscard]] Costs load_costs(const std::filesystem::path& file);
 
+// risk.yaml (V1-T7): robust planning with a learned estimator (legalvrp-learn). When enabled, plans
+// use mu + z * sigma minutes per stop and keep a pooled time reserve (minutes) before every
+// legal limit and window end (estimate::apply, estimate::reserve_time).
+struct RiskConfig {
+  bool enabled = false;
+  double z = 0.0;
+  Minutes reserve_minutes = 0;
+};
+[[nodiscard]] RiskConfig parse_risk(std::string_view yaml, std::string_view source);
+[[nodiscard]] RiskConfig load_risk(const std::filesystem::path& file);
+
 struct Config {
   Rules rules;
   Contracts contracts;

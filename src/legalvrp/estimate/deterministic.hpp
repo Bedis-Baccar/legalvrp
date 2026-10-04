@@ -8,7 +8,7 @@ namespace legalvrp::estimate {
 class DeterministicEstimator final : public Estimator {
  public:
   [[nodiscard]] std::vector<ServiceEstimate> estimate(
-      std::span<const Order> orders, std::span<const Driver> roster) const override;
+      std::span<const Order> orders, std::span<const Customer> customers) const override;
 };
 
 }  // namespace legalvrp::estimate

@@ -39,7 +39,7 @@ legalvrp_module(data
 target_link_libraries(legalvrp_data PRIVATE yaml-cpp::yaml-cpp)  # instance_config uses the internal YAML reader
 
 legalvrp_module(estimate
-  SOURCES ${L}/estimate/deterministic.cpp
+  SOURCES ${L}/estimate/base.cpp ${L}/estimate/deterministic.cpp ${L}/estimate/learned.cpp
   DEPS legalvrp::domain)
 
 legalvrp_module(heuristics

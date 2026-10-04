@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "legalvrp/domain/paths.hpp"
+#include "legalvrp/domain/rules.hpp"
 
 namespace {
 YAML::Node load(const char* file) {
@@ -36,10 +37,12 @@ TEST_CASE("every config file parses", "[config]") {
   }
 }
 
-TEST_CASE("risk layer is disabled in V0 (brief-9)", "[config]") {
-  const YAML::Node r = load("risk.yaml");
-  CHECK_FALSE(r["enabled"].as<bool>());
-  CHECK(r["z"].as<double>() == 0.0);
+TEST_CASE("risk layer: off by default, robust-planning defaults of V1-T7", "[config]") {
+  const auto r = legalvrp::load_risk(legalvrp::config_dir() / "risk.yaml");
+  CHECK_FALSE(r.enabled);  // plans use the V0 planning rule unless an estimator is given
+  CHECK(r.z == 0.5);
+  CHECK(r.reserve_minutes == 15);
+  CHECK_THROWS(legalvrp::parse_risk("enabled: false\nz: 0.5\nreserve_minutes: 15\nextra: 1\n", "x"));  // strict
 }
 
 TEST_CASE("contracts carry the brief-3 weekly thresholds and caps", "[config]") {
