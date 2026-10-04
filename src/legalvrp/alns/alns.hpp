@@ -12,7 +12,8 @@
 // geometric cooling over the run). Adaptive operator weights (Ropke & Pisinger 2006: scores
 // 33 / 9 / 13, segments of 100 iterations, reaction 0.1). New best solutions are polished by
 // intra-route 2-opt and relocate. With an iteration limit (and a generous time limit) the
-// search is deterministic for a given seed.
+// search is deterministic for a given seed, on every platform: its exp / log come from the
+// portable RNG module (V1-T10, CI regression).
 
 #include <cstddef>
 #include <cstdint>

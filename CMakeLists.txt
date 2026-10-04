@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(legalvrp
-  VERSION 0.1.0
-  DESCRIPTION "Legal VRP with driver hours-of-service rules - V0 (exact daily MILP)"
+  VERSION 1.0.0
+  DESCRIPTION "Legal VRP with driver hours-of-service rules - V1 (exact MILP, ALNS, week policies, robust planning, column generation bounds)"
   LANGUAGES CXX)
 
 # ---------------------------------------------------------------------------

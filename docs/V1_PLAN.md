@@ -94,7 +94,7 @@ instance ─► baseline ─►│ day solver = ALNS (any size)  ──► route
 | Uncertainty model is invented (no real durations) | Keep distributions in config; plan to calibrate on LaDe / Amazon data shapes (V0 SIZING §3) |
 | Scope creep | Task order and acceptance criteria as in V0; V2 list for everything else |
 
-## 8. Status (2026-10-04)
+## 8. Status (2026-10-04): V1 complete
 
 | Task | State | Evidence |
 |---|---|---|
@@ -108,4 +108,4 @@ instance ─► baseline ─►│ day solver = ALNS (any size)  ──► route
 | V1-T7 learned estimator + robust planning | done | estimator learned from history (calibrated); μ̂ + ½σ̂ per stop + 15-min pooled reserve: −88 % / −86 % late or illegal duties for +28 % / +15 % cost (small / medium); per-stop buffers alone cost 2–3× more — `ROBUST_V1.md`, D-112 … D-114 |
 | V1-T8 legal relaxations | done | checker = the law (any break list), corpus 60 duties; 30-min break and 15 + 30 split in every planner (fast = STN on 100 000 cases, MILP = enumeration); exact day saving on 4/20 regime days (−8.4 %); MILP weeks −0.8 % on small — `BREAKS_V1.md`, D-115 … D-117 |
 | V1-T9 column generation bounds | done | valid Lagrangian bound from an exactly priced relaxation (dynamic ng); ALNS certified within a median 7–9 % at 40–100 orders (MILP-300 s: 24–38 %); MIP over the columns improves ALNS on 15/60 — `CG_V1.md`, D-118, D-119 |
-| V1-T10 release | to do | next |
+| V1-T10 release | done | version 1.0.0, `v1` merged into `main` (tag `v1.0.0`); ALNS bit-identical across platforms with a CI regression on fixed seeds; `BENCHMARK_V1.md` opens with V1 at a glance — D-120, D-121 |

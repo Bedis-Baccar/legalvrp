@@ -12,7 +12,24 @@ driver's shift and the hours already worked this week. The objective is the cost
 distance, overtime, agency drivers and postponements.
 
 V0 plans a Monday–Friday week as five daily MILPs linked by the drivers' weekly state, and checks
-every plan with an independent legality checker.
+every plan with an independent legality checker. V1 (release 1.0.0) adds:
+- an ALNS for 60–100 orders a day;
+- week policies (look-ahead, fairness);
+- uncertain service times, learned from history and planned for with buffers;
+- the law's shorter break options;
+- column-generation lower bounds that certify the plans.
+
+## Results (V1)
+
+| | |
+|---|---|
+| **Scale** | ALNS is at least as good as the 300-s MILP on every day from 25 orders; 60–100 orders within ~1 % of the best known in 30 s |
+| **Certified quality** | Column generation proves ALNS within a median 7–9 % of the optimum at 40–100 orders, where the MILP's bound left 24–38 % |
+| **Week** | Planning today + tomorrow recovers 92 % of the cost of day-by-day myopia; a fairness weight balances full-time drivers' hours at no measurable cost |
+| **Uncertainty** | Executed with true service times, 40–49 % of optimised duties become late or illegal. Learning the times and keeping a pooled time reserve cuts that by 86–88 % for +15–28 % cost |
+| **Law** | 30-min break for 6–9 h of work and the 15 + 30 split, in the checker (60 labelled duties) and in every planner; exact saving on 4 of 20 tight days |
+
+Details: [V1 at a glance](docs/BENCHMARK_V1.md) · [plan and status](docs/V1_PLAN.md).
 
 ## Results (V0)
 
@@ -37,9 +54,13 @@ instance ──► territory baseline ──► daily MILP (Gurobi, warm start) 
 
 - **Route evaluator** — for a fixed sequence, every timing rule (windows, shift, 6 h work
   segments, service caps) is a difference constraint: a simple temporal network solved by
-  Bellman–Ford gives the exact cheapest legal schedule and break position.
-- **Daily MILP** — the model of [`docs/MODEL.md`](docs/MODEL.md): routing, time, driving
-  accumulation, one 45-min break at a customer, work segments, daily and weekly caps, overtime.
+  Bellman–Ford gives the exact cheapest legal schedule and break pattern. An O(n) exact variant
+  (composition of time functions) serves the metaheuristic.
+- **Daily solvers** — the MILP of [`docs/MODEL.md`](docs/MODEL.md) (routing, time, driving
+  accumulation, breaks of 45, 30 or 15 + 30 min at customers, work segments, daily and weekly
+  caps, overtime) and an ALNS for large days. Column generation gives certified lower bounds.
+- **Week** — rolling loop with an optional look-ahead (today + tomorrow) and a fairness term;
+  planning durations can come from an estimator learned on history, with a time reserve.
 - **Independent checker** — written from the rules, links nothing but the data model; validates
   plans as reported and recomputes every KPI.
 - **Instance generator** — seeded and byte-identical across compilers and platforms; instances are
@@ -113,16 +134,12 @@ for development rules.
 
 ## Status
 
-V0 complete: tasks T0–T9 of the [specification](docs/PROJECT_BRIEF.md), T10 as an import path for
-real data, T11 (clairvoyant week). V1 in progress on branch `v1` ([plan](docs/V1_PLAN.md)): large
-instances, an O(n) exact route evaluator, ALNS (at least as good as the 300-s MILP on every tested
-day from 25 orders, ~1 % from the best known in 30 s at 60–100 orders; [benchmark](docs/BENCHMARK_V1.md)),
-and week policies: planning today + tomorrow recovers 92 % of the cost of day-by-day myopia;
-a fairness weight balances full-time hours at no measurable cost ([policies](docs/POLICIES_V1.md)).
-Executed with true (uncertain) service times, 40–49 % of the optimised duties become late or
-illegal, half of it from a biased estimate ([robustness](docs/ROBUSTNESS_V1.md));
-learning the times from history and planning with a pooled time reserve cuts that by 86–88 %
-for +15–28 % cost ([robust planning](docs/ROBUST_V1.md)).
-Breaks follow the law (30-min break for 6–9 h of work, 15 + 30 split) in the checker and every
-planner ([break rules](docs/BREAKS_V1.md)). Column generation certifies
-ALNS within a median 7–9 % of the optimum at 40–100 orders ([bounds](docs/CG_V1.md)).
+**V1 complete — release 1.0.0** (tag `v1.0.0`).
+
+- V0: tasks T0–T9 of the [specification](docs/PROJECT_BRIEF.md), T10 as an import path for real
+  data, T11 (clairvoyant week).
+- V1: tasks T0–T10 of the [V1 plan](docs/V1_PLAN.md), each with its report. The overview is in
+  [docs/BENCHMARK_V1.md](docs/BENCHMARK_V1.md).
+- Every reported plan passes the independent checker.
+- CI (Linux, GCC, no Gurobi) runs the unit tests. These include the golden instances and a
+  seeded ALNS regression that must be bit-identical on every platform.

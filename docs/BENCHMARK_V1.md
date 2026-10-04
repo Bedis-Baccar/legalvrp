@@ -1,4 +1,30 @@
-# Benchmark V1 — ALNS at scale (V1-T0 … T4), 2026-10-04
+# Benchmark V1 — 2026-10-04
+
+## V1 at a glance
+
+V1 (branch `v1`, release 1.0.0) adds large days, a metaheuristic, week policies, uncertain
+service times, the law's break options, and certified bounds. Every plan of every experiment
+passed the independent checker. Each line links to its report and data.
+
+| task | result | report |
+|---|---|---|
+| T0 large instances | 60 / 70 / 80 orders a day over 5 days, certified, byte-identical on Windows and Linux | below, D-101 |
+| T1 fast route evaluation | exact (0 mismatches on 100 000 cases, break patterns included), ≈ 57× faster than the STN | D-102, D-116 |
+| T2 ALNS | exact on the regime days; ≤ the 300-s MILP from 25 orders; 60–100 orders within ~1 % of the best known in 30 s | below, D-103 |
+| T3 route pool | never worse than its ALNS phase; no gain at equal time | below, D-104 |
+| T4 scale benchmark | ALNS is the default day solver; MILP for ≤ 20 orders and proofs | below, D-105 |
+| T5 week policies | planning today + tomorrow recovers 92 % of the cost of myopia; fairness weight 0.2 €/min balances full-time hours at no measurable cost | [POLICIES_V1](POLICIES_V1.md) |
+| T6 uncertain service times | executed with true durations, 40–49 % of optimised duties become late or illegal (half of it estimation bias) | [ROBUSTNESS_V1](ROBUSTNESS_V1.md) |
+| T7 learned estimator + robust planning | μ̂ + ½σ̂ per stop and a 15-min pooled reserve: −86 % / −88 % late or illegal duties for +15 % / +28 % cost | [ROBUST_V1](ROBUST_V1.md) |
+| T8 break rules | 30-min break and 15 + 30 split in the checker and every planner; exact saving on 4/20 regime days (−8.4 %), MILP weeks −0.8 % | [BREAKS_V1](BREAKS_V1.md) |
+| T9 column generation | valid bounds: ALNS certified within a median 7–9 % at 40–100 orders, against 24–38 % with the 300-s MILP bound | [CG_V1](CG_V1.md) |
+| T10 release | ALNS bit-identical on every platform, with a regression on fixed seeds in CI (no Gurobi) | D-120, D-121 |
+
+The rest of this page is the scale benchmark of T0–T4. Its section 1 is completed by T9's
+certified gaps (section 5).
+
+## The scale benchmark (V1-T0 … T4)
+
 
 **Setup.** `legalvrp-compare --config config/instance_scale.yaml --orders 8 … 100 --milp-csv
 docs/scaling/scaling.csv --milp-sizes 60 80`: the certified one-day instances of the V0-T9 scaling
@@ -11,7 +37,7 @@ Raw data: [`compare/compare.csv`](compare/compare.csv); figure:
 [`compare/time_to_quality.svg`](compare/time_to_quality.svg). **Every plan of every method
 passed the independent checker (0 violations on 60 instances × 4 methods).**
 
-## 1. ALNS against the MILP
+### 1. ALNS against the MILP
 
 | n | K | ALNS ≤ MILP (300 s) | MILP gap to best known (median) | ALNS gap certified by the MILP bound (median / max) |
 |---|---|---|---|---|
@@ -30,9 +56,10 @@ passed the independent checker (0 violations on 60 instances × 4 methods).**
   55–96 % above the best known plan) while ALNS halves the baseline cost.
 - The **certified gap** (ALNS vs the MILP's lower bound) grows from ≤ 1 % to 35–53 %. This is the
   weakness of the compact MILP's bound (V0), not evidence that ALNS is far from optimal: the bound
-  stops being informative beyond ~25 orders. Better bounds are V1-T9 (column generation).
+  stops being informative beyond ~25 orders. Column generation (V1-T9, section 5) now certifies
+  ALNS within a median 7–9 % at 40–100 orders.
 
-## 2. Time to quality (ALNS alone)
+### 2. Time to quality (ALNS alone)
 
 Median gap to the best known plan of each instance:
 
@@ -49,7 +76,7 @@ Median gap to the best known plan of each instance:
 
 A large day (60–80 orders) is within ~3 % in 5 s and within ~1 % in 30 s.
 
-## 3. Does the route pool help? Not at equal time
+### 3. Does the route pool help? Not at equal time
 
 ALNS + pool gets the same total time as ALNS alone (0.6 T ALNS, ≤ 0.3 T set partitioning,
 0.1 T polish):
@@ -68,7 +95,7 @@ collected from one search are too similar to recombine into much better plans. K
 the default day solver for large days is **ALNS alone**. A pool built from diversified searches (or
 from column generation, V1-T9) may change this — to be measured, not assumed.
 
-## 4. Frontier of each method
+### 4. Frontier of each method
 
 | Method | Use it for |
 |---|---|
@@ -76,3 +103,11 @@ from column generation, V1-T9) may change this — to be measured, not assumed.
 | ALNS | every size; optimal-quality up to 40 orders in seconds; 60–100 orders within ~1 % in 30 s |
 | ALNS + pool | no gain at equal time today; revisit with diversified columns |
 | Territory baseline | reference only (50–220 % above the best plan from 15 orders up) |
+| Column generation (V1-T9) | certificate of ALNS from 25 orders (bound valid on 54/60 instances); its MIP over the columns sometimes improves ALNS by up to 3 % |
+
+### 5. Certified gaps with column generation (V1-T9)
+
+Same instances (V0 break rules). Median certified gap of ALNS, with the better of the
+column-generation and MILP-300 s bounds: ≤ 1 % up to 20 orders (the MILP's), 4.9 % at 25, 11.2 % at
+30, 8.8 % at 40, 7.2 % at 60, 7.3 % at 70, 8.6 % at 80, 7.8 % at 100. Details and the cases where
+each bound wins: [CG_V1.md](CG_V1.md).

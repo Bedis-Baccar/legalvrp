@@ -54,6 +54,8 @@ target_link_libraries(test_kpi PRIVATE legalvrp::kpi legalvrp::week)
 legalvrp_test(test_route_quick unit unit/test_route_quick.cpp)
 target_link_libraries(test_route_quick PRIVATE legalvrp::heuristics legalvrp::data)
 legalvrp_test(test_alns unit unit/test_alns.cpp)
+legalvrp_test(test_alns_regression unit unit/test_alns_regression.cpp)  # V1-T10
+target_link_libraries(test_alns_regression PRIVATE legalvrp::alns legalvrp::check legalvrp::data)
 target_link_libraries(test_alns PRIVATE legalvrp::alns legalvrp::check legalvrp::data)
 legalvrp_test(test_estimate unit unit/test_estimate.cpp)  # V1-T7
 target_link_libraries(test_estimate PRIVATE legalvrp::estimate legalvrp::data legalvrp::alns legalvrp::check)

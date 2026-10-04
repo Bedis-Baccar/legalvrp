@@ -216,7 +216,7 @@ void Search::destroy(Solution& s, Destroy op, int q) {
         }
         std::ranges::sort(gain, std::greater<>());
         const double y = rng_.uniform01();
-        const auto j = static_cast<std::size_t>(std::pow(y, 3.0) * static_cast<double>(gain.size()));
+        const auto j = static_cast<std::size_t>(y * y * y * static_cast<double>(gain.size()));
         const std::size_t pick = gain[std::min(j, gain.size() - 1)].second;
         take(pick);
         served.erase(std::ranges::find(served, pick));
@@ -239,7 +239,8 @@ void Search::destroy(Solution& s, Destroy op, int q) {
         }
         std::ranges::sort(rel);
         const double y = rng_.uniform01();
-        const auto j = static_cast<std::size_t>(std::pow(y, 6.0) * static_cast<double>(rel.size()));
+        const double y3 = y * y * y;
+        const auto j = static_cast<std::size_t>(y3 * y3 * static_cast<double>(rel.size()));
         const std::size_t pick = rel[std::min(j, rel.size() - 1)].second;
         removed.push_back(pick);
         take(pick);
@@ -454,7 +455,7 @@ Result Search::run() {
   std::vector<double> wd(kDestroyCount, 1.0), wr(kRepairCount, 1.0);
   std::vector<double> sd(kDestroyCount, 0.0), sr(kRepairCount, 0.0);
   std::vector<long long> ud(kDestroyCount, 0), ur(kRepairCount, 0), seg_ud(kDestroyCount, 0), seg_ur(kRepairCount, 0);
-  const double T0 = std::max(1e-6, o_.start_worse_share * std::max(cur.cost, 1.0) / std::log(2.0));
+  const double T0 = std::max(1e-6, o_.start_worse_share * std::max(cur.cost, 1.0) / data::portable_log(2.0));
   const double Tend = T0 * o_.end_temperature_ratio;
 
   long long it = 0;
@@ -464,7 +465,7 @@ Result Search::run() {
     if (t >= o_.time_limit_s) break;
     const double progress = o_.max_iterations > 0 ? static_cast<double>(it) / static_cast<double>(o_.max_iterations)
                                                   : t / o_.time_limit_s;
-    const double T = T0 * std::pow(Tend / T0, progress);
+    const double T = T0 * data::portable_exp(progress * data::portable_log(Tend / T0));
 
     // Destroy size relative to all orders, at least min(n, 4) at the top end (small days need
     // multi-order moves: e.g. swapping three orders between two drivers).
@@ -501,7 +502,7 @@ Result Search::run() {
       cur = std::move(cand);
       score = 9.0;
       add_to_pool(cur);
-    } else if (rng_.uniform01() < std::exp(-(cand.cost - cur.cost) / T)) {
+    } else if (rng_.uniform01() < data::portable_exp(-(cand.cost - cur.cost) / T)) {
       cur = std::move(cand);
       score = 13.0;
       add_to_pool(cur);

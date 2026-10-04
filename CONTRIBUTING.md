@@ -40,9 +40,16 @@ Tests are Catch2 executables in `tests/unit/`, registered in `tests/CMakeLists.t
 - **Units.** Integer minutes and integer pallets in instance data; money in euros (`double`).
 - **No rule value as a literal in model code**: rules, contracts, costs and solver parameters come
   from `config/*.yaml`, which are validated strictly (errors name the file and the key).
-- **Determinism.** The generator uses `data/rng` only (no `std::*_distribution`, no libm
-  transcendentals), so instances are byte-identical on every platform; golden fixtures in
-  `tests/fixtures/instances/` enforce it. Regenerate them deliberately after an intended change.
+- **Determinism.** The generator and ALNS use `data/rng` only: no `std::*_distribution`, and no
+  libm transcendentals (`portable_exp` / `portable_log` instead of `std::exp` / `std::log` /
+  `std::pow`). Sorts break ties explicitly. Instances are therefore byte-identical, and ALNS
+  runs with an iteration limit bit-identical, on every platform. Three tests enforce it:
+  - the golden fixtures in `tests/fixtures/instances/`;
+  - the large-instance hashes in `test_generate`;
+  - the ALNS regression on fixed seeds in `test_alns_regression` (costs and route hashes).
+
+  After an intended change, regenerate them deliberately. The regression prints the new values
+  when it fails.
 - **Dependencies** are pinned in `cmake/Dependencies.cmake`; add one only with a recorded decision.
 - **No network** while solving or testing.
 
