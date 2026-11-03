@@ -24,8 +24,13 @@ if [[ $rebuild == 1 || ! -f results/demo/index.json ]]; then
   "$py" scripts/build_demo.py --bin "$bin" $([[ $rebuild == 1 ]] && echo --force)
 fi
 
-if [[ ! -f app/dist/index.html ]]; then
-  command -v npm >/dev/null || { echo "app/dist is missing and npm is not installed (Node.js >= 20)" >&2; exit 1; }
+# Web application: (re)built when missing, incomplete or older than its sources.
+app_stale() {
+  [[ ! -f app/dist/index.html || ! -f app/dist/client.html ]] && return 0
+  [[ -n "$(find app/src app/index.html app/client.html app/package.json app/vite.config.ts -newer app/dist/index.html -print -quit)" ]]
+}
+if [[ $rebuild == 1 ]] || app_stale; then
+  command -v npm >/dev/null || { echo "the web application must be (re)built and npm is not installed (Node.js >= 20)" >&2; exit 1; }
   echo "== building the web application"
   (cd app && npm install --no-fund --no-audit && npm run build)
 fi

@@ -56,6 +56,9 @@ def main() -> None:
         sys.exit("app/dist is missing: build the application first (cd app && npm install && npm run build)")
     if not (DATA / "index.json").exists():
         sys.exit("results/demo/index.json is missing: run python scripts/build_demo.py first")
+    if not (DIST / "client.html").exists():
+        print("warning: app/dist has no client.html (built before the client mock-up): "
+              "rebuild it with  cd app && npm run build", file=sys.stderr)
     srv = http.server.ThreadingHTTPServer(("127.0.0.1", args.port), functools.partial(Handler, directory=str(DIST)))
     url = f"http://127.0.0.1:{args.port}/"
     print(f"legalvrp demo: {url}  ·  client mock-up: {url}client.html  (Ctrl+C to stop)")

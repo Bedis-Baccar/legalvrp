@@ -49,8 +49,16 @@ if ($Rebuild -or -not (Test-Path (Join-Path $root 'results\demo\index.json'))) {
 }
 
 # 3. Web application -> app/dist (Node.js only needed here).
-if (-not (Test-Path (Join-Path $root 'app\dist\index.html'))) {
-  if (-not (Get-Command npm -ErrorAction SilentlyContinue)) { throw 'app/dist is missing and npm is not installed (Node.js >= 20).' }
+# Rebuilt when missing, incomplete or older than its sources.
+$dist = Join-Path $root 'app\dist\index.html'
+$stale = $Rebuild -or -not (Test-Path $dist) -or -not (Test-Path (Join-Path $root 'app\dist\client.html'))
+if (-not $stale) {
+  $built = (Get-Item $dist).LastWriteTime
+  $src = @(Get-ChildItem -Recurse -File (Join-Path $root 'app\src')) + @('index.html', 'client.html', 'package.json', 'vite.config.ts' | ForEach-Object { Get-Item (Join-Path $root "app\$_") })
+  $stale = [bool]($src | Where-Object { $_.LastWriteTime -gt $built } | Select-Object -First 1)
+}
+if ($stale) {
+  if (-not (Get-Command npm -ErrorAction SilentlyContinue)) { throw 'the web application must be (re)built and npm is not installed (Node.js >= 20).' }
   Write-Host '== building the web application'
   Push-Location (Join-Path $root 'app')
   try {
