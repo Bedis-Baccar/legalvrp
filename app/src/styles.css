@@ -235,3 +235,5 @@ dl.facts dd { margin: 0; }
   .dayrow-label { width: 100%; }
   .verdicts { grid-template-columns: 1fr; }
 }
+.btn { display: inline-block; background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 0.42rem 0.9rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+.btn:hover { filter: brightness(1.08); }
