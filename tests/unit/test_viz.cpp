@@ -4,7 +4,10 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <string>
+#include <tuple>
+#include <utility>
 
 #include "legalvrp/alns/alns.hpp"
 #include "legalvrp/check/checker.hpp"

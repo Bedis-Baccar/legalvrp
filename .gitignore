@@ -26,3 +26,6 @@ docs/validation/*.synctex.gz
 .vscode/
 .idea/
 *.swp
+# visual application (app/): dependencies and build output
+/app/node_modules/
+/app/dist/

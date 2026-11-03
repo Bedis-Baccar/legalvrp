@@ -1,6 +1,8 @@
 # APP_PLAN.md — local visual application (V2-A)
 
-Status: **proposal** (2026-11-03), nothing implemented yet. Decisions to take: §8.
+Status (2026-11-03): **phase 1 implemented** — see [APP.md](APP.md) for how to run it and §9 for
+what was built and what differs from this plan. Phase 2 (A8 re-run / edit from the interface) is
+not implemented.
 
 Goal: a local application that shows, on one concrete week, what legalvrp does — routes on a
 map, each driver's day on a timeline with the legal breaks, the cost against current practice —
@@ -239,3 +241,35 @@ results/demo/        generated bundles (git-ignored, already covered by /results
 - **Q5 — Audience**: technical (emphasis on the timeline, the law, the certified bounds) or
   business (map, euros, the real day). It changes the order of the screens and the texts, not
   the tasks.
+
+---
+
+## 9. Status (2026-11-03): phase 1 implemented
+
+Decisions taken: Q1 Vite + React + TypeScript with a Python standard-library orchestrator and
+server; Q2 read-only, precomputed scenarios; Q3 depot anchored at Saint-Priest (Lyon area),
+OpenStreetMap background with an offline schematic mode; Q4 C11 shown from the frozen CSV
+(no plans); Q5 not fixed — texts are written for a mixed audience.
+
+| task | status | notes |
+|---|---|---|
+| A0 | done | dressing (names, lat/lon) is done by `build_demo.py` on the bundles, not by the generator: no golden hash changes. Week report prints `—` as the gap of heuristic days; bundles carry `gap: null` |
+| A1 | done | `legalvrp::viz` (timeline, bundle, gallery), `legalvrp-export`, `run-week --bundle`; `test_viz` checks timelines against the checker on every duty |
+| A2 | done, merged into A1 | the realised days are part of the bundle (no separate `legalvrp-realise`): run-week knows the planning instance (estimator, reserve) needed to judge them |
+| A3 | done | 11 scenarios (C1–C11 + gallery); builds in ~30 s without Gurobi; `--iterations` makes ALNS runs reproducible |
+| A4–A6 | done | screens Accueil, Semaine, Journées (map + timeline + order details), Journée réelle, Heures, Comparaison, Résultats, Galerie; light/dark; usable at phone width |
+| A7 | done | `scripts/demo.ps1`, `scripts/demo.sh`, `scripts/demo_server.py`, [APP.md](APP.md) |
+| A8 | not done | phase 2 |
+| A9 | partly | C11 from the committed CSV |
+
+Findings while building the scenarios:
+
+- **Trap (a) is illegal only for the planners' break patterns.** With two 45-min breaks (after B
+  and after C: 200 | 200 | 140 min of driving) the duty is legal for the checker; planners
+  consider one break or 15 + 30 and postpone an order. Shown in the `piege` scenario; a candidate
+  for a later version (more break patterns).
+- **In the overloaded week, every postponed order needs the tail-lift.** The fleet has spare
+  capacity (the part-time driver stays at the depot on two days); the single tail-lift truck is
+  the bottleneck.
+- On `small` seed 1, executed with the true service times, 10 of 18 optimised duties are late or
+  illegal; 4 with learned times; 0 with learned times + 15-min reserve, for +7 % planned cost.

@@ -7,7 +7,7 @@ summary = "Certains clients ne peuvent être livrés qu'avec un hayon élévateu
 story = """
 Les clients marqués **hayon** n'ont pas de quai : seul le porteur de 12 palettes équipé d'un hayon peut les livrer. Le chauffeur de ce camion devient une ressource rare : ses tournées sont contraintes par la capacité (12 palettes seulement) et par la dispersion des clients à hayon dans la zone.
 
-Sur la carte, les clients à hayon sont entourés. Regardez comment l'optimisation regroupe ces clients sur le camion équipé, et comment la pratique actuelle (secteurs fixes) doit parfois envoyer ce camion loin de son secteur.
+Sur la carte, les clients à hayon sont entourés de noir ; dans la liste des tournées, ils portent le signe ⬍. Regardez quel chauffeur les livre et comment sa tournée s'organise autour d'eux, puis comparez avec la pratique actuelle (secteurs fixes). Le scénario « Semaine surchargée » montre ce qui arrive quand ce camion est plein.
 """
 compare = ["alns", "baseline"]
 

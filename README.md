@@ -19,6 +19,22 @@ every plan with an independent legality checker. V1 (release 1.0.0) adds:
 - the law's shorter break options;
 - column-generation lower bounds that certify the plans.
 
+## Visual application
+
+A local web application shows one concrete week and the special cases of the law: routes on a
+map, each driver's day minute by minute with the legal counters, current practice vs optimisation,
+plans executed with the true service times, and the checker's labelled duties.
+
+```powershell
+./scripts/demo.ps1      # Windows: builds what is missing, opens http://127.0.0.1:8765/
+```
+
+```bash
+./scripts/demo.sh       # Linux (WITH_GUROBI=ON to use Gurobi)
+```
+
+Details: [docs/APP.md](docs/APP.md).
+
 ## Results (V1)
 
 | | |
@@ -107,7 +123,9 @@ Real data can be used by writing `week.json` and `matrix.json` ([docs/DATA.md](d
 
 ```
 apps/            command-line tools (generate, check, run-week, bench, scaling, myopia, compare, policies,
-                 robustness, learn, breaks, cg)
+                 robustness, learn, breaks, cg, export)
+app/             visual application (Vite + React + TypeScript), see docs/APP.md
+scenarios/       scenarios of the visual application (TOML, French texts)
 config/          rules, contracts, costs, solver parameters, instance generators (YAML)
 src/legalvrp/    one static library per module
   domain/          records, config loaders, compatibility, JSON, day builder
@@ -122,9 +140,10 @@ src/legalvrp/    one static library per module
   sim/             plans executed with the true service times, judged by the checker
   cg/              column generation: exactly priced relaxed routes, lower bounds certifying ALNS
   kpi/             KPIs and week report
+  viz/             timelines, run bundles and the checker's gallery for the visual application
 tests/           Catch2 unit tests and fixtures (labelled duties, golden instances)
 docs/            model, decisions, specification, data, benchmarks
-scripts/         build helper
+scripts/         build helper, demo builder and server (build_demo.py, demo_server.py, demo.ps1/.sh)
 ```
 
 ## Documentation

@@ -9,7 +9,7 @@ Instance plus grande : six chauffeurs (quatre à temps plein, un à temps partie
 
 Les salariés sont payés quelles que soient les heures en dessous de leur seuil : les faire travailler ne coûte presque rien de plus. L'intérimaire, lui, coûte **60 € dès qu'il prend la route**, plus **0,55 € par minute**. L'optimisation ne l'appelle que lorsque cela évite des heures supplémentaires plus chères ou un report.
 
-Regardez, jour par jour, si l'intérimaire roule, et comparez au découpage en secteurs fixes où il a toujours son secteur.
+Regardez, jour par jour, si l'intérimaire (k6) roule : dans la pratique actuelle, il a son secteur et part tous les jours ; l'optimisation ne l'appelle que lorsque c'est rentable.
 """
 compare = ["baseline", "alns"]
 

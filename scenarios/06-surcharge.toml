@@ -3,13 +3,15 @@ order = 6
 category = "Cas particuliers"
 title = "Semaine surchargée : reporter des commandes"
 view = "week"
-summary = "Plus de commandes que la flotte ne peut en livrer légalement : certaines sont reportées au lendemain, avec une pénalité qui double chaque jour."
+summary = "Des journées plus chargées : certaines commandes sont reportées au lendemain, avec une pénalité qui double chaque jour. Ce qui sature n'est pas la flotte, mais le seul camion à hayon."
 story = """
-Avec la même flotte que l'exemple principal mais des journées plus chargées, il n'est plus possible de tout livrer dans les règles. Le planificateur doit **reporter** des commandes.
+Même flotte que l'exemple principal, avec des journées plus chargées. Le planificateur ne peut plus tout livrer le jour prévu : il doit **reporter** des commandes.
 
-Un report coûte **200 €** le premier jour, puis **400 €**, **800 €**… : une commande ne peut pas être repoussée indéfiniment. Une commande encore non livrée le vendredi coûte au moins **1 000 €**.
+Un report coûte **200 €** le premier jour, puis **400 €**, **800 €**… : une commande ne peut pas être repoussée indéfiniment. Une commande encore non livrée le vendredi soir coûte au moins **1 000 €**.
 
-Le planificateur choisit donc quoi reporter (les commandes qui coûtent le plus à livrer aujourd'hui, celles d'un client qui sera sur la route demain…), et la pénalité croissante les fait passer en priorité les jours suivants. Ouvrez une journée : les commandes reportées sont listées avec leur jour d'origine.
+**Ce que montre l'optimisation** : toutes les commandes qu'elle reporte sont chez des clients qui exigent un **hayon**. Ce n'est pas la flotte qui manque — la chauffeuse à temps partiel reste même au dépôt certains jours — mais le **seul porteur équipé** (12 palettes), dont la journée est pleine. Chaque commande reportée est livrée le lendemain, avant que la pénalité ne grimpe : aucune ne reste en souffrance le vendredi.
+
+La pratique actuelle (secteurs fixes) reporte bien davantage et laisse des commandes non livrées en fin de semaine. Ouvrez une journée : les commandes reportées sont listées avec leur jour d'origine ; activez la vue Journées pour les voir sur la carte (cercles pointillés).
 """
 compare = ["baseline", "alns"]
 
