@@ -6,7 +6,8 @@ import { createReadStream, existsSync, statSync } from "node:fs";
 import { resolve, normalize, sep, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DATA = resolve(dirname(fileURLToPath(import.meta.url)), "..", "results", "demo");
+const ROOT = dirname(fileURLToPath(import.meta.url));
+const DATA = resolve(ROOT, "..", "results", "demo");
 
 function serveDemoData(): Plugin {
   return {
@@ -28,5 +29,9 @@ export default defineConfig({
   plugins: [react(), serveDemoData()],
   base: "./",
   server: { port: 5173 },
-  build: { outDir: "dist", chunkSizeWarningLimit: 1000 },
+  build: {
+    outDir: "dist",
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: { input: { demo: resolve(ROOT, "index.html"), client: resolve(ROOT, "client.html") } },
+  },
 });

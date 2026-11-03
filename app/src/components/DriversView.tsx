@@ -5,7 +5,7 @@ import { driverColor, driverName, Loading, useWidth } from "../util";
 import { RUN_COLORS } from "./Charts";
 import { useCompareRuns } from "./WeekView";
 
-function HoursChart({ b }: { b: Bundle }) {
+export function HoursChart({ b }: { b: Bundle }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const drivers = b.instance.drivers;
   const contracts = new Map(b.instance.contracts.map((c) => [c.name, c]));

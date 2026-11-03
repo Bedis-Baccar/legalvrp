@@ -366,6 +366,8 @@ class Builder:
                 args += ["--iterations", run.get("iterations", self.demo.get("alns_iterations", 20000))]
             if "time_limit" in run:
                 args += ["--time-limit", run["time_limit"]]
+            if "profile" in run:
+                args += ["--profile", run["profile"]]
             if "fairness" in run:
                 args += ["--fairness", run["fairness"]]
             if "estimator" in run:
@@ -391,6 +393,7 @@ class Builder:
         print(f"\n[{sid}] {sc['title']}", flush=True)
         entry = {k: sc[k] for k in ("id", "title", "category", "summary", "story", "view") if k in sc}
         entry["order"] = sc.get("order", 99)
+        entry["hidden"] = bool(sc.get("hidden", False))
         entry["focus"] = sc.get("focus", [])
         entry["compare"] = sc.get("compare", [])
         entry["runs"] = []
@@ -468,6 +471,7 @@ def main() -> None:
         "subtitle": demo.get("subtitle", ""),
         "disclaimer": demo.get("disclaimer", ""),
         "geo": demo["geo"],
+        "client": demo.get("client", {}),
         "built": dt.datetime.now().isoformat(timespec="seconds"),
         "host": platform.node(),
         "gurobi": tools.gurobi,

@@ -1,0 +1,41 @@
+# Week of the client mock-up (app/client.html). Hidden from the demo's navigation.
+id = "client"
+order = 20
+hidden = true
+category = "Maquette client"
+title = "Semaine type — distribution régionale"
+view = "week"
+summary = "202 commandes du lundi au vendredi, 84 clients dans 5 à 6 bourgs, 8 chauffeurs (dont 2 intérimaires), 8 porteurs dont 2 avec hayon."
+story = """
+Semaine type d'un distributeur régional de taille moyenne, générée pour la maquette : 36 à 42 commandes par jour, des épiceries (06:00–10:00), des restaurants (08:30–11:30) et des chantiers (07:00–15:00).
+"""
+compare = ["actuel", "optimise", "robuste", "milp"]
+
+[instances.main]
+generate = { config = "scenarios/configs/instance_client.yaml", seed = 1 }
+
+[[runs]]
+id = "actuel"
+label = "Planning actuel (secteurs fixes)"
+solver = "baseline"
+
+[[runs]]
+id = "optimise"
+label = "Planning optimisé"
+solver = "alns"
+
+[[runs]]
+id = "robuste"
+label = "Planning optimisé + marge"
+solver = "alns"
+estimator = "learned"
+z = 0.5
+reserve = 15
+note = "Durées apprises sur l'historique, moyenne + 0,5 écart-type par arrêt, 15 min de réserve avant chaque limite."
+
+[[runs]]
+id = "milp"
+label = "Planning optimisé (Gurobi)"
+solver = "milp"
+time_limit = 120
+requires_gurobi = true

@@ -158,7 +158,8 @@ export default function App() {
 
 function Nav({ index, current }: { index: Index; current?: string }) {
   const cats: string[] = [];
-  index.scenarios.forEach((s) => cats.includes(s.category) || cats.push(s.category));
+  const visible = index.scenarios.filter((s) => !s.hidden);
+  visible.forEach((s) => cats.includes(s.category) || cats.push(s.category));
   return (
     <>
       <a href="#/" className={!current ? "nav-item on" : "nav-item"}>
@@ -167,7 +168,7 @@ function Nav({ index, current }: { index: Index; current?: string }) {
       {cats.map((c) => (
         <div key={c}>
           <div className="nav-cat">{c}</div>
-          {index.scenarios
+          {visible
             .filter((s) => s.category === c)
             .map((s) => (
               <a key={s.id} href={`#/${s.id}`} className={s.id === current ? "nav-item on" : "nav-item"}>
@@ -192,9 +193,16 @@ function Home({ index }: { index: Index }) {
         <h1>{index.title}</h1>
         <p className="lead">{index.subtitle}.</p>
         <div className="notice warn">{index.disclaimer}</div>
+        {index.scenarios.some((s) => s.id === index.client?.scenario) && (
+          <p>
+            <a className="btn" href="client.html">
+              Ouvrir la maquette client ({index.client?.product}) →
+            </a>
+          </p>
+        )}
       </section>
       <div className="cards">
-        {index.scenarios.map((s) => (
+        {index.scenarios.filter((s) => !s.hidden).map((s) => (
           <a key={s.id} className="card scenario-card" href={`#/${s.id}`}>
             <div className="nav-cat">{s.category}</div>
             <h3>{s.title}</h3>

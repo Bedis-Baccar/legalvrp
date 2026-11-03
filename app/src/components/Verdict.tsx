@@ -1,5 +1,5 @@
 import type { Bundle, Day, Violation } from "../types";
-import { dur, RULES, ruleTitle } from "../format";
+import { DAYS, dur, RULES, ruleTitle } from "../format";
 import { customerName, driverName, orderCustomer } from "../util";
 
 // Amount of a violation in words (minutes of excess for time rules, pallets for capacity).
@@ -16,13 +16,15 @@ export function ViolationList({ violations, bundle, day }: { violations: Violati
     <ul className="violations">
       {violations.map((v, i) => {
         const r = RULES[v.rule];
-        const c = bundle && day && v.order_id ? orderCustomer(bundle, day, v.order_id) : undefined;
+        const d = day ?? (bundle && v.order_id ? bundle.days.find((x) => x.orders.some((o) => o.id === v.order_id)) : undefined);
+        const c = bundle && d && v.order_id ? orderCustomer(bundle, d, v.order_id) : undefined;
         return (
           <li key={i}>
             <div className="v-title">
               <span className="badge bad">{ruleTitle(v.rule)}</span> {amountText(v)}
             </div>
             <div className="small">
+              {v.day >= 0 && !day ? `${DAYS[v.day]} · ` : ""}
               {bundle && v.driver_id ? driverName(bundle, v.driver_id) : v.driver_id}
               {v.order_id ? ` · ${c ? customerName(c) : v.order_id}` : ""}
               {r ? ` — ${r.text}` : ""}

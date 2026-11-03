@@ -23,7 +23,9 @@ every plan with an independent legality checker. V1 (release 1.0.0) adds:
 
 A local web application shows one concrete week and the special cases of the law: routes on a
 map, each driver's day minute by minute with the legal counters, current practice vs optimisation,
-plans executed with the true service times, and the checker's labelled duties.
+plans executed with the true service times, and the checker's labelled duties. A client mock-up
+(`client.html`) turns a demanding 8-driver week into a dispatch and compliance tool: dashboard,
+day planning, drivers' route sheets, orders, and a controller's view of every duty and order.
 
 ```powershell
 ./scripts/demo.ps1      # Windows: builds what is missing, opens http://127.0.0.1:8765/

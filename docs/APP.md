@@ -44,6 +44,31 @@ dev server reads `results/demo` directly).
 The server is bound to 127.0.0.1 and read-only. The only outside request is the
 OpenStreetMap background, made by the browser; untick **Fond de carte** to work offline.
 
+## Client mock-up (`client.html`)
+
+A second page of the same application, http://127.0.0.1:8765/client.html (also linked from the
+demo's home page): a dispatch and compliance tool as a client would use it, on a demanding
+`medium`-type week (scenario `client`, hidden from the demo's navigation:
+`scenarios/configs/instance_client.yaml` seed 1 — 202 orders, 84 customers in 5–6 towns,
+8 drivers of which 2 temp-agency, 8 trucks of which 2 with a tail-lift). The product name and
+the company line come from `[client]` in `scenarios/demo.toml` (neutral, never a real company).
+
+The plan selector switches between the runs of the scenario: current practice (sectors),
+optimised (ALNS), optimised + margin (learned service times, z = 0.5, 15-min reserve) and, with
+Gurobi, the MILP. Every page reads the same bundles as the demo.
+
+| page | what it shows |
+|---|---|
+| **Tableau de bord** | KPI tiles against current practice (cost, km, served, postponements, compliance, truck fill rate, overtime, duties at risk with the true times), cost breakdown (km / staff / postponement penalties), alerts, day-by-day table, weekly hours per driver |
+| **Planning du jour** | map and timelines of the day, route list (filter by driver), order card, postponed orders |
+| **Chauffeurs** | one card per driver (contract, truck, hours against the threshold, days worked); driver page with the week's timelines and a printable *feuille de route*: every task (prep, drive, wait, delivery, break, close) with times, place, details and the two legal counters, plus the checker's verdict |
+| **Commandes** | every order of the week with its fate (served on time / after postponement / unserved), driver, time, slack to the window end; filters, search, CSV export; order card with planned and simulated real delivery against the window |
+| **Contrôle légal** | the controller's side: the checker's verdict for the week, each family of controls with the number of checks and the smallest margin of the week; a drivers × days matrix (compliant / tight margin / missed window / violation); for a duty, its timeline, each control (value, limit, margin, source), each order (window, slack, tail-lift, load on board) and the checker's verdict; printable. A switch replays everything on the simulated execution with the true service times |
+
+Controls are read off the duty timeline, which is the checker's own walk of the route; the
+verdict is always the checker's. "Tight" (≈) flags less than 15 min before a limit that a delay
+can exceed (driving and work blocks, daily and weekly totals, end of duty, customer windows).
+
 ## Screens
 
 | screen | what it shows |
@@ -75,6 +100,7 @@ the disclaimer, the map anchor and the ALNS iteration count):
 | `pauses` | 30-min break and 15 + 30 split vs the 45-min rule only | hand-built instances, rule switches off / on |
 | `myopie` | look-ahead vs day by day vs clairvoyant | `docs/policies/lookahead.csv` (Gurobi, frozen) |
 | `galerie` | the checker's labelled duties | `legalvrp-export --duties` |
+| `client` | the client mock-up's week (hidden in the demo) | `scenarios/configs/instance_client.yaml` seed 1; current practice, ALNS, ALNS + margin, MILP with Gurobi |
 
 **Adding a scenario**: write `scenarios/NN-name.toml` with `title`, `category`, `summary`, `story`,
 `view` (`week`, `day`, `real`, `drivers`, `compare`, `report`, `gallery`), optional `compare` and

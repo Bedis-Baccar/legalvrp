@@ -58,7 +58,7 @@ def main() -> None:
         sys.exit("results/demo/index.json is missing: run python scripts/build_demo.py first")
     srv = http.server.ThreadingHTTPServer(("127.0.0.1", args.port), functools.partial(Handler, directory=str(DIST)))
     url = f"http://127.0.0.1:{args.port}/"
-    print(f"legalvrp demo: {url}  (Ctrl+C to stop)")
+    print(f"legalvrp demo: {url}  ·  client mock-up: {url}client.html  (Ctrl+C to stop)")
     if args.open:
         threading.Timer(0.5, lambda: webbrowser.open(url)).start()
     try:

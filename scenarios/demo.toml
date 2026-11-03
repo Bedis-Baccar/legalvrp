@@ -11,3 +11,10 @@ lat = 45.7035
 lon = 4.9440
 depot_name = "Dépôt (Saint-Priest)"
 label = "Agglomération lyonnaise"
+
+[client]
+# The client mock-up (app/client.html): a neutral product name, never a real company's.
+product = "Planif'Légal"
+company = "Distribution régionale — démonstration"
+scenario = "client"
+default_run = "optimise"

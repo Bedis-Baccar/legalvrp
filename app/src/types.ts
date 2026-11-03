@@ -208,6 +208,7 @@ export type View = "week" | "day" | "real" | "drivers" | "compare" | "report" | 
 export interface ScenarioEntry {
   id: string;
   order: number;
+  hidden?: boolean;
   title: string;
   category: string;
   summary: string;
@@ -228,6 +229,7 @@ export interface Index {
   geo: { lat: number; lon: number; depot_name?: string; label?: string };
   built: string;
   gurobi: boolean;
+  client?: { product: string; company: string; scenario: string; default_run: string };
   scenarios: ScenarioEntry[];
 }
 
