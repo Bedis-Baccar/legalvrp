@@ -7,6 +7,7 @@
 #   week    <- domain, heuristics, check, [model]
 #   kpi     <- domain, check         (KPIs from the checker's recomputation, §11)
 #   sim     <- domain, check, data   (V1-T6: replays a given plan; never solves)
+#   viz     <- domain, check, kpi, sim, data   (APP_PLAN: draws what the checker computes; never solves)
 #
 # tests/unit/test_layering.cpp additionally scans #include lines.
 
@@ -94,3 +95,7 @@ if(LEGALVRP_WITH_GUROBI)
     SOURCES ${L}/cg/pricing.cpp ${L}/cg/colgen.cpp
     DEPS legalvrp::domain legalvrp::heuristics legalvrp::alns Gurobi::Gurobi)
 endif()
+
+legalvrp_module(viz                     # APP_PLAN A1/A2: timelines and run bundles for the visual app
+  SOURCES ${L}/viz/timeline.cpp ${L}/viz/bundle.cpp
+  DEPS legalvrp::domain legalvrp::check legalvrp::kpi legalvrp::sim legalvrp::data)

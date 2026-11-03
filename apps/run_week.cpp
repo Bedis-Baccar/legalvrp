@@ -2,6 +2,8 @@
 //   legalvrp-run-week --instance data/instances/small/1 [--solver milp|baseline]
 //                     [--profile small] [--time-limit S] [--fairness W] [--run NAME]
 //                     [--estimator FILE [--z Z] [--reserve MIN]]   (V1-T7 robust planning)
+//                     [--iterations N] [--bundle FILE]               (APP_PLAN: deterministic ALNS,
+//                                                                     bundle for the visual app)
 // Writes results/<run>/day<d>/{plan.json, stats.json, violations.json, gurobi.log} and
 // results/<run>/{week_kpis.json, week_report.md}. Exit code 0 only if the week-mode checker
 // reports zero violations.
@@ -10,6 +12,7 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <string>
 
 #include "legalvrp/alns/alns.hpp"
@@ -19,6 +22,7 @@
 #include "legalvrp/domain/rules.hpp"
 #include "legalvrp/estimate/learned.hpp"
 #include "legalvrp/heuristics/territory.hpp"
+#include "legalvrp/viz/bundle.hpp"
 #include "legalvrp/kpi/kpis.hpp"
 #include "legalvrp/kpi/report.hpp"
 #include "legalvrp/week/loop.hpp"
@@ -52,10 +56,16 @@ int main(int argc, char** argv) {
   app.add_option("--z", z, "override risk.yaml z (with --estimator)");
   app.add_option("--reserve", reserve, "override risk.yaml reserve_minutes (with --estimator)");
   app.add_option("--run", run, "run name (default <name>_<seed>_<solver>)");
+  long long iterations = 0;
+  fs::path bundle;
+  app.add_option("--iterations", iterations, "ALNS: iterations per day (deterministic run; time limit ignored)");
+  app.add_option("--bundle", bundle,
+                 "also write the run bundle of the visual application (timelines, checker, KPIs, realised days)");
   CLI11_PARSE(app, argc, argv);
 
   try {
     WeekInstance week = data::read_week(instance);
+    const WeekInstance original = week;  // the real instance, before learned durations and reserve
     if (!estimator_file.empty()) {  // V1-T7 robust planning (D-112, D-113)
       const RiskConfig risk = load_risk(config_dir() / "risk.yaml");
       const double zz = z >= 0 ? z : risk.z;
@@ -75,6 +85,10 @@ int main(int argc, char** argv) {
     if (solver_name == "alns") {  // V1-T2: time limit per day (default 30 s)
       alns::Options ao;
       ao.time_limit_s = time_limit > 0 ? time_limit : 30.0;
+      if (iterations > 0) {
+        ao.max_iterations = iterations;
+        ao.time_limit_s = 1e9;
+      }
       ao.fairness_weight = fairness;
       result = week::run_week(week, [&](const DayInstance& day) {
         const auto r = alns::solve(day, ao);
@@ -124,6 +138,32 @@ int main(int argc, char** argv) {
 
     const kpi::WeekKpis k = kpi::compute_week_kpis(week, result.days, result.plans, result.week_check);
     kpi::write_week_report(out, k, "Week report — " + run);
+    if (!bundle.empty()) {
+      viz::RunData rd;
+      rd.run = run;
+      rd.solver = solver_name;
+      rd.week = &week;
+      rd.days = &result.days;
+      rd.plans = &result.plans;
+      rd.day_checks = &result.day_checks;
+      rd.week_check = &result.week_check;
+      rd.kpis = &k;
+      rd.real_week = &original;
+      std::optional<data::TrueService> truth;
+      if (fs::exists(instance / "truth.json")) {
+        truth = data::read_truth(instance);
+        rd.truth = &*truth;
+      }
+      rd.options = {{"solver", solver_name}, {"time_limit_s", time_limit}, {"iterations", iterations},
+                    {"fairness", fairness}, {"estimator", estimator_file.filename().string()}};
+      if (!estimator_file.empty()) {
+        const RiskConfig risk = load_risk(config_dir() / "risk.yaml");
+        rd.options["z"] = z >= 0 ? z : risk.z;
+        rd.options["reserve"] = reserve >= 0 ? reserve : risk.reserve_minutes;
+      }
+      data::write_text_file(bundle, viz::run_bundle(rd).dump());
+      std::cout << "bundle: " << bundle.string() << "\n";
+    }
     std::cout << "week: cost " << k.cost_total << " EUR, " << k.km << " km, " << k.served << " served, "
               << k.unserved_end << " unserved at the end, gini " << k.hours_gini << ", checker "
               << (k.week_checker_ok ? "OK" : "VIOLATIONS") << "\nwritten: " << (out / "week_report.md").string()

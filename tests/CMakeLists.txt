@@ -61,3 +61,5 @@ legalvrp_test(test_estimate unit unit/test_estimate.cpp)  # V1-T7
 target_link_libraries(test_estimate PRIVATE legalvrp::estimate legalvrp::data legalvrp::alns legalvrp::check)
 legalvrp_test(test_sim unit unit/test_sim.cpp)  # V1-T6
 target_link_libraries(test_sim PRIVATE legalvrp::sim legalvrp::alns legalvrp::data)
+legalvrp_test(test_viz unit unit/test_viz.cpp)  # APP_PLAN A1/A2
+target_link_libraries(test_viz PRIVATE legalvrp::viz legalvrp::week legalvrp::alns)

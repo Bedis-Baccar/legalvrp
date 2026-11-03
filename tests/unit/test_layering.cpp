@@ -56,3 +56,8 @@ TEST_CASE("the day simulator replays plans and never solves", "[layering]") {
   const auto hits = forbidden_includes(kSrc / "sim", {"model", "heuristics", "week", "alns", "pool", "kpi"});
   CHECK(hits.empty());
 }
+
+TEST_CASE("the visual application's module draws and never solves", "[layering]") {
+  const auto hits = forbidden_includes(kSrc / "viz", {"model", "heuristics", "week", "alns", "pool", "cg", "estimate"});
+  CHECK(hits.empty());
+}

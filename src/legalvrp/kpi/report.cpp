@@ -20,6 +20,11 @@ void write_file(const std::filesystem::path& p, const std::string& text) {
   std::ofstream out(p, std::ios::binary | std::ios::trunc);
   out.write(text.data(), static_cast<std::streamsize>(text.size()));
 }
+// Heuristic days (ALNS, baseline) have no lower bound: their gap is unknown, not 0 % (APP_PLAN A0).
+std::string gap_cell(const SolverStats& s) {
+  if (s.status.empty() || s.status == "ALNS" || s.status == "BASELINE" || s.status == "HAND") return "—";
+  return f1(100.0 * s.gap) + "%";
+}
 }  // namespace
 
 json to_json(const WeekKpis& k) {
@@ -66,7 +71,7 @@ std::string to_markdown(const WeekKpis& k, const std::string& title) {
     md << "| " << d.day << " | " << d.orders << " | " << d.served << " | " << d.postponed << " | "
        << d.drivers_used << " | " << f1(d.km) << " | " << f1(d.cost, 2) << " | "
        << (d.solver.status.empty() ? "-" : d.solver.status) << (d.solver.baseline_fallback ? " (fallback)" : "")
-       << " | " << f1(d.solver.runtime_s) << " | " << f1(100.0 * d.solver.gap) << "% |\n";
+       << " | " << f1(d.solver.runtime_s) << " | " << gap_cell(d.solver) << " |\n";
   }
   md << "\n## Drivers\n\n| driver | contract | service h (week) | driving h | threshold h | extra min | days |\n"
      << "|---|---|---|---|---|---|---|\n";
