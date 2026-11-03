@@ -8,12 +8,14 @@
 #include <stdexcept>
 
 #include "gurobi_c++.h"
+#include "legalvrp/data/instance_config.hpp"
 #include "legalvrp/data/io.hpp"
 #include "legalvrp/domain/day.hpp"
 #include "legalvrp/domain/json.hpp"
 #include "legalvrp/domain/paths.hpp"
 #include "legalvrp/domain/rules.hpp"
 #include "legalvrp/model/solve.hpp"
+#include "legalvrp/week/certify.hpp"
 #include "legalvrp/week/solve_day.hpp"
 
 using namespace legalvrp;
@@ -153,5 +155,28 @@ TEST_CASE("T7 acceptance: MILP objective <= baseline on every small day", "[solv
     CHECK(r.milp.start_accepted);
     CHECK(r.check.ok());
     CHECK(r.plan.objective <= r.baseline_check.objective + 1e-6);
+  }
+}
+
+// Step 5 of solve_day: at the time limit the MILP incumbent can cost more than its own start once
+// the checker recomputes it (seen on the client mock-up's Monday, 42 orders, 120 s: 2913 vs 2758).
+// Whatever the incumbent, the returned day is never more expensive than the baseline.
+TEST_CASE("large day stopped early: never worse than the baseline start", "[solve]") {
+  const auto ic = data::load_instance_config(repo_root() / "scenarios" / "configs" / "instance_client.yaml");
+  const auto cw = week::generate_certified_week(ic, load_config(), 1);
+  REQUIRE(cw);
+  const DayInstance day = make_day_instance(cw->generated.week, 0);
+  for (const double limit : {5.0, 20.0}) {
+    model::MilpOptions o;
+    o.solver.time_limit = limit;
+    const auto r = week::solve_day(env(), day, o);
+    INFO("time limit " << limit << " s, source " << week::to_string(r.source) << ", plan " << r.plan.objective
+                       << ", baseline " << r.baseline_check.objective);
+    CHECK(r.check.ok());
+    CHECK(r.plan.objective <= r.baseline_check.objective + 1e-6);
+    if (r.source == week::PlanSource::baseline_better) {
+      CHECK(json(r.plan.routes) == json(r.baseline.routes));
+      CHECK_FALSE(r.plan.solver_stats.baseline_fallback);
+    }
   }
 }

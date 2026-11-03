@@ -155,6 +155,9 @@ scenarios/*.toml ─► scripts/build_demo.py ─► legalvrp-generate / -learn 
   verdict (APP_PLAN A8) are not implemented; rebuild with `build_demo.py`.
 - The look-ahead scenario shows frozen numbers; its plans are not exported (`legalvrp-policies`
   writes CSV only).
+- The MILP (Gurobi) is exact only where it finishes: up to ~25 orders a day. On the client week
+  (40+ orders, 120 s/day) it stops at the time limit and barely improves its start (the current
+  practice); the ALNS plan is the one to show. Each Gurobi day is never worse than its start.
 - Planners consider at most one break or 15 + 30 per duty; the law also allows e.g. two 45-min
   breaks. The `piege` scenario shows such a duty, legal for the checker and out of the planners'
   reach.

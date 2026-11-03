@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <fstream>
+#include <optional>
+#include <utility>
 
 #include "legalvrp/domain/json.hpp"
 #include "legalvrp/heuristics/route_eval.hpp"
@@ -15,6 +17,7 @@ const char* to_string(PlanSource s) noexcept {
     case PlanSource::milp_retimed: return "milp_retimed";
     case PlanSource::baseline_no_incumbent: return "baseline_no_incumbent";
     case PlanSource::baseline_rejected: return "baseline_rejected";
+    case PlanSource::baseline_better: return "baseline_better";
   }
   return "?";
 }
@@ -64,12 +67,34 @@ DaySolve solve_day(GRBEnv& env, const DayInstance& day, model::MilpOptions optio
     accept(out.baseline, PlanSource::baseline_no_incumbent);
     return out;
   }
-  if (check::check_day(day, *out.milp.plan).ok()) {
-    accept(*out.milp.plan, PlanSource::milp);
+  // Step 5: a legal candidate is kept only if it is not more expensive than the baseline start.
+  constexpr double kTol = 1e-6;
+  const double base = out.baseline_check.objective;
+  const auto retimed = [&]() -> std::optional<std::pair<DayPlan, double>> {
+    auto r = retime_plan(day, *out.milp.plan);
+    if (!r) return std::nullopt;
+    const auto c = check::check_day(day, *r);
+    if (!c.ok()) return std::nullopt;
+    return std::pair{std::move(*r), c.objective};
+  };
+  if (const auto c = check::check_day(day, *out.milp.plan); c.ok()) {
+    if (c.objective <= base + kTol) {
+      accept(*out.milp.plan, PlanSource::milp);
+      return out;
+    }
+    if (auto r = retimed(); r && r->second <= base + kTol) {
+      accept(std::move(r->first), PlanSource::milp_retimed);
+      return out;
+    }
+    accept(out.baseline, PlanSource::baseline_better);
     return out;
   }
-  if (auto r = retime_plan(day, *out.milp.plan); r && check::check_day(day, *r).ok()) {
-    accept(std::move(*r), PlanSource::milp_retimed);
+  if (auto r = retimed()) {
+    if (r->second <= base + kTol) {
+      accept(std::move(r->first), PlanSource::milp_retimed);
+    } else {
+      accept(out.baseline, PlanSource::baseline_better);
+    }
     return out;
   }
   accept(out.baseline, PlanSource::baseline_rejected);

@@ -5,7 +5,11 @@
 //   3. extraction, then the independent checker;
 //   4. if the incumbent fails the checker, re-time its sequences with the exact evaluator and
 //      check again; if there is still a problem, or no incumbent at the time limit, the
-//      baseline is returned and the day is flagged.
+//      baseline is returned and the day is flagged;
+//   5. never worse than the baseline: when the legal MILP plan costs more than the baseline (checker's
+//      recomputed objective; possible when the time limit stops the search, since the model's cost and
+//      the checker's differ), its sequences are re-timed by the exact evaluator, and if that is still
+//      more expensive the baseline is returned (source baseline_better, not flagged as a fallback).
 // The returned plan always has zero checker violations.
 
 #include <filesystem>
@@ -24,6 +28,8 @@ enum class PlanSource {
   milp_retimed,         // the MILP sequences re-timed by the evaluator
   baseline_no_incumbent,
   baseline_rejected,    // MILP plan failed the checker even after re-timing (a model bug)
+  baseline_better,      // legal MILP plan (re-timed or not) more expensive than the baseline start:
+                        // possible at the time limit, the model's and the checker's costs differ
 };
 [[nodiscard]] const char* to_string(PlanSource s) noexcept;
 

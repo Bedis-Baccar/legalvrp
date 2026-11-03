@@ -68,6 +68,7 @@ export default function Dashboard({ ctx }: { ctx: Ctx }) {
       <div className="notice info small">
         Plan affiché : <b>{run.label}</b>
         {ref ? " — comparé au planning actuel (secteurs fixes)." : "."} Toutes les tournées sont rejugées par le vérificateur indépendant.
+        {run.note && <div className="muted">{run.note}</div>}
       </div>
       <div className="c-tiles">
         <Tile label="Coût de la semaine" value={eur(k.cost_total)} delta={rel((x) => x.kpis.cost_total)} good="low" sub="coûts illustratifs" />

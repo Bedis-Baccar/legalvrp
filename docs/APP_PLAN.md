@@ -271,5 +271,11 @@ Findings while building the scenarios:
 - **In the overloaded week, every postponed order needs the tail-lift.** The fleet has spare
   capacity (the part-time driver stays at the depot on two days); the single tail-lift truck is
   the bottleneck.
+- **Gurobi at the client size** (42–47 orders a day with carried orders, 120 s/day, user's run): every
+  day stops at the time limit with a 43–69 % gap; the week costs 14 651 € against 8 736 € for ALNS,
+  as expected from BENCHMARK_V1 (MILP 11 % above the best known at 40 orders with 300 s). On Monday
+  the legal incumbent cost **more than its own MIP start** once recomputed by the checker (2 913 vs
+  2 758 €): `week::solve_day` kept it. Fixed: step 5 of `solve_day` re-times such a plan and returns
+  the baseline if it is still more expensive (source `baseline_better`); Gurobi test added.
 - On `small` seed 1, executed with the true service times, 10 of 18 optimised duties are late or
   illegal; 4 with learned times; 0 with learned times + 15-min reserve, for +7 % planned cost.
