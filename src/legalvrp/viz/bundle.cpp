@@ -15,18 +15,6 @@ using nlohmann::json;
 
 namespace {
 
-json to_json_timeline(const Timeline& t) {
-  json segs = json::array();
-  for (const auto& s : t.segments) {
-    json j = {{"kind", s.kind}, {"start", s.start}, {"end", s.end},
-              {"drive_since_break", s.drive_since_break}, {"work_since_break", s.work_since_break}};
-    if (!s.order_id.empty()) j["order_id"] = s.order_id;
-    segs.push_back(std::move(j));
-  }
-  return {{"segments", segs}, {"duty_start", t.duty_start}, {"duty_end", t.duty_end}, {"driving", t.driving},
-          {"work", t.work}, {"breaks", t.breaks}, {"km", t.km}, {"pallets", t.pallets}};
-}
-
 json to_json_facts(const check::DriverFacts& f) {
   return {{"driver_id", f.driver_id}, {"used", f.used}, {"service_minutes", f.service_minutes},
           {"driving_minutes", f.driving_minutes}, {"km", f.km}, {"cost", f.cost}};
@@ -60,7 +48,7 @@ std::string truck_of(const DayInstance& day, const std::string& driver_id) {
 json to_json_route(const DayInstance& day, const Route& r) {
   json j = r;  // driver_id, order_ids, breaks, departure, arrivals, service_starts, return_time
   j["truck_id"] = truck_of(day, r.driver_id);
-  j["timeline"] = to_json_timeline(build_timeline(day, r));
+  j["timeline"] = timeline_json(build_timeline(day, r));
   return j;
 }
 
@@ -72,6 +60,18 @@ json to_json_instance(const WeekInstance& w) {
 }
 
 }  // namespace
+
+json timeline_json(const Timeline& t) {
+  json segs = json::array();
+  for (const auto& s : t.segments) {
+    json j = {{"kind", s.kind}, {"start", s.start}, {"end", s.end},
+              {"drive_since_break", s.drive_since_break}, {"work_since_break", s.work_since_break}};
+    if (!s.order_id.empty()) j["order_id"] = s.order_id;
+    segs.push_back(std::move(j));
+  }
+  return {{"segments", segs}, {"duty_start", t.duty_start}, {"duty_end", t.duty_end}, {"driving", t.driving},
+          {"work", t.work}, {"breaks", t.breaks}, {"km", t.km}, {"pallets", t.pallets}};
+}
 
 DayInstance judged_day(const DayInstance& planned, const WeekInstance& real) {
   DayInstance d = planned;

@@ -24,6 +24,7 @@
 #include "legalvrp/data/io.hpp"
 #include "legalvrp/domain/models.hpp"
 #include "legalvrp/kpi/kpis.hpp"
+#include "legalvrp/viz/timeline.hpp"
 
 namespace legalvrp::viz {
 
@@ -46,6 +47,10 @@ struct RunData {
 };
 
 [[nodiscard]] nlohmann::json run_bundle(const RunData& run);
+
+// A timeline as the application reads it: {"segments", "duty_start", "duty_end", "driving", "work",
+// "breaks", "km", "pallets"}.
+[[nodiscard]] nlohmann::json timeline_json(const Timeline& t);
 
 // A planned day judged against the real instance: the real rules, customers' windows, contracts
 // and drivers' shifts (a plan made on a tightened instance, V1-T7, must be judged on reality).

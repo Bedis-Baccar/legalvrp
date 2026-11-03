@@ -13,6 +13,9 @@
 #include "legalvrp/heuristics/territory.hpp"
 #include "legalvrp/kpi/kpis.hpp"
 #include "legalvrp/viz/bundle.hpp"
+#include "legalvrp/viz/gallery.hpp"
+#include "legalvrp/domain/rules.hpp"
+#include <fstream>
 #include "legalvrp/viz/timeline.hpp"
 #include "legalvrp/week/loop.hpp"
 
@@ -143,5 +146,18 @@ TEST_CASE("run bundle: schema, KPIs, realised days and ALNS gap", "[viz]") {
     CHECK(d["check"]["ok"].get<bool>());
     CHECK(d["realised"]["routes"].size() == d["routes"].size());
     for (const auto& o : d["orders"]) CHECK(o.contains("service_true"));
+  }
+}
+
+TEST_CASE("checker's gallery: every corpus duty's verdict equals its label", "[viz][corpus]") {
+  std::ifstream in(fixtures_dir() / "duties.json");
+  REQUIRE(in);
+  const auto corpus = nlohmann::json::parse(in);
+  const auto g = viz::duty_gallery(corpus, load_config());
+  REQUIRE(g["items"].size() == corpus["duties"].size());
+  for (const auto& it : g["items"]) {
+    INFO(it["name"].get<std::string>());
+    CHECK(it["matches"].get<bool>());
+    if (!it["route"]["order_ids"].empty()) CHECK(it["timeline"].is_object());
   }
 }

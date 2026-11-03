@@ -97,5 +97,5 @@ if(LEGALVRP_WITH_GUROBI)
 endif()
 
 legalvrp_module(viz                     # APP_PLAN A1/A2: timelines and run bundles for the visual app
-  SOURCES ${L}/viz/timeline.cpp ${L}/viz/bundle.cpp
+  SOURCES ${L}/viz/timeline.cpp ${L}/viz/bundle.cpp ${L}/viz/gallery.cpp
   DEPS legalvrp::domain legalvrp::check legalvrp::kpi legalvrp::sim legalvrp::data)
