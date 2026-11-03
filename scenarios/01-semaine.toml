@@ -30,8 +30,8 @@ solver = "alns"
 
 [[runs]]
 id = "milp"
-label = "Programme linéaire (Gurobi, 60 s/jour)"
+label = "Programme linéaire (Gurobi, 69 s/jour)"
 solver = "milp"
-time_limit = 60
+time_limit = 69
 requires_gurobi = true
 note = "Solveur exact : donne aussi une borne (écart à l'optimum)."

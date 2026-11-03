@@ -34,8 +34,8 @@ Each script does four steps, each skipped when its output exists:
 | web app | `cd app && npm install && npm run build` | `app/dist/` |
 | server | `python scripts/demo_server.py [--port 8765] [--open]` | http://127.0.0.1:8765/ |
 
-Building every scenario takes about 30 s without Gurobi. With Gurobi, the MILP runs (60 s/day on
-`small`, 120 s/day on `medium`) add about 15 minutes. `results/`, `data/`, `app/dist` and
+Building every scenario takes about 30 s without Gurobi. With Gurobi, the MILP runs (69 s/day on
+`small`, 138 s/day on `medium` and on the client week) add about 30 minutes. `results/`, `data/`, `app/dist` and
 `app/node_modules` are git-ignored; the scenario definitions (`scenarios/`) are versioned.
 
 Development of the front end: `cd app && npm run dev` (http://localhost:5173, hot reload; the
@@ -156,7 +156,7 @@ scenarios/*.toml ─► scripts/build_demo.py ─► legalvrp-generate / -learn 
 - The look-ahead scenario shows frozen numbers; its plans are not exported (`legalvrp-policies`
   writes CSV only).
 - The MILP (Gurobi) is exact only where it finishes: up to ~25 orders a day. On the client week
-  (40+ orders, 120 s/day) it stops at the time limit and barely improves its start (the current
+  (40+ orders, 138 s/day) it stops at the time limit and barely improves its start (the current
   practice); the ALNS plan is the one to show. Each Gurobi day is never worse than its start.
 - Planners consider at most one break or 15 + 30 per duty; the law also allows e.g. two 45-min
   breaks. The `piege` scenario shows such a duty, legal for the checker and out of the planners'

@@ -36,8 +36,8 @@ note = "Durées apprises sur l'historique, moyenne + 0,5 écart-type par arrêt,
 
 [[runs]]
 id = "milp"
-label = "Programme linéaire Gurobi (120 s/jour)"
-note = "Modèle exact arrêté au bout de 120 s par jour : à 40 commandes il ne prouve rien et améliore peu son point de départ (le planning actuel). Jamais pire que ce point de départ, jour par jour."
+label = "Programme linéaire Gurobi (138 s/jour)"
+note = "Modèle exact arrêté au bout de 138 s par jour : à 40 commandes il ne prouve rien et améliore peu son point de départ (le planning actuel). Jamais pire que ce point de départ, jour par jour."
 solver = "milp"
-time_limit = 120
+time_limit = 138
 requires_gurobi = true

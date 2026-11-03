@@ -28,7 +28,7 @@ solver = "alns"
 
 [[runs]]
 id = "milp"
-label = "Programme linéaire (Gurobi, 120 s/jour)"
+label = "Programme linéaire (Gurobi, 138 s/jour)"
 solver = "milp"
-time_limit = 120
+time_limit = 138
 requires_gurobi = true
