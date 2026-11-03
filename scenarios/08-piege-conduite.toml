@@ -1,0 +1,54 @@
+id = "piege"
+order = 8
+category = "La loi"
+title = "Le piège de conduite : 9 h de volant, une seule pause"
+view = "compare"
+summary = "Trois clients, 540 min de conduite : aucune position de la pause de 45 min ne coupe la conduite en deux blocs de 4 h 30 au plus."
+story = """
+Cas d'école de la spécification. Un chauffeur, trois clients lointains : dépôt → A **60 min**, A → B **140 min**, B → C **200 min**, C → dépôt **140 min**, soit 540 min de conduite (le maximum journalier).
+
+La loi impose une pause après **4 h 30 de conduite au plus**. Où placer une pause de 45 min ?
+- après A : 60 min avant, **480 min après** ;
+- après B : 200 min avant, **340 min après** ;
+- après C : **400 min avant** ;
+- sans pause : **540 min d'affilée**.
+
+Toutes ces tournées sont **illégales** : le vérificateur indique la règle violée et le dépassement. L'optimisation, qui ne considère qu'une pause (ou 15 + 30 min), **sert deux clients et reporte le troisième**.
+
+**Ce que montre aussi ce cas** : la loi autorise **deux pauses de 45 min** (après B et après C : 200 | 200 | 140 min de conduite). Cette tournée est légale pour le vérificateur, mais aucun planificateur actuel ne l'envisage. C'est une limite connue du modèle : elle ne concerne que des journées de conduite très longues, rares en distribution régionale.
+"""
+compare = ["apres_a", "apres_b", "apres_c", "sans", "deux_pauses", "alns"]
+
+[instances.main]
+hand = "trap_drive"
+
+[[runs]]
+id = "apres_a"
+label = "Pause après A"
+plan = { sequence = ["o-A", "o-B", "o-C"], breaks = [["o-A", 45]] }
+
+[[runs]]
+id = "apres_b"
+label = "Pause après B"
+plan = { sequence = ["o-A", "o-B", "o-C"], breaks = [["o-B", 45]] }
+
+[[runs]]
+id = "apres_c"
+label = "Pause après C"
+plan = { sequence = ["o-A", "o-B", "o-C"], breaks = [["o-C", 45]] }
+
+[[runs]]
+id = "sans"
+label = "Sans pause"
+plan = { sequence = ["o-A", "o-B", "o-C"] }
+
+[[runs]]
+id = "deux_pauses"
+label = "Deux pauses de 45 min (après B et C)"
+plan = { sequence = ["o-A", "o-B", "o-C"], breaks = [["o-B", 45], ["o-C", 45]] }
+note = "Légal, mais hors du champ des planificateurs (une pause, ou 15 + 30)."
+
+[[runs]]
+id = "alns"
+label = "Optimisation (ALNS)"
+solver = "alns"

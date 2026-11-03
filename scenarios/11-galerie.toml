@@ -1,0 +1,26 @@
+id = "galerie"
+order = 11
+category = "La loi"
+title = "La galerie du vérificateur"
+view = "gallery"
+summary = "60 tournées construites à la main, légales ou non, avec la règle attendue : le vérificateur les retrouve toutes."
+story = """
+Le vérificateur est le juge de tout le projet : aucun plan n'est montré s'il ne l'a pas validé. Il est écrit à partir des textes, indépendamment des planificateurs.
+
+Pour s'assurer qu'il applique bien la loi, 60 tournées ont été construites à la main, chacune étiquetée « légale » ou avec la règle exacte qu'elle viole : les cas limites (270 / 271 min de conduite, 360 / 361 min de travail), les pauses mal placées, les créneaux manqués, la capacité, le hayon, les plafonds hebdomadaires, les pauses courtes et fractionnées. Chacune est rejugée à chaque compilation, et le verdict doit être exactement l'étiquette.
+
+Choisissez une tournée pour voir son planning, les compteurs de la loi et le verdict.
+"""
+
+[gallery]
+featured = [
+  "legal: exactly 270 min driving without break",
+  "illegal: 271 min driving without break",
+  "trap (a): 60/140/200/140, break after B -> 340 after",
+  "legal only late: waiting before the break node (D-007), 360 work after",
+  "same route, break placed early: 385 work after",
+  "illegal: 361 min duty, post-trip close counts",
+  "V1-T8 legal: 15 + 30 split restarts driving (140 | 140)",
+  "V1-T8 illegal: 30 then 15 is not a split for driving",
+  "illegal: customer needs a tail-lift, truck has none",
+]

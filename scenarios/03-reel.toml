@@ -1,0 +1,43 @@
+id = "reel"
+order = 3
+category = "Incertitude"
+title = "La journée telle qu'elle se passe vraiment"
+view = "real"
+summary = "Le plan optimal suppose des temps de livraison exacts. Exécuté avec les vrais temps, une bonne partie des tournées arrive en retard ou devient illégale."
+story = """
+Le planificateur estime chaque livraison à **10 min + 6 min par palette**. En réalité, les temps varient : un restaurant en plein service, un chantier sans quai… Le générateur tire ces **vrais temps** (loi log-normale par type de client) et ne les montre jamais au planificateur.
+
+On rejoue ici chaque journée planifiée avec les vrais temps : même départ, même ordre, mêmes pauses, aucune replanification. Le vérificateur juge le résultat. Une tournée est **en retard** si une livraison commence après la fermeture du créneau, **illégale** si une règle de temps de travail est dépassée (6 h sans pause, fin de service, …).
+
+Trois façons de planifier :
+1. **Règle actuelle** : 10 + 6 × palettes, optimisée au plus serré ;
+2. **Temps appris** : durées apprises sur 20 semaines d'historique (par type de client et taille de commande) ;
+3. **Temps appris + marge** : on planifie chaque arrêt à moyenne + 0,5 écart-type et on garde **15 min de réserve** avant chaque limite légale et chaque fermeture de créneau.
+
+La marge coûte plus cher sur le papier, mais elle évite l'essentiel des retards et des infractions.
+"""
+compare = ["regle", "appris", "marge"]
+
+[instances.main]
+generate = { config = "config/instance_small.yaml", seed = 1 }
+
+[[runs]]
+id = "regle"
+label = "Règle actuelle (10 + 6 × palettes)"
+ref = "semaine/alns"
+
+[[runs]]
+id = "appris"
+label = "Temps appris"
+solver = "alns"
+estimator = "learned"
+z = 0.0
+reserve = 0
+
+[[runs]]
+id = "marge"
+label = "Temps appris + marge (z = 0,5, réserve 15 min)"
+solver = "alns"
+estimator = "learned"
+z = 0.5
+reserve = 15

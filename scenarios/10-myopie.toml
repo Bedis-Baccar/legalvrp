@@ -1,0 +1,20 @@
+id = "myopie"
+order = 10
+category = "Semaine"
+title = "Voir demain pour mieux planifier aujourd'hui"
+view = "report"
+summary = "Planifier jour par jour peut coûter cher quand une compétence rare (le hayon) appartient à un chauffeur proche de son plafond d'heures. Regarder le lendemain récupère l'essentiel de la perte."
+story = """
+Le planificateur décide chaque jour sans connaître la suite : c'est la **myopie**. La plupart des semaines, cela coûte peu. Mais si le seul chauffeur capable de livrer certains clients (hayon, gros volumes) approche de son plafond hebdomadaire, le gaspiller lundi coûte très cher jeudi.
+
+Sur cinq semaines de test (2 chauffeurs dont un à temps partiel), on compare :
+- **jour par jour** (myope) ;
+- **aujourd'hui + demain** (les commandes du lendemain sont connues la veille) ;
+- **clairvoyant** : toute la semaine connue d'avance, le meilleur possible.
+
+Regarder le lendemain récupère **92 % de l'écart** entre myope et clairvoyant, et n'est jamais pire que myope. Résultats calculés avec Gurobi (V1-T5) et figés dans le dépôt.
+"""
+
+[report]
+kind = "lookahead"
+csv = "docs/policies/lookahead.csv"

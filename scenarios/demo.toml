@@ -1,0 +1,13 @@
+# Settings of the visual application's demo (docs/APP_PLAN.md). Read by scripts/build_demo.py.
+title = "legalvrp — tournées légales"
+subtitle = "Planifier les livraisons de la semaine en respectant les temps de conduite et de travail"
+disclaimer = "Données synthétiques et coûts illustratifs : clients, distances et temps de service sont générés ; les règles (Règl. 561/2006, Dir. 2002/15, Code des transports) sont réelles. Les écarts relatifs sont le message, pas les euros."
+alns_iterations = 20000   # per day: deterministic runs, identical on every machine
+
+[geo]
+# Anchor of the synthetic plane on the map (the depot). Customers keep their synthetic distances;
+# routes are drawn as straight lines ("trajets schématiques").
+lat = 45.7035
+lon = 4.9440
+depot_name = "Dépôt (Saint-Priest)"
+label = "Agglomération lyonnaise"

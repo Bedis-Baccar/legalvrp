@@ -1,0 +1,34 @@
+id = "interim"
+order = 7
+category = "Cas particuliers"
+title = "Six chauffeurs, dont un intérimaire"
+view = "week"
+summary = "25 à 30 commandes par jour ; l'intérimaire coûte 60 € par jour plus 0,55 €/min : faut-il l'appeler ?"
+story = """
+Instance plus grande : six chauffeurs (quatre à temps plein, un à temps partiel, **un intérimaire**), six porteurs dont deux avec hayon, 25 à 30 commandes par jour.
+
+Les salariés sont payés quelles que soient les heures en dessous de leur seuil : les faire travailler ne coûte presque rien de plus. L'intérimaire, lui, coûte **60 € dès qu'il prend la route**, plus **0,55 € par minute**. L'optimisation ne l'appelle que lorsque cela évite des heures supplémentaires plus chères ou un report.
+
+Regardez, jour par jour, si l'intérimaire roule, et comparez au découpage en secteurs fixes où il a toujours son secteur.
+"""
+compare = ["baseline", "alns"]
+
+[instances.main]
+generate = { config = "config/instance_medium.yaml", seed = 1 }
+
+[[runs]]
+id = "baseline"
+label = "Pratique actuelle (secteurs fixes)"
+solver = "baseline"
+
+[[runs]]
+id = "alns"
+label = "Optimisation (ALNS)"
+solver = "alns"
+
+[[runs]]
+id = "milp"
+label = "Programme linéaire (Gurobi, 120 s/jour)"
+solver = "milp"
+time_limit = 120
+requires_gurobi = true

@@ -1,0 +1,54 @@
+id = "pauses"
+order = 9
+category = "La loi"
+title = "Pauses courtes : 30 min, ou 15 + 30 min"
+view = "compare"
+summary = "La loi ne réclame pas toujours 45 min d'un bloc : une pause de 30 min suffit entre 6 h et 9 h de travail, et la pause de conduite peut se fractionner en 15 + 30 min."
+story = """
+Deux cas où ces options **évitent un report** (une commande non livrée coûte au moins 1 000 €).
+
+**Pause fractionnée.** Le client B n'accepte la livraison qu'entre **10:50 et 11:00**. Avec une pause de 45 min après A, on arrive trop tard chez B ; après B, on a déjà travaillé 6 h 30 sans pause. En coupant la pause en **15 min après A** et **30 min après B**, les trois clients sont livrés dans les règles.
+
+**Pause courte.** Une journée de 9 h de travail exactement, dans un service qui se termine à 15:35 : avec 45 min de pause, le chauffeur rentre trop tard ; **30 min suffisent** pour 6 à 9 h de travail (Dir. 2002/15 art. 5) et la journée tient.
+
+Pour chaque cas, comparez la planification avec les seules règles « 45 min » (V0) et avec les options de la loi (V1).
+"""
+compare = ["split_v0", "split_v1", "short_v0", "short_v1"]
+
+[instances.split]
+hand = "split_window"
+
+[instances.split_v0]
+from = "split"
+rules = { allow_short_break = false, allow_split_break = false }
+
+[instances.short]
+hand = "short_break"
+
+[instances.short_v0]
+from = "short"
+rules = { allow_short_break = false, allow_split_break = false }
+
+[[runs]]
+id = "split_v0"
+label = "Créneau serré — pause de 45 min seulement"
+instance = "split_v0"
+solver = "alns"
+
+[[runs]]
+id = "split_v1"
+label = "Créneau serré — pauses de la loi (15 + 30)"
+instance = "split"
+solver = "alns"
+
+[[runs]]
+id = "short_v0"
+label = "Journée de 9 h — pause de 45 min seulement"
+instance = "short_v0"
+solver = "alns"
+
+[[runs]]
+id = "short_v1"
+label = "Journée de 9 h — pause de 30 min"
+instance = "short"
+solver = "alns"

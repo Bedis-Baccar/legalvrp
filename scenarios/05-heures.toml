@@ -1,0 +1,22 @@
+id = "heures"
+order = 5
+category = "Cas particuliers"
+title = "Heures de la semaine et temps partiel"
+view = "drivers"
+summary = "Les heures s'accumulent jour après jour : seuils contractuels (39 h, 24 h pour le temps partiel), plafond légal, heures supplémentaires et équité."
+story = """
+Chaque jour hérite des heures déjà faites dans la semaine. Au-delà du **seuil contractuel** (39 h pour un temps plein, 24 h pour le temps partiel), chaque minute est payée en heures supplémentaires ou complémentaires ; le **plafond** (52 h, et 24 h + 10 % pour le temps partiel) ne peut jamais être dépassé.
+
+L'optimisation tient compte de ces heures d'un jour à l'autre et ajoute un **terme d'équité** : à coût égal, elle équilibre les heures des chauffeurs à temps plein (indice de Gini affiché). Comparez avec la pratique actuelle, où chaque secteur charge son chauffeur selon la demande du jour.
+"""
+compare = ["alns", "baseline"]
+
+[[runs]]
+id = "alns"
+label = "Optimisation (ALNS)"
+ref = "semaine/alns"
+
+[[runs]]
+id = "baseline"
+label = "Pratique actuelle"
+ref = "semaine/baseline"

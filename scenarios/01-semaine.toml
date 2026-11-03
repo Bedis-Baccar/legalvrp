@@ -1,0 +1,37 @@
+id = "semaine"
+order = 1
+category = "Exemple principal"
+title = "Une semaine de livraisons"
+view = "week"
+summary = "89 commandes du lundi au vendredi, 4 chauffeurs : la pratique actuelle face à l'optimisation, toutes deux validées par le vérificateur légal."
+story = """
+Un distributeur régional livre des palettes à des épiceries, des restaurants et des chantiers répartis dans trois ou quatre bourgs autour du dépôt. Chaque après-midi, il prépare la journée du lendemain : qui livre quoi, dans quel ordre, où placer la pause obligatoire, et quelles commandes reporter.
+
+**La flotte** : trois chauffeurs à temps plein (prise de poste 05:30, 06:00 et 07:00) et un chauffeur à temps partiel (24 h par semaine). Quatre porteurs de 12 à 18 palettes, dont un seul équipé d'un hayon.
+
+**La pratique actuelle** découpe la zone en secteurs fixes (un secteur par chauffeur) puis ordonne les arrêts au mieux. **L'optimisation** (ALNS) cherche les tournées de coût minimal en respectant toutes les règles ; chaque tournée proposée est ensuite rejugée par un vérificateur indépendant, écrit à partir des textes de loi.
+
+Comparez le coût de la semaine, les kilomètres et les reports, puis ouvrez une journée pour voir les tournées et le planning de chaque chauffeur.
+"""
+compare = ["baseline", "alns", "milp"]
+
+[instances.main]
+generate = { config = "config/instance_small.yaml", seed = 1 }
+
+[[runs]]
+id = "baseline"
+label = "Pratique actuelle (secteurs fixes)"
+solver = "baseline"
+
+[[runs]]
+id = "alns"
+label = "Optimisation (ALNS)"
+solver = "alns"
+
+[[runs]]
+id = "milp"
+label = "Programme linéaire (Gurobi, 60 s/jour)"
+solver = "milp"
+time_limit = 60
+requires_gurobi = true
+note = "Solveur exact : donne aussi une borne (écart à l'optimum)."

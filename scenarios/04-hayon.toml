@@ -1,0 +1,28 @@
+id = "hayon"
+order = 4
+category = "Cas particuliers"
+title = "Un seul camion avec hayon"
+view = "day"
+summary = "Certains clients ne peuvent être livrés qu'avec un hayon élévateur ; un seul porteur (12 palettes) en est équipé."
+story = """
+Les clients marqués **hayon** n'ont pas de quai : seul le porteur de 12 palettes équipé d'un hayon peut les livrer. Le chauffeur de ce camion devient une ressource rare : ses tournées sont contraintes par la capacité (12 palettes seulement) et par la dispersion des clients à hayon dans la zone.
+
+Sur la carte, les clients à hayon sont entourés. Regardez comment l'optimisation regroupe ces clients sur le camion équipé, et comment la pratique actuelle (secteurs fixes) doit parfois envoyer ce camion loin de son secteur.
+"""
+compare = ["alns", "baseline"]
+
+[[runs]]
+id = "alns"
+label = "Optimisation (ALNS)"
+ref = "semaine/alns"
+
+[[runs]]
+id = "baseline"
+label = "Pratique actuelle"
+ref = "semaine/baseline"
+
+[[focus]]
+run = "alns"
+day = 0
+highlight = "tail_lift"
+text = "Clients à hayon entourés ; le camion t1 est le seul équipé."

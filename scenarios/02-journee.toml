@@ -1,0 +1,30 @@
+id = "journee"
+order = 2
+category = "Exemple principal"
+title = "Lundi, minute par minute"
+view = "day"
+summary = "Le planning de chaque chauffeur : conduite, livraisons, attente, pause légale, avec les compteurs de la loi."
+story = """
+Chaque ligne du planning est une journée de travail, de la prise de poste à la fin de service : préparation au dépôt (20 min), trajets, attente quand on arrive avant l'ouverture du client, livraison, pause, retour et clôture (10 min).
+
+**Deux compteurs** suivent la loi en continu :
+- la **conduite depuis la dernière pause** ne doit jamais dépasser **4 h 30** (Règl. 561/2006 art. 7) ; seule une pause de 45 min, ou 15 puis 30 min, la remet à zéro ;
+- le **travail depuis la dernière pause** ne doit jamais dépasser **6 h** (Dir. 2002/15 art. 5, Code des transports L3312-2) ; l'attente compte comme du travail.
+
+Survolez un segment pour lire ces compteurs. Les créneaux des clients sont dessinés derrière chaque livraison : la livraison doit commencer à l'intérieur.
+"""
+
+[[runs]]
+id = "alns"
+label = "Optimisation (ALNS)"
+ref = "semaine/alns"
+
+[[runs]]
+id = "baseline"
+label = "Pratique actuelle"
+ref = "semaine/baseline"
+
+[[focus]]
+run = "alns"
+day = 0
+text = "Lundi est le jour le plus chargé (+15 % de commandes)."

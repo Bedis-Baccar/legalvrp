@@ -1,0 +1,27 @@
+id = "surcharge"
+order = 6
+category = "Cas particuliers"
+title = "Semaine surchargée : reporter des commandes"
+view = "week"
+summary = "Plus de commandes que la flotte ne peut en livrer légalement : certaines sont reportées au lendemain, avec une pénalité qui double chaque jour."
+story = """
+Avec la même flotte que l'exemple principal mais des journées plus chargées, il n'est plus possible de tout livrer dans les règles. Le planificateur doit **reporter** des commandes.
+
+Un report coûte **200 €** le premier jour, puis **400 €**, **800 €**… : une commande ne peut pas être repoussée indéfiniment. Une commande encore non livrée le vendredi coûte au moins **1 000 €**.
+
+Le planificateur choisit donc quoi reporter (les commandes qui coûtent le plus à livrer aujourd'hui, celles d'un client qui sera sur la route demain…), et la pénalité croissante les fait passer en priorité les jours suivants. Ouvrez une journée : les commandes reportées sont listées avec leur jour d'origine.
+"""
+compare = ["baseline", "alns"]
+
+[instances.main]
+generate = { config = "scenarios/configs/instance_overload.yaml", seed = 2, no_certify = true }
+
+[[runs]]
+id = "baseline"
+label = "Pratique actuelle (secteurs fixes)"
+solver = "baseline"
+
+[[runs]]
+id = "alns"
+label = "Optimisation (ALNS)"
+solver = "alns"
