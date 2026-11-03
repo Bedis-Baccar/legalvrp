@@ -1,6 +1,7 @@
 # FindGurobi.cmake — locates the Gurobi C and C++ libraries.
 #
-# Input : GUROBI_HOME (CMake or environment variable), e.g. C:/gurobi1203/win64
+# Input : GUROBI_HOME (CMake or environment variable), e.g. C:/gurobi1203/win64 or
+#         /opt/gurobi1203/linux64; without it, C:/gurobi*/win64 and /opt/gurobi*/linux64 are searched
 # Output: imported target Gurobi::Gurobi (C++ API + C library), Gurobi_VERSION_MAJOR
 #
 # Windows: the C++ wrapper is shipped prebuilt for MSVC only (gurobi_c++md2017.lib
@@ -9,6 +10,10 @@
 set(_grb_hints "${GUROBI_HOME}" "$ENV{GUROBI_HOME}")
 if(WIN32)
   file(GLOB _grb_dirs "C:/gurobi*/win64")
+  list(SORT _grb_dirs ORDER DESCENDING)
+  list(APPEND _grb_hints ${_grb_dirs})
+else()
+  file(GLOB _grb_dirs "/opt/gurobi*/linux64" "/opt/gurobi*/armlinux64" "$ENV{HOME}/gurobi*/linux64")
   list(SORT _grb_dirs ORDER DESCENDING)
   list(APPEND _grb_hints ${_grb_dirs})
 endif()
@@ -24,8 +29,11 @@ if(GUROBI_INCLUDE_DIR AND EXISTS "${GUROBI_INCLUDE_DIR}/gurobi_c.h")
   set(Gurobi_VERSION "${Gurobi_VERSION_MAJOR}.${Gurobi_VERSION_MINOR}.${Gurobi_VERSION_PATCH}")
 endif()
 
+# C library: libgurobi<major><minor> (e.g. gurobi120, gurobi130); if the header's version could not
+# be read, any recent release, then a plain libgurobi (symlink some installations provide).
 find_library(GUROBI_C_LIBRARY
   NAMES "gurobi${Gurobi_VERSION_MAJOR}${Gurobi_VERSION_MINOR}" "gurobi${Gurobi_VERSION_MAJOR}0"
+        gurobi130 gurobi120 gurobi110 gurobi100 gurobi
   HINTS ${_grb_hints} PATH_SUFFIXES lib)
 
 if(MSVC)
